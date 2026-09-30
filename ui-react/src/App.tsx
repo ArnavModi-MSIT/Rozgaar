@@ -1,0 +1,273 @@
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { api } from "./api";
+import JobCard from "./components/JobCard";
+import Sidebar from "./components/Sidebar";
+import type { Filters, Job, ResumeState } from "./types";
+
+// Matches ui/app.py's MIN_MATCH_THRESHOLD — once a resume is loaded, jobs
+// scoring below this are hidden. Kept a constant, not a slider, same as
+// the Streamlit version.
+const MIN_MATCH = 20;
+// Lowered from 2 to 0 (hide anything requiring 1+ years, not just 3+)
+// and hideHighExperience below defaults to true — per explicit request:
+// a college student's board targeting fresher/0-experience roles as the
+// standing default, not an occasional filter. Still a real toggle in
+// Sidebar.tsx, not a hardcoded rule.
+const EXPERIENCE_THRESHOLD = 0;
+const PAGE_SIZE = 40;
+
+const DEFAULT_FILTERS: Filters = {
+  locationText: "",
+  showRemote: false,
+  showNcr: false,
+  showIndia: false,
+  hideSenior: false,
+  hideHighExperience: true,
+};
+
+export default function App() {
+  const [jobs, setJobs] = useState<Job[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const [filters, setFilters] = useState<Filters>(DEFAULT_FILTERS);
+  const [resume, setResume] = useState<ResumeState>({
+    loaded: false,
+    resume_key: null,
+    word_count: 0,
+    skills: [],
+  });
+  const [resumeBusy, setResumeBusy] = useState(false);
+  const [resumeError, setResumeError] = useState<string | null>(null);
+  const [autoRemove, setAutoRemove] = useState(true);
+  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
+
+  const refresh = useCallback(async () => {
+    try {
+      const [jobList, resumeState] = await Promise.all([api.jobs(), api.resume()]);
+      setJobs(jobList);
+      setResume(resumeState);
+      setLoadError(null);
+    } catch (e) {
+      setLoadError(
+        e instanceof Error
+          ? `${e.message} — is the backend running on port 8000?`
+          : "failed to load",
+      );
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    void refresh();
+  }, [refresh]);
+
+  const resumeSkills = useMemo(() => new Set(resume.skills), [resume.skills]);
+
+  // All filtering happens in memory. With a few thousand jobs this is well
+  // under a frame, which is exactly why the rewrite was worth doing:
+  // ticking a box no longer round-trips to the server.
+  const filtered = useMemo(() => {
+    const text = filters.locationText.trim().toLowerCase();
+    const anyLocationType =
+      filters.showRemote || filters.showNcr || filters.showIndia;
+
+    let out = jobs.filter((j) => {
+      if (text && !j.location.toLowerCase().includes(text)) return false;
+
+      // Remote / NCR / India are OR'd together — ticking more than one
+      // WIDENS the result, matching the Streamlit behaviour.
+      if (anyLocationType) {
+        const hit =
+          (filters.showRemote && j.is_remote) ||
+          (filters.showNcr && j.is_ncr) ||
+          (filters.showIndia && j.is_india);
+        if (!hit) return false;
+      }
+
+      if (filters.hideSenior && j.is_senior) return false;
+      if (
+        filters.hideHighExperience &&
+        j.experience_years >= 0 &&
+        j.experience_years > EXPERIENCE_THRESHOLD
+      ) {
+        // Unknown (-1) is deliberately kept — "couldn't determine" is not
+        // evidence a job needs too much experience.
+        return false;
+      }
+      if (resume.loaded && j.match_pct !== null && j.match_pct < MIN_MATCH) {
+        return false;
+      }
+      return true;
+    });
+
+    out = resume.loaded
+      ? out.sort((a, b) => (b.match_pct ?? 0) - (a.match_pct ?? 0))
+      : out.sort((a, b) => b.first_seen.localeCompare(a.first_seen));
+    return out;
+  }, [jobs, filters, resume.loaded]);
+
+  useEffect(() => {
+    setVisibleCount(PAGE_SIZE);
+  }, [filters, resume.loaded]);
+
+  const bulkCounts = useMemo(
+    () => ({
+      belowThreshold: jobs.filter(
+        (j) => j.match_pct !== null && j.match_pct < MIN_MATCH,
+      ).length,
+      senior: jobs.filter((j) => j.is_senior).length,
+      highExperience: jobs.filter(
+        (j) => j.experience_years >= 0 && j.experience_years > EXPERIENCE_THRESHOLD,
+      ).length,
+    }),
+    [jobs],
+  );
+
+  // Optimistic: the card disappears immediately and the POST settles in the
+  // background. On failure we reload rather than guess at rolling back.
+  const dismiss = useCallback(async (id: string) => {
+    setJobs((prev) => prev.filter((j) => j.id !== id));
+    try {
+      await api.dismiss(id);
+    } catch {
+      void refresh();
+    }
+  }, [refresh]);
+
+  const bulkDismiss = useCallback(
+    async (which: "match" | "senior" | "experience") => {
+      const targets = jobs.filter((j) => {
+        if (which === "match") return j.match_pct !== null && j.match_pct < MIN_MATCH;
+        if (which === "senior") return j.is_senior;
+        return j.experience_years >= 0 && j.experience_years > EXPERIENCE_THRESHOLD;
+      });
+      const ids = new Set(targets.map((j) => j.id));
+      if (ids.size === 0) return;
+      setJobs((prev) => prev.filter((j) => !ids.has(j.id)));
+      try {
+        await api.dismissBulk([...ids]);
+      } catch {
+        void refresh();
+      }
+    },
+    [jobs, refresh],
+  );
+
+  const uploadResume = useCallback(
+    async (file: File) => {
+      setResumeBusy(true);
+      setResumeError(null);
+      try {
+        await api.uploadResume(file);
+        await refresh();
+      } catch (e) {
+        setResumeError(e instanceof Error ? e.message : "upload failed");
+      } finally {
+        setResumeBusy(false);
+      }
+    },
+    [refresh],
+  );
+
+  const clearResume = useCallback(async () => {
+    await api.clearResume();
+    await refresh();
+  }, [refresh]);
+
+  const companies = useMemo(
+    () => new Set(filtered.map((j) => j.company)).size,
+    [filtered],
+  );
+
+  return (
+    <div className="flex">
+      <Sidebar
+        filters={filters}
+        onFilterChange={(patch) => setFilters((f) => ({ ...f, ...patch }))}
+        resume={resume}
+        onUpload={uploadResume}
+        onClearResume={clearResume}
+        resumeBusy={resumeBusy}
+        resumeError={resumeError}
+        autoRemove={autoRemove}
+        onAutoRemoveChange={setAutoRemove}
+        counts={bulkCounts}
+        onBulkDismiss={bulkDismiss}
+        minMatch={MIN_MATCH}
+      />
+
+      <main className="flex-1 h-screen overflow-y-auto">
+        <div className="max-w-4xl mx-auto px-6 py-6">
+          <h1 className="text-2xl font-semibold mb-4">Job Intel</h1>
+
+          <div className="flex gap-8 border-b border-gray-200 pb-4 mb-5">
+            <div>
+              <div className="text-2xl font-semibold tabular-nums">
+                {filtered.length.toLocaleString()}
+              </div>
+              <div className="text-xs uppercase tracking-wide text-gray-500">
+                Matching jobs
+              </div>
+            </div>
+            <div>
+              <div className="text-2xl font-semibold tabular-nums">
+                {companies.toLocaleString()}
+              </div>
+              <div className="text-xs uppercase tracking-wide text-gray-500">
+                Companies
+              </div>
+            </div>
+            <div>
+              <div className="text-2xl font-semibold tabular-nums text-gray-400">
+                {jobs.length.toLocaleString()}
+              </div>
+              <div className="text-xs uppercase tracking-wide text-gray-500">
+                Total in DB
+              </div>
+            </div>
+          </div>
+
+          {loading && <p className="text-sm text-gray-500">Loading jobs…</p>}
+          {loadError && (
+            <div className="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+              {loadError}
+            </div>
+          )}
+
+          {!loading && !loadError && !resume.loaded && (
+            <div className="rounded-md border border-sky-200 bg-sky-50 px-3 py-2 text-sm text-sky-800 mb-4">
+              Upload your resume in the sidebar to rank jobs by how well they match.
+            </div>
+          )}
+
+          {!loading && !loadError && filtered.length === 0 && (
+            <p className="text-sm text-gray-500">No jobs match your current filters.</p>
+          )}
+
+          <div className="space-y-3">
+            {filtered.slice(0, visibleCount).map((job) => (
+              <JobCard
+                key={job.id}
+                job={job}
+                resumeSkills={resumeSkills}
+                resumeLoaded={resume.loaded}
+                autoRemove={autoRemove}
+                onDismiss={dismiss}
+              />
+            ))}
+          </div>
+
+          {visibleCount < filtered.length && (
+            <button
+              onClick={() => setVisibleCount((c) => c + PAGE_SIZE)}
+              className="w-full mt-4 rounded-md border border-gray-300 bg-white px-4 py-2.5 text-sm hover:bg-gray-50"
+            >
+              Show more — {filtered.length - visibleCount} remaining
+            </button>
+          )}
+        </div>
+      </main>
+    </div>
+  );
+}

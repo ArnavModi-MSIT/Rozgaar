@@ -1,0 +1,27 @@
+"""
+Filtering and relevance scoring for collected job postings.
+"""
+
+import config
+
+
+def matches(job):
+    # Location filter, plus a narrow seniority exclude (senior/director/
+    # executive). config.INCLUDE (intern/fresher gate) is kept defined for
+    # debug_titles.py's display columns but is no longer applied here.
+    if config.EXCLUDE_SENIOR.search(job["title"]):
+        return False
+    if not config.LOCATION.search(job.get("location") or ""):
+        return False
+    # Some companies (large BPO/consulting firms) post across every
+    # function and would otherwise flood results with irrelevant roles —
+    # see config.RELEVANCE_FILTERS for why.
+    relevance = config.RELEVANCE_FILTERS.get(job["company"])
+    if relevance and not relevance.search(job["title"]):
+        return False
+    return True
+
+
+# NOTE: matches() is no longer called by run.py — run.py now saves every
+# fetched job so resume-based matching (core/matcher.py) has the full pool
+# to rank against. Left here in case you want a hard pre-filter again later.

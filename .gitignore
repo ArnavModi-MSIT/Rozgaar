@@ -1,0 +1,36 @@
+# Local configuration and secrets
+.env
+.env.*
+!.env.example
+
+# Personal data — each person's own saved/dismissed jobs, not shared
+db/*.db
+db/*.db-journal
+db/*.db-wal
+db/*.db-shm
+db/*.pt
+
+# Generated at runtime, not source
+debug_log.txt
+*_debug.png
+*.zip
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+.pytest_cache/
+.mypy_cache/
+
+# React dependencies and build output
+ui-react/node_modules/
+ui-react/dist/
+ui-react/*.tsbuildinfo
+
+# Clean source export for a new public repository
+public-release/
+
+# OS noise
+.DS_Store
+Thumbs.db

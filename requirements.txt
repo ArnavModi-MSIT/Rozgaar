@@ -1,0 +1,17 @@
+# Core pipeline (run.py, fetchers/, core/)
+requests
+beautifulsoup4
+pandas
+pymupdf
+python-docx
+sentence-transformers
+
+# ui/app.py — the original Streamlit UI
+streamlit
+
+# api/ — FastAPI backend for the React UI (ui-react/).
+# python-multipart is required for the resume upload endpoint's
+# multipart/form-data parsing; FastAPI raises at import time without it.
+fastapi
+uvicorn
+python-multipart

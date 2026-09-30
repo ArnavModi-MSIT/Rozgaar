@@ -1,0 +1,23 @@
+@import "tailwindcss";
+
+/* Light, warm, low-chrome — matching the tone of the Streamlit app this
+   replaces, and deliberately plain: this is a personal tool for reading
+   job postings, so the type and spacing matter far more than decoration. */
+@theme {
+  --color-ink: #1a1a1a;
+  --color-muted: #6b7280;
+  --color-line: #e5e7eb;
+  --color-accent: #b45309;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  background: #fafaf9;
+  color: var(--color-ink);
+  font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+}
