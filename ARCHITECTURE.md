@@ -28,6 +28,8 @@ flowchart LR
 
 The embedding cache is generated locally. The React client does not fetch career sites itself.
 
+The sidebar also contains two external Internshala search links (`/jobs/salary-6` and `/internships/stipend-10000`). They open the site in a browser tab; those filtered pages are not ingested by the collector.
+
 ## Repository map
 
 | Path | Responsibility |

@@ -8,6 +8,7 @@ A local job discovery prototype for students and early career applicants in Indi
 - Location filtering, duplicate detection, last-observed dates, job classification, skill extraction, and experience extraction.
 - PDF, DOCX, and TXT resume upload (5 MB limit). Matching combines `all-MiniLM-L6-v2` semantic similarity with explicit skill overlap. Resume skills can be corrected in the React sidebar.
 - React interface backed by FastAPI, using the same local database and matching code as the collector.
+- Direct links in the sidebar to the requested Internshala salary-filtered jobs and stipend-filtered internships.
 
 This is a prototype. Relevance scores rank jobs; they are not validated probabilities of being hired or being eligible. The last-observed date does not confirm that a listing is still open. Job sources can change or become unavailable. Application form automation is not implemented.
 
