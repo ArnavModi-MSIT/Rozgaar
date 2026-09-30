@@ -30,20 +30,47 @@ class LinkedInTests(unittest.TestCase):
         self.assertEqual(result[0]["description"], "Build Python pipelines.")
 
     def test_missing_description_is_partial(self):
-        with patch.object(linkedin, "_get", side_effect=[SEARCH_HTML, None]), \
+        with patch.object(linkedin, "_get", side_effect=[SEARCH_HTML, None, None]), \
              patch.object(linkedin.time, "sleep"):
             result = linkedin.collect()
         self.assertEqual(result.status, "partial")
         self.assertEqual(len(result), 1)
         self.assertIn("1 job descriptions unavailable", result.error)
 
-    def test_login_or_empty_search_fails(self):
+    def test_both_search_routes_unavailable_fails(self):
         with patch.object(linkedin, "_get", return_value=None):
-            with self.assertRaisesRegex(RuntimeError, "search unavailable"):
+            with self.assertRaisesRegex(RuntimeError, "searches unavailable"):
                 linkedin.collect()
         with patch.object(linkedin, "_get", return_value="<html></html>"):
-            with self.assertRaisesRegex(RuntimeError, "no job cards"):
+            with self.assertRaisesRegex(RuntimeError, "searches unavailable"):
                 linkedin.collect()
+
+    def test_guest_search_falls_back_to_public_page(self):
+        with patch.object(linkedin, "_get", side_effect=[None, SEARCH_HTML, DETAIL_HTML]) as get, \
+             patch.object(linkedin.time, "sleep"):
+            result = linkedin.collect()
+        self.assertEqual(result.status, "ok")
+        self.assertEqual(len(result), 1)
+        self.assertEqual(get.call_args_list[0].args[0], linkedin.GUEST_SEARCH_URL)
+        self.assertEqual(get.call_args_list[1].args[0], linkedin.SEARCH_URL)
+
+    def test_guest_detail_falls_back_to_public_job_page(self):
+        with patch.object(linkedin, "_get", side_effect=[SEARCH_HTML, None, DETAIL_HTML]) as get, \
+             patch.object(linkedin.time, "sleep"):
+            result = linkedin.collect()
+        self.assertEqual(result.status, "ok")
+        self.assertEqual(result[0]["description"], "Build Python pipelines.")
+        self.assertEqual(get.call_args_list[-1].args[0], result[0]["url"])
+
+    def test_guest_pagination_uses_offsets(self):
+        cards = SEARCH_HTML * 10
+        with patch.object(linkedin, "MAX_JOBS", 20), \
+             patch.object(linkedin, "_get", side_effect=[cards, SEARCH_HTML]) as get:
+            parsed, error = linkedin._search_cards()
+        self.assertEqual(len(parsed), 11)
+        self.assertEqual(error, "")
+        self.assertEqual(get.call_args_list[0].kwargs["params"]["start"], 0)
+        self.assertEqual(get.call_args_list[1].kwargs["params"]["start"], 10)
 
 
 if __name__ == "__main__":

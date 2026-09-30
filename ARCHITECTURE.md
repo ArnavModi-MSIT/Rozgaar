@@ -30,7 +30,7 @@ The embedding cache is generated locally. The React client does not fetch career
 
 The Internshala adapter samples three listing paths: broad internships (up to 30 pages), salary-filtered jobs (up to 10 pages), and stipend-filtered internships (up to 10 pages). It deduplicates source IDs across those searches and reports a partial source result if one search fails. The sidebar also opens the two filtered searches directly in a browser tab.
 
-The LinkedIn adapter uses the logged-out `/jobs/search/` page for India data engineer jobs from the last 24 hours. It takes at most 20 cards and requests each public job page for the description. This is a small sample; if the site redirects to login or stops returning cards, the source fails or reports partial results rather than silently claiming success.
+The LinkedIn adapter uses the logged-out `jobs-guest` search and detail fragments for India data engineer jobs from the last 24 hours. It reads at most two pages of 10 cards and requests each guest description. If a guest route fails, it tries the public search or job page. This is a small sample; if both routes fail, the source fails or reports partial results rather than silently claiming success.
 
 ## Repository map
 

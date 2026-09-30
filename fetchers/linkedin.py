@@ -1,7 +1,8 @@
 """Bounded collection from LinkedIn's logged-out public job pages.
 
-This uses the public /jobs/search/ page, not the member-only
-/jobs/search-results/ route. Page availability may change at any time.
+Guest search and detail fragments are primary. Public job pages are a fallback.
+The member-only /jobs/search-results/ route is not used. Page availability
+may change at any time.
 """
 
 import logging
@@ -18,8 +19,11 @@ from fetchers.standard import strip_html
 log = logging.getLogger("jobbot")
 
 SEARCH_URL = "https://www.linkedin.com/jobs/search/"
+GUEST_SEARCH_URL = "https://www.linkedin.com/jobs-guest/jobs/api/seeMoreJobPostings/search"
+GUEST_DETAIL_URL = "https://www.linkedin.com/jobs-guest/jobs/api/jobPosting/{}"
 SEARCH_PARAMS = {"keywords": "data engineer", "location": "India", "f_TPR": "r86400"}
 MAX_JOBS = 20
+GUEST_PAGE_SIZE = 10
 TIMEOUT = 15
 SESSION = requests.Session()
 SESSION.headers.update({"User-Agent": "Mozilla/5.0"})
@@ -63,13 +67,29 @@ def _description(html):
     return strip_html(element.decode_contents(), max_chars=None) if element else ""
 
 
+def _search_cards():
+    cards = []
+    error = ""
+    for offset in range(0, MAX_JOBS, GUEST_PAGE_SIZE):
+        html = _get(GUEST_SEARCH_URL, params={**SEARCH_PARAMS, "start": offset})
+        page_cards = BeautifulSoup(html, "html.parser").select("li.base-card, div.job-search-card") if html else []
+        if not page_cards:
+            if offset == 0:
+                fallback = _get(SEARCH_URL, params=SEARCH_PARAMS)
+                cards = BeautifulSoup(fallback, "html.parser").select("li.base-card, div.job-search-card") if fallback else []
+                if not cards:
+                    raise RuntimeError("linkedin public and guest searches unavailable")
+            else:
+                error = f"linkedin guest search stopped at offset {offset}"
+            break
+        cards.extend(page_cards)
+        if len(page_cards) < GUEST_PAGE_SIZE:
+            break
+    return cards[:MAX_JOBS], error
+
+
 def collect(deadline=None):
-    html = _get(SEARCH_URL, params=SEARCH_PARAMS)
-    if not html:
-        raise RuntimeError("linkedin public search unavailable")
-    cards = BeautifulSoup(html, "html.parser").select("div.job-search-card")
-    if not cards:
-        raise RuntimeError("linkedin public search returned no job cards")
+    cards, search_error = _search_cards()
 
     jobs = []
     seen = set()
@@ -83,18 +103,18 @@ def collect(deadline=None):
         seen.add(job["source_id"])
         if deadline is not None and time.monotonic() >= deadline:
             return CollectionResult(jobs, status="partial", error="linkedin deadline before all descriptions")
-        detail = _get(job["url"])
-        if not detail:
+        detail = _get(GUEST_DETAIL_URL.format(job["source_id"]))
+        job["description"] = _description(detail) if detail else ""
+        if not job["description"]:
+            fallback = _get(job["url"])
+            job["description"] = _description(fallback) if fallback else ""
+        if not job["description"]:
             failures += 1
-        else:
-            job["description"] = _description(detail)
-            if not job["description"]:
-                failures += 1
         jobs.append(job)
         if len(jobs) < MAX_JOBS:
             time.sleep(0.3)
 
     if not jobs:
         raise RuntimeError("linkedin public search had no parsable cards")
-    return CollectionResult(jobs, status="partial" if failures else "ok",
-                            error=f"{failures} job descriptions unavailable" if failures else "")
+    reasons = [reason for reason in (search_error, f"{failures} job descriptions unavailable" if failures else "") if reason]
+    return CollectionResult(jobs, status="partial" if reasons else "ok", error="; ".join(reasons))
