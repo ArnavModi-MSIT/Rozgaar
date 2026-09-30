@@ -216,7 +216,8 @@ def run():
                                  round(time.monotonic() - platform_start, 2),
                                  status="failed", error=str(e)[:300])
                     continue
-                platforms_run.append(platform_name)
+                if getattr(jobs, "status", "ok") != "skipped":
+                    platforms_run.append(platform_name)
                 for job in jobs:
                     fetched += 1
                     p_fetched += 1

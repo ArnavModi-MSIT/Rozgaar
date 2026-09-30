@@ -42,7 +42,7 @@ For a per-platform health report based on recent collection history:
 python stats.py --health
 ```
 
-It distinguishes failed or partial fetches from genuinely empty results and flags large drops against earlier successful runs. It does not verify whether individual saved jobs are still open.
+It distinguishes failed or partial fetches from genuinely empty results, labels unconfigured Workable as such, and flags large drops against earlier successful runs. The baseline appears after three earlier successful nonzero runs for a platform. It does not verify whether individual saved jobs are still open.
 
 ## Local and offline use
 

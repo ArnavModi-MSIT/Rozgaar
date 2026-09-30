@@ -64,7 +64,7 @@ Each collector returns job dictionaries with the common fields below. The collec
 }
 ```
 
-The `standard` adapter handles Greenhouse, Lever, and Ashby. Other adapters cover Oracle, Workday, SmartRecruiters, SuccessFactors, Phenom, iCIMS, Eightfold, Workable, Unstop, Internshala, Google Careers, Amazon, and several company-specific sites. Most use public JSON endpoints; some parse HTML. An adapter must normalize the same fields even if its source uses different names. `config.WORKABLE` is currently empty, so its registered collector has no configured boards.
+The `standard` adapter handles Greenhouse, Lever, and Ashby. Other adapters cover Oracle, Workday, SmartRecruiters, SuccessFactors, Phenom, iCIMS, Eightfold, Workable, Unstop, Internshala, Google Careers, Amazon, and several company-specific sites. Most use public JSON endpoints; some parse HTML. An adapter must normalize the same fields even if its source uses different names. `config.WORKABLE` is currently empty, so the registered Workable collector is reported as skipped rather than as a successful zero-job fetch.
 
 ### What `python run.py` does
 

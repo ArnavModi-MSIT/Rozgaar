@@ -1,6 +1,9 @@
 import sqlite3
 import unittest
+from unittest.mock import patch
 
+import config
+from core.collector import PLATFORMS
 from core.source_health import summarize
 from core.storage import init_db, record_stats
 
@@ -45,6 +48,17 @@ class SourceHealthTests(unittest.TestCase):
         columns = {row[1] for row in old.execute("PRAGMA table_info(run_stats)")}
         self.assertIn("error", columns)
         old.close()
+
+    def test_unconfigured_workable_is_skipped(self):
+        collect_workable = next(fn for name, fn in PLATFORMS if name == "workable")
+        with patch.object(config, "WORKABLE", []):
+            result = collect_workable(None)
+        self.assertEqual(result.status, "skipped")
+        self.assertEqual(result.error, "no Workable boards configured")
+
+        record_stats(self.conn, 1, "workable", 0, 0, 0, 0.0, status="ok")
+        rows = self.conn.execute("SELECT * FROM run_stats").fetchall()
+        self.assertEqual(summarize(rows, disabled_platforms={"workable"})[0]["health"], "not configured")
 
 
 if __name__ == "__main__":

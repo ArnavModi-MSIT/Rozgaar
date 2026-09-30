@@ -14,6 +14,7 @@ import sys
 from datetime import datetime
 from pathlib import Path
 
+import config
 from core.source_health import summarize
 
 DB_PATH = "db/jobs.db"
@@ -48,10 +49,14 @@ if "--health" in sys.argv:
             print("No run_stats recorded yet — run python run.py at least once first.")
         else:
             print("Fetch health by platform (baseline: up to 7 earlier successful nonzero runs)")
-            for item in summarize(rows):
+            disabled = {"workable"} if not config.WORKABLE else set()
+            for item in summarize(rows, disabled_platforms=disabled):
                 latest = item["latest"]
                 baseline = f"{item['baseline']:.0f}" if item["baseline"] is not None else "—"
-                last_ok = fmt_ts(item["last_success"]) if item["last_success"] else "never"
+                last_ok = (
+                    "n/a" if item["health"] == "not configured"
+                    else fmt_ts(item["last_success"]) if item["last_success"] else "never"
+                )
                 print(
                     f"{item['platform']:<18} {item['health']:<18} "
                     f"fetched={latest['jobs_fetched']:<6} saved={latest['jobs_saved']:<5} "

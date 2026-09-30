@@ -9,6 +9,7 @@ from concurrent.futures import ThreadPoolExecutor
 
 import config
 from fetchers import ainterviews, amazon, apple, atlassian, deutsche_bank, eightfold, expedia, goldman_sachs, google_careers, icims, indiamart, internshala, oracle, phenom, smartrecruiters, standard, successfactors, unstop, workable, workday
+from fetchers.result import CollectionResult
 log = logging.getLogger("jobbot")
 
 # Ordered by historical yield: standard (Greenhouse/Lever/Ashby, incl. Paytm)
@@ -23,7 +24,7 @@ PLATFORMS = [
     ("icims", lambda deadline: icims.collect(config.ICIMS, deadline=deadline)),
     ("smartrecruiters", lambda deadline: smartrecruiters.collect(config.SMARTRECRUITERS, deadline=deadline)),
     ("successfactors", lambda deadline: successfactors.collect(config.SUCCESSFACTORS, deadline=deadline)),
-    ("workable", lambda deadline: workable.collect(config.WORKABLE)),
+    ("workable", lambda deadline: workable.collect(config.WORKABLE) if config.WORKABLE else CollectionResult(status="skipped", error="no Workable boards configured")),
     ("phenom", lambda deadline: phenom.collect(config.PHENOM, deadline=deadline)),
     ("workday", lambda deadline: workday.collect(config.WORKDAY, deadline=deadline)),
     ("google_careers", lambda deadline: google_careers.collect(config.GOOGLE_CAREERS, deadline=deadline)),

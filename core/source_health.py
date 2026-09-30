@@ -3,7 +3,7 @@
 from collections import defaultdict
 
 
-def summarize(rows):
+def summarize(rows, disabled_platforms=()):
     """Return one health summary per platform from newest-first run_stats rows."""
     groups = defaultdict(list)
     for row in rows:
@@ -20,7 +20,9 @@ def summarize(rows):
         baseline = sum(prior_success) / len(prior_success) if len(prior_success) >= 3 else None
         latest_success = next((row["timestamp"] for row in history if (row["status"] or "ok") == "ok"), None)
 
-        if latest["status"] in {"failed", "partial"}:
+        if platform in disabled_platforms:
+            health = "not configured"
+        elif latest["status"] in {"failed", "partial", "skipped"}:
             health = latest["status"]
         elif latest["jobs_fetched"] == 0:
             health = "zero after history" if baseline is not None and baseline >= 10 else "zero"
