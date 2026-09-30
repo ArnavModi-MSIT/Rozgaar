@@ -1,26 +1,13 @@
 """
-Fetcher for Internshala (internshala.com) — no API at all, but genuinely
-clean server-rendered HTML (confirmed: no XHR/fetch call ever fires for
-the listing itself, real `<div class="individual_internship">` cards are
-already in the raw response). Paginated via
-  GET https://internshala.com/internships/page-N/
+Fetch public Internshala listing cards from three bounded searches:
+  /internships/                         existing broad sample
+  /jobs/salary-6/                       requested salary-filtered jobs
+  /internships/stipend-10000/           requested stipend-filtered internships
 
-No filter is needed for "is this fresher-targeted" — the entire site is
-internships only, by definition. A per-category URL path DOES exist on
-the site (e.g. "Internships by Profile" -> data-analyst-internship/) but
-was checked and found NOT to reliably scope results (a live check
-against .../data-analyst-internship/ returned "Operations" as the top
-two titles, not data-analyst-relevant postings) — left unscoped instead,
-same "fetch broadly, let the existing TARGET_ROLE_RE relevance gate in
-config.py do the real filtering downstream" pattern most fetchers in
-this project already use.
-
-~7,220 total internships at last check — MAX_PAGES caps this at a
-sample (see its own comment), not an attempt at the full pool; the site
-gives no reliable way to pre-filter to only the relevant slice, and
-crawling all 7,220 every run would be excessive. Full description text
-is already in the list response (`div.about_job div.text`) — no
-separate detail-fetch needed.
+Each search uses its own page-N path and shares one source-ID dedup set.
+The HTML contains `div.individual_internship` cards for both jobs and
+internships. This is a bounded sample, not a complete crawl; the live
+search pages can change independently of this parser.
 """
 
 import logging
@@ -30,6 +17,7 @@ import requests
 from bs4 import BeautifulSoup
 
 from fetchers.standard import strip_html
+from fetchers.result import CollectionResult
 
 log = logging.getLogger("jobbot")
 
@@ -38,8 +26,13 @@ TIMEOUT = 15
 RETRIES = 3
 RETRY_BACKOFF = (1, 2, 4)
 MAX_PAGES = 30  # ~40-50 cards/page -> ~1200-1500 postings sampled per
-# run, a deliberate bounded sample out of ~7,220 total (see module
-# docstring) — no reliable server-side relevance filter exists here.
+# run for the existing broad internship search.
+FILTERED_MAX_PAGES = 10  # limit extra requests to each requested search
+SEARCHES = (
+    ("internships", MAX_PAGES),
+    ("jobs/salary-6", FILTERED_MAX_PAGES),
+    ("internships/stipend-10000", FILTERED_MAX_PAGES),
+)
 
 SESSION = requests.Session()
 SESSION.headers.update({
@@ -50,8 +43,8 @@ SESSION.headers.update({
 })
 
 
-def _get(page):
-    url = f"{BASE}/internships/" if page == 1 else f"{BASE}/internships/page-{page}/"
+def _get(search_path, page):
+    url = f"{BASE}/{search_path}/" if page == 1 else f"{BASE}/{search_path}/page-{page}/"
     for attempt in range(RETRIES):
         try:
             r = SESSION.get(url, timeout=TIMEOUT)
@@ -96,34 +89,62 @@ def _parse_card(card):
     }
 
 
-def collect(deadline=None):
+def _fetch_search(search_path, max_pages, seen_ids, deadline=None):
     jobs = []
-    seen_ids = set()
+    seen_on_search = set()
     page = 1
-    while page <= MAX_PAGES:
+    incomplete_reason = ""
+    while page <= max_pages:
         if deadline is not None and time.monotonic() >= deadline:
+            incomplete_reason = f"{search_path}: deadline before page {page}"
             break
-        html = _get(page)
+        html = _get(search_path, page)
         if not html:
+            incomplete_reason = f"{search_path}: page {page} request failed"
             break
         soup = BeautifulSoup(html, "html.parser")
         cards = soup.find_all("div", class_="individual_internship")
         if not cards:
+            if page == 1:
+                incomplete_reason = f"{search_path}: no listing cards on page 1"
             break
 
         new_on_page = 0
         for card in cards:
             job = _parse_card(card)
-            if not job["title"] or job["source_id"] in seen_ids:
+            if not job["title"] or not job["url"] or job["source_id"] in seen_on_search:
                 continue
-            seen_ids.add(job["source_id"])
-            jobs.append(job)
+            seen_on_search.add(job["source_id"])
             new_on_page += 1
+            if job["source_id"] not in seen_ids:
+                seen_ids.add(job["source_id"])
+                jobs.append(job)
         if new_on_page == 0:
             break
         page += 1
         time.sleep(0.3)
+    if incomplete_reason:
+        if not seen_on_search:
+            raise RuntimeError(incomplete_reason)
+        return CollectionResult(jobs, status="partial", error=incomplete_reason)
+    return CollectionResult(jobs)
 
-    if not jobs:
-        raise RuntimeError("internshala fetcher: no jobs fetched")
-    return jobs
+
+def collect(deadline=None):
+    jobs = []
+    seen_ids = set()
+    reasons = []
+    failures = 0
+    for search_path, max_pages in SEARCHES:
+        try:
+            result = _fetch_search(search_path, max_pages, seen_ids, deadline=deadline)
+            jobs.extend(result)
+            if result.status == "partial":
+                reasons.append(result.error)
+        except Exception as exc:
+            log.exception("internshala '%s' failed: %s", search_path, exc)
+            failures += 1
+            reasons.append(str(exc))
+    if failures == len(SEARCHES):
+        raise RuntimeError("internshala fetcher: all searches failed")
+    return CollectionResult(jobs, status="partial" if reasons else "ok", error="; ".join(reasons))
