@@ -9,7 +9,7 @@ Job Intel is a **local, single-user** application. It has two separate execution
 1. `python run.py` collects and processes postings, then writes `db/jobs.db`.
 2. FastAPI reads that database and serves a React UI. The user may upload a resume to rank the saved postings.
 
-There is no background scheduler, hosted service, login system, application submission bot, or cloud database. Run commands from the repository root because the Python code uses relative `db/` paths.
+There is no background scheduler, hosted service, login system, application submission bot, or cloud database. Run commands from the repository root because the Python code uses relative `db/` paths. Collection is the network step; parsing, matching, and the UI run locally. To enforce offline mode, download the model with `python scripts/download_model.py` once, then set `JOB_INTEL_OFFLINE=1`. Normal collection refuses to run in that mode; `--process-only` remains available.
 
 ```mermaid
 flowchart LR
@@ -71,7 +71,7 @@ The `standard` adapter handles Greenhouse, Lever, and Ashby. Other adapters cove
 1. `init_db()` creates or migrates SQLite tables. The database directory is created at `run.py` import time.
 2. `run.py` preloads existing IDs and repost keys from **all** saved jobs, including dismissed ones.
 3. It submits every entry in `core.collector.PLATFORMS` to a thread pool with one shared deadline (`RUN_DEADLINE_SECONDS`, default 600 seconds). Network fetching overlaps; SQLite writes happen in the main thread.
-4. For each returned posting, it drops locations confidently outside India. Unknown locations are kept. It skips an existing `job_id`, then checks the repost key, then inserts new jobs.
+4. For each returned posting, it drops locations confidently outside India. Unknown locations are kept. It updates `last_seen` for an existing `job_id`, then checks the repost key for new IDs, then inserts new jobs. Missing postings are never automatically marked closed.
 5. It writes one `run_stats` row per platform. A raised platform error receives `status='failed'`; other platforms continue. The legacy `jobs_matched` statistic currently equals `jobs_fetched` and is **not** a count of resume matches.
 6. `process_backlog()` fills missing category, skills, and experience fields. The three processors have separate error handling, so a classification failure does not prevent skill or experience extraction.
 7. It removes rows whose `first_seen` is older than 365 days. This is age-based cleanup, not verification that a posting is still open.
@@ -92,7 +92,7 @@ The stable ID is `company:source_id` when the source provides an ID; otherwise i
 
 | Table | Important fields | Purpose |
 | --- | --- | --- |
-| `jobs` | `id`, `company`, `title`, `location`, `url`, `description`, `source`, `first_seen`, `dismissed`, `category`, `skills`, `experience_years` | Saved postings and derived fields. The `score` column is legacy and not the current resume match. |
+| `jobs` | `id`, `company`, `title`, `location`, `url`, `description`, `source`, `first_seen`, `last_seen`, `dismissed`, `category`, `skills`, `experience_years` | Saved postings and derived fields. `last_seen` is the latest observation of an exact source ID, not confirmed open status. The `score` column is legacy and not the current resume match. |
 | `run_stats` | `run_id`, `timestamp`, `platform`, fetched/saved counts, runtime, `status` | Per-platform collection history. |
 | `custom_skills` | `skill` | User-added terms used by the regex skill extractor. |
 | `resume_skill_overrides` | `resume_key`, `skills` | Corrected skill set keyed by SHA-256 of the uploaded file bytes. |
@@ -101,14 +101,14 @@ The stable ID is `company:source_id` when the source provides an ID; otherwise i
 
 ## Resume upload and ranking
 
-1. React sends a PDF, DOCX, or TXT file to `POST /api/resume` as multipart form data.
+1. React sends a PDF, DOCX, or TXT file to `POST /api/resume` as multipart form data. The API rejects unsupported extensions and files larger than 5 MB.
 2. `api/main.py` hashes the file bytes and adapts FastAPI's `UploadFile` to the file-like interface of `core/resume_text.py`.
 3. The parser uses PyMuPDF for PDF text, `python-docx` for paragraphs and table cells, and UTF-8 decoding for TXT. Empty extracted text is rejected. There is no OCR for scanned PDFs.
 4. The API extracts recognized resume skills. If `resume_skill_overrides` has a saved set for the file hash, that corrected set takes precedence.
 5. `api/data.py:set_resume()` calls `rescore()`. It loads or incrementally computes job embeddings and calls `rank_by_resume()`.
 6. Scores are held in memory as `{job_id: match_pct}` and included in later `/api/jobs` responses.
 
-`core/embeddings.py` lazily loads one `all-MiniLM-L6-v2` model for classification and matching within each Python process. Job embeddings represent title plus description (capped at 2,500 characters). The resume input is capped at 5,000 characters, and the model sequence limit is set to 512 tokens. Later text can still be truncated by the tokenizer. Each cached job embedding is keyed by job ID plus a content hash, so unchanged jobs do not need to be re-embedded; the cache is saved with PyTorch under `db/`.
+`core/embeddings.py` lazily loads one `all-MiniLM-L6-v2` model for classification and matching within each Python process. It prefers the project-local `models/all-MiniLM-L6-v2`; outside strict offline mode it can still download the model on first use if that directory is absent. Job embeddings represent title plus description (capped at 2,500 characters). The resume input is capped at 5,000 characters, and the model sequence limit is set to 512 tokens. Later text can still be truncated by the tokenizer. Each cached job embedding is keyed by job ID plus a content hash, so unchanged jobs do not need to be re-embedded; the cache is saved with PyTorch under `db/`.
 
 The current match formula is:
 
@@ -122,7 +122,7 @@ score = (1 - skill_weight) * semantic_pct + skill_weight * skill_pct
 
 If a job has no recognized skills, it uses semantic score alone. If neither its title matches `config.TARGET_ROLE_RE` nor its skill overlap reaches 40%, the score is capped at 10. The values are configured in `core/matcher.py`; they are heuristics, not calibrated probabilities of eligibility or hiring. The job category classifier uses embeddings too, but it is a separate step and its category label is not the match percentage.
 
-The API exposes `PUT /api/resume/skills` and custom-skill endpoints. **The current React UI does not expose controls for editing skills or custom keywords**; `ui-react/src/api.ts` has a helper for resume skill updates, but no component calls it. Do not claim that the editor exists in the browser yet.
+The React sidebar calls `PUT /api/resume/skills` to save corrections to the current resume and rescore. The API also exposes custom-skill endpoints, but the React UI does not yet manage the global custom-skill vocabulary. Existing job skill lists require `--reprocess-skills` after that vocabulary changes.
 
 ## HTTP and browser behavior
 
@@ -139,7 +139,7 @@ The API exposes `PUT /api/resume/skills` and custom-skill endpoints. **The curre
 
 The API reads non-dismissed jobs from SQLite into a Pandas DataFrame, computes derived location flags and the `is_senior` flag, then serializes list rows. `ui-react/src/types.ts` manually mirrors those JSON fields. Update both sides when the API contract changes.
 
-The React app fetches the full list once per refresh and filters in browser memory. Its default filter hides jobs with a known requirement of **1 or more years**; unknown experience (`-1`) stays visible. Location text is a substring search; Remote/NCR/India checkboxes combine with OR. With a resume loaded it hides scores below 20 and sorts by score; otherwise it sorts by `first_seen`. It displays 40 rows at first and reveals more in batches. Opening a job link can dismiss it automatically because that toggle defaults to on; dismissal is stored in SQLite. The React UI does not currently distinguish “applied” from “not interested.”
+The React app fetches the full list once per refresh and filters in browser memory. Its default filter hides jobs with a known requirement of **1 or more years**; unknown experience (`-1`) stays visible. Location text is a substring search; Remote/NCR/India checkboxes combine with OR. With a resume loaded it hides scores below 20 and sorts by score; otherwise it sorts by `first_seen`. It displays 40 rows at first and reveals more in batches. Opening a job link dismisses it only when the optional auto-remove toggle is enabled; the toggle defaults to off. Dismissal is stored in SQLite. The React UI does not currently distinguish “applied” from “not interested.”
 
 In development, Vite on port 5173 proxies `/api` to FastAPI on `127.0.0.1:8000`. After `npm run build`, `api/main.py` serves the `ui-react/dist` index and assets from the API origin. The built directory is generated and ignored by Git.
 
@@ -162,7 +162,7 @@ The repository currently has no automated test suite or CI. `python -m compileal
 
 ## Important limits
 
-- A stored posting is not guaranteed to be open today; there is no `last_seen` or confirmed-closed workflow.
+- A stored posting is not guaranteed to be open today; `last_seen` records an observation, but there is no confirmed-closed workflow. Old rows migrated from earlier versions start with `last_seen = first_seen`.
 - Save-time filtering only rejects confidently non-India locations. Unknown locations are kept and treated as potentially India-relevant in the UI.
 - Unstop currently fetches open jobs and internships broadly; it does not reproduce student, course, specialization, or passing-year filters from a search URL.
 - Resume scoring and category assignment have no labeled evaluation in this repo. Match percentages are ranking heuristics.

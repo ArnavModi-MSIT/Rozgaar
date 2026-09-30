@@ -18,6 +18,7 @@ per-session store.
 import sqlite3
 import threading
 import time
+from pathlib import Path
 
 import pandas as pd
 
@@ -48,6 +49,7 @@ _resume = {"key": None, "text": "", "skills": set(), "scores": {}}
 
 
 def connect():
+    Path(DB_PATH).parent.mkdir(parents=True, exist_ok=True)
     conn = sqlite3.connect(DB_PATH)
     return conn
 
@@ -67,6 +69,7 @@ def _load_jobs_df():
         return df
 
     df["first_seen"] = pd.to_datetime(df["first_seen"], unit="s")
+    df["last_seen"] = pd.to_datetime(df["last_seen"], unit="s")
     df["country"] = df["location"].apply(parse_country)
     df["city"] = df["location"].apply(parse_city)
     df["is_remote"] = df["location"].apply(is_remote)
@@ -182,6 +185,7 @@ def job_list_payload(df):
             "skills": [s for s in (r.skills or "").split(",") if s],
             "experience_years": int(r.experience_years),
             "first_seen": r.first_seen.strftime("%Y-%m-%d"),
+            "last_seen": r.last_seen.strftime("%Y-%m-%d"),
             "is_remote": bool(r.is_remote),
             "is_ncr": bool(r.is_ncr),
             "is_india": bool(r.is_india),

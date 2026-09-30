@@ -16,6 +16,8 @@ export interface Job {
    *  0 is a real, meaningful value: explicitly fresher-friendly. */
   experience_years: number;
   first_seen: string;
+  /** Last observed in a collector result; does not prove the job is still open. */
+  last_seen: string;
   is_remote: boolean;
   is_ncr: boolean;
   is_india: boolean;

@@ -1,4 +1,4 @@
-import { useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { Filters, ResumeState } from "../types";
 
 interface Props {
@@ -7,6 +7,7 @@ interface Props {
   resume: ResumeState;
   onUpload: (file: File) => void;
   onClearResume: () => void;
+  onUpdateResumeSkills: (skills: string[]) => Promise<void>;
   resumeBusy: boolean;
   resumeError: string | null;
   autoRemove: boolean;
@@ -49,6 +50,7 @@ export default function Sidebar({
   resume,
   onUpload,
   onClearResume,
+  onUpdateResumeSkills,
   resumeBusy,
   resumeError,
   autoRemove,
@@ -58,6 +60,17 @@ export default function Sidebar({
   minMatch,
 }: Props) {
   const fileRef = useRef<HTMLInputElement>(null);
+  const [draftSkills, setDraftSkills] = useState<string[]>([]);
+  const [newSkill, setNewSkill] = useState("");
+  useEffect(() => setDraftSkills(resume.skills), [resume.skills]);
+
+  const addSkill = () => {
+    const skill = newSkill.trim().toLowerCase();
+    if (skill && !draftSkills.includes(skill)) {
+      setDraftSkills((current) => [...current, skill].sort());
+    }
+    setNewSkill("");
+  };
 
   return (
     <aside className="w-72 shrink-0 border-r border-gray-200 bg-white h-screen overflow-y-auto p-5 space-y-6">
@@ -71,8 +84,43 @@ export default function Sidebar({
               Loaded — {resume.word_count} words
             </p>
             <p className="text-xs text-green-700 mt-0.5">
-              {resume.skills.length} skills detected
+              {resume.skills.length} resume skills
             </p>
+            <div className="mt-3 border-t border-green-200 pt-2">
+              <p className="text-xs font-medium text-green-900 mb-1">Correct extracted skills</p>
+              <div className="flex flex-wrap gap-1">
+                {draftSkills.map((skill) => (
+                  <button
+                    key={skill}
+                    type="button"
+                    disabled={resumeBusy}
+                    onClick={() => setDraftSkills((current) => current.filter((s) => s !== skill))}
+                    title={`Remove ${skill}`}
+                    className="rounded bg-white border border-green-200 px-1.5 py-0.5 text-xs hover:bg-red-50"
+                  >
+                    {skill} ×
+                  </button>
+                ))}
+              </div>
+              <form onSubmit={(e) => { e.preventDefault(); addSkill(); }} className="flex gap-1 mt-2">
+                <input
+                  value={newSkill}
+                  onChange={(e) => setNewSkill(e.target.value)}
+                  placeholder="Add skill"
+                  aria-label="Add resume skill"
+                  className="min-w-0 w-full rounded border border-green-200 px-2 py-1 text-xs"
+                />
+                <button type="submit" className="text-xs underline">Add</button>
+              </form>
+              <button
+                type="button"
+                disabled={resumeBusy || draftSkills.join("|") === resume.skills.join("|")}
+                onClick={() => { void onUpdateResumeSkills(draftSkills).catch(() => {}); }}
+                className="mt-2 text-xs font-medium text-green-900 underline disabled:opacity-40"
+              >
+                {resumeBusy ? "Rescoring…" : "Save skills and rescore"}
+              </button>
+            </div>
             <button
               onClick={onClearResume}
               className="mt-2 text-xs text-gray-600 underline hover:text-gray-900"
@@ -167,7 +215,7 @@ export default function Sidebar({
         </h2>
         <Check
           label="Remove a job when I open it"
-          hint="Opening the link marks it applied / not interested"
+          hint="Optional: opening the link permanently hides it. Default is off."
           checked={autoRemove}
           onChange={onAutoRemoveChange}
         />

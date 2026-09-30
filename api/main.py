@@ -25,6 +25,7 @@ then the client applies location and experience filters in memory.
 
 import hashlib
 import logging
+from pathlib import Path
 
 from fastapi import FastAPI, HTTPException, UploadFile, File
 from fastapi.middleware.cors import CORSMiddleware
@@ -78,9 +79,9 @@ class CustomSkillRequest(BaseModel):
 class _UploadAdapter:
     """Adapt FastAPI UploadFile to the file-like interface extract_text expects."""
 
-    def __init__(self, upload: UploadFile):
-        self.name = upload.filename or ""
-        self._data = upload.file.read()
+    def __init__(self, name: str, content: bytes):
+        self.name = name
+        self._data = content
 
     def seek(self, pos):
         return None  # already fully read into memory
@@ -141,7 +142,14 @@ def dismiss_job(job_id: str):
 
 @app.post("/api/resume")
 async def upload_resume(file: UploadFile = File(...)):
-    adapter = _UploadAdapter(file)
+    name = file.filename or ""
+    if Path(name).suffix.lower() not in {".pdf", ".docx", ".txt"}:
+        raise HTTPException(status_code=400, detail="upload a PDF, DOCX, or TXT resume")
+    max_bytes = 5 * 1024 * 1024
+    content = await file.read(max_bytes + 1)
+    if len(content) > max_bytes:
+        raise HTTPException(status_code=413, detail="resume exceeds the 5 MB limit")
+    adapter = _UploadAdapter(name, content)
     resume_key = hashlib.sha256(adapter.read()).hexdigest()
     try:
         text = extract_text(adapter)

@@ -55,7 +55,7 @@ from core.storage import (
     cleanup_old, delete_by_source, get_custom_skills,
     get_oracle_jobs_missing_description, get_unprocessed,
     get_workday_jobs_missing_description, init_db, job_id,
-    load_dedup_keys, load_existing_ids, prune_non_india, record_stats,
+    load_dedup_keys, load_existing_ids, mark_observed, prune_non_india, record_stats,
     reset_experience_years, reset_skills, save_job, update_categories,
     update_descriptions, update_experience, update_skills,
 )
@@ -161,6 +161,8 @@ def process_backlog(conn):
 
 
 def run():
+    if os.environ.get("JOB_INTEL_OFFLINE") == "1":
+        raise RuntimeError("JOB_INTEL_OFFLINE=1 disables collection; use --process-only for saved jobs")
     conn = sqlite3.connect(DB_PATH)
     try:
         init_db(conn)
@@ -222,6 +224,7 @@ def run():
                         continue
                     jid = job_id(job)
                     if jid in existing_ids:
+                        mark_observed(conn, jid, int(time.time()))
                         skipped += 1
                         continue
                     key = dedup_key(job["company"], job["title"], job.get("location"), job.get("description"))
@@ -276,6 +279,10 @@ def run():
 
 if __name__ == "__main__":
     import sys
+    if os.environ.get("JOB_INTEL_OFFLINE") == "1" and any(
+        arg.startswith("--refetch-") for arg in sys.argv[1:]
+    ):
+        raise RuntimeError("JOB_INTEL_OFFLINE=1 disables source refetch commands")
     # Windows' default console encoding (cp1252) can't print some Unicode
     # characters in job titles (narrow no-break spaces, en dashes, etc.).
     if hasattr(sys.stdout, "reconfigure"):

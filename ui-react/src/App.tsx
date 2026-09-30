@@ -36,7 +36,7 @@ export default function App() {
   });
   const [resumeBusy, setResumeBusy] = useState(false);
   const [resumeError, setResumeError] = useState<string | null>(null);
-  const [autoRemove, setAutoRemove] = useState(true);
+  const [autoRemove, setAutoRemove] = useState(false);
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
 
   const refresh = useCallback(async () => {
@@ -173,6 +173,20 @@ export default function App() {
     await refresh();
   }, [refresh]);
 
+  const updateResumeSkills = useCallback(async (skills: string[]) => {
+    setResumeBusy(true);
+    setResumeError(null);
+    try {
+      await api.updateResumeSkills(skills);
+      await refresh();
+    } catch (e) {
+      setResumeError(e instanceof Error ? e.message : "couldn't save skills");
+      throw e;
+    } finally {
+      setResumeBusy(false);
+    }
+  }, [refresh]);
+
   const companies = useMemo(
     () => new Set(filtered.map((j) => j.company)).size,
     [filtered],
@@ -186,6 +200,7 @@ export default function App() {
         resume={resume}
         onUpload={uploadResume}
         onClearResume={clearResume}
+        onUpdateResumeSkills={updateResumeSkills}
         resumeBusy={resumeBusy}
         resumeError={resumeError}
         autoRemove={autoRemove}

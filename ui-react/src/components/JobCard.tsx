@@ -48,10 +48,8 @@ export default function JobCard({
     }
   }
 
-  // This click is detectable, so
-  // opening a job can remove it in one action with no page reload and no
-  // lost resume. The anchor still navigates natively (new tab) — the
-  // dismissal is fired alongside it, not instead of it.
+  // Opening a link does not imply an application. Only the optional
+  // auto-remove setting dismisses it; the anchor still opens a new tab.
   function handleOpen() {
     if (autoRemove) onDismiss(job.id);
   }
@@ -87,7 +85,7 @@ export default function JobCard({
             {job.is_ncr && (
               <span className="rounded bg-amber-50 text-amber-800 px-1.5 py-0.5">NCR</span>
             )}
-            <span>{job.first_seen}</span>
+            <span title="Last observed by a collector; verify the posting is still open before applying">Seen {job.last_seen}</span>
           </div>
 
           {resumeLoaded && skillPct !== null && (
@@ -155,12 +153,12 @@ export default function JobCard({
         </div>
 
         {job.match_pct !== null && (
-          <div className="shrink-0 text-right">
+          <div className="shrink-0 text-right" title="Ranking score based on resume text and skills. It is not an eligibility or hiring probability.">
             <div className="text-2xl font-semibold tabular-nums">
               {job.match_pct.toFixed(0)}
             </div>
             <div className="text-[10px] uppercase tracking-wide text-gray-400">
-              Match
+              Relevance score
             </div>
           </div>
         )}

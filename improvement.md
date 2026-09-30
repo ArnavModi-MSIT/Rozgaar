@@ -6,10 +6,10 @@ This file lists proposed work for the current local, single-user prototype. Item
 
 ### Check whether a job is still open
 
-The database records when a job was first seen, and old rows are removed after 365 days. That does not tell us whether an employer closed a posting yesterday.
+The database now records when a job was first seen and when the same source ID was observed again. Old rows are removed after 365 days. These dates do not tell us whether an employer closed a posting yesterday.
 
-- Add `last_seen`, `last_checked`, and an `open`, `closed`, or `unknown` status to each job.
-- Update `last_seen` whenever a collector sees the same source ID again. Mark a job closed only after a reliable source signal or repeated absence, since a failed fetch must not close every job from that source.
+- Add `last_checked` and an `open`, `closed`, or `unknown` status to each job.
+- Continue updating `last_seen` for exact source IDs. Mark a job closed only after a reliable source signal or repeated absence from a proven-complete source, since a failed or partial fetch must not close every job from that source.
 - Show the check date and status in the React UI. Let the user open the original posting before applying.
 
 **Done when:** a closed sample posting disappears from the default list, while a temporary source failure leaves existing postings marked unknown rather than closed.
@@ -50,7 +50,7 @@ The current [`core/matcher.py`](core/matcher.py) blends semantic similarity and 
 
 - Detect empty or very short extraction and show a clear message; consider OCR only for scanned files.
 - Compare whole-resume matching with section-level embeddings for skills, experience, and projects.
-- Add a React skill editor using the existing `PUT /api/resume/skills` endpoint so users can correct extraction mistakes.
+- Improve the current React resume skill editor with suggestions from the global skill vocabulary and clearer feedback when a correction changes job ranking.
 
 **Done when:** a scanned or long sample resume has an understandable result, and section-level matching improves the labeled evaluation before replacing the current method.
 
@@ -64,9 +64,9 @@ The UI can dismiss jobs. Add optional `saved`, `applied`, and `interview` states
 
 ### Improve cold-start feedback and privacy
 
-First-time embedding of a large job pool can take time. Show progress and explain when the model is downloading or new jobs are being embedded. Put reasonable size limits on resume uploads and avoid logging resume text. The current FastAPI resume state is shared process memory, so keep the server on localhost until per-user state and authentication exist.
+First-time embedding of a large job pool can take time. Show progress and explain when the model is downloading or new jobs are being embedded. The API now rejects resume files over 5 MB; consider a text-length limit and better file validation if larger inputs become common. Avoid logging resume text. The current FastAPI resume state is shared process memory, so keep the server on localhost until per-user state and authentication exist.
 
-**Done when:** users see useful progress during a cold start, oversized uploads fail clearly, and resume contents do not appear in logs.
+**Done when:** users see useful progress during a cold start, malformed uploads fail clearly, and resume contents do not appear in logs.
 
 ### Add automated checks
 

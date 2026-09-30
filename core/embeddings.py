@@ -7,10 +7,12 @@ process.
 """
 
 import os
+from pathlib import Path
 
 from sentence_transformers import SentenceTransformer
 
 _model = None
+MODEL_DIR = Path(__file__).resolve().parents[1] / "models" / "all-MiniLM-L6-v2"
 
 
 def get_model():
@@ -34,7 +36,21 @@ def get_model():
             num_threads = int(configured) if configured else min(8, cpu_count)
             torch.set_num_threads(num_threads)
 
-        _model = SentenceTransformer("all-MiniLM-L6-v2")
+        if MODEL_DIR.is_dir():
+            model_source = str(MODEL_DIR)
+        elif os.environ.get("JOB_INTEL_OFFLINE") == "1":
+            raise RuntimeError(
+                f"Local embedding model missing at {MODEL_DIR}. "
+                "Run `python scripts/download_model.py` while online first."
+            )
+        else:
+            # Backward-compatible first use; the explicit setup script saves
+            # a project-local copy for later offline use.
+            model_source = "sentence-transformers/all-MiniLM-L6-v2"
+        if os.environ.get("JOB_INTEL_OFFLINE") == "1":
+            os.environ["HF_HUB_OFFLINE"] = "1"
+            os.environ["TRANSFORMERS_OFFLINE"] = "1"
+        _model = SentenceTransformer(model_source)
         # Default max_seq_length is 256 tokens (~1000-1500 chars) — well
         # below the char-level caps used elsewhere (resume: 5000 chars,
         # job text: 2500 chars in core/matcher.py). Everything past the

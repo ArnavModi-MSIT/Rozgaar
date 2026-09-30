@@ -209,10 +209,10 @@ def load_embedding_cache(path=DEFAULT_EMBEDDINGS_CACHE_PATH):
     if not os.path.exists(path):
         return {}
     try:
-        # weights_only=False: this cache stores (hash_string, tensor)
-        # tuples inside a dict, not just tensor weights — newer torch
-        # defaults to weights_only=True, which would reject that.
-        data = torch.load(path, weights_only=False)
+        # This cache contains only strings, tuples, dicts and tensors.
+        # Restricted loading avoids executing arbitrary pickle classes if
+        # a local cache file has been replaced or corrupted.
+        data = torch.load(path, weights_only=True)
     except Exception:
         return {}
     return data if isinstance(data, dict) else {}

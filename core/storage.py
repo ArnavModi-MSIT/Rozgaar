@@ -77,7 +77,7 @@ def init_db(conn):
            )"""
     )
     # Migration: existing jobs.db files (created before this column existed)
-    # won't have `dismissed` — add it so "mark as applied / not interested"
+    # won't have `dismissed` — add it so "remove from list"
     # in the UI can persist across restarts instead of just hiding for the
     # current session.
     _add_column_if_missing(conn, "ALTER TABLE jobs ADD COLUMN dismissed INTEGER DEFAULT 0")
@@ -104,6 +104,10 @@ def init_db(conn):
     # no experience requirement could be found in the text (see
     # core/experience.py); >=0 = an actual extracted minimum.
     _add_column_if_missing(conn, "ALTER TABLE jobs ADD COLUMN experience_years INTEGER")
+    # Observed again by a successful fetch. Existing rows start with their
+    # original discovery time; absence from a fetch is not proof of closure.
+    _add_column_if_missing(conn, "ALTER TABLE jobs ADD COLUMN last_seen INTEGER")
+    conn.execute("UPDATE jobs SET last_seen = first_seen WHERE last_seen IS NULL")
     conn.commit()
 
 
@@ -159,16 +163,22 @@ def save_job(conn, jid, job, source):
     # `score` column kept in the schema for compatibility with existing
     # rows/db files but is no longer computed — resume match % is computed
     # live in the UI (core/matcher.py) instead of a static keyword score.
+    observed_at = int(time.time())
     conn.execute(
         "INSERT OR IGNORE INTO jobs (id, company, title, location, url, "
-        "description, source, score, first_seen) VALUES (?,?,?,?,?,?,?,?,?)",
+        "description, source, score, first_seen, last_seen) VALUES (?,?,?,?,?,?,?,?,?,?)",
         (jid, job["company"], job["title"], job.get("location") or "", job["url"],
-         job.get("description") or "", source, 0, int(time.time())),
+         job.get("description") or "", source, 0, observed_at, observed_at),
     )
 
 
+def mark_observed(conn, jid, observed_at):
+    """Record a posting seen again by its stable source ID; caller batches commit."""
+    conn.execute("UPDATE jobs SET last_seen = ? WHERE id = ?", (observed_at, jid))
+
+
 def mark_dismissed(conn, jid, dismissed=True):
-    """Used by the UI's 'remove / mark as applied' checkbox. Committed
+    """Used by the UI's remove button. Committed
     immediately (not batched) since it's a single interactive click, not
     part of a bulk run.py pass."""
     conn.execute("UPDATE jobs SET dismissed = ? WHERE id = ?", (1 if dismissed else 0, jid))
