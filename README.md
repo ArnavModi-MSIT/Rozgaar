@@ -7,7 +7,7 @@ A local job discovery prototype for students and early career applicants in Indi
 - Platform-specific collectors for career sites and job boards, with a shared job format.
 - Location filtering, duplicate detection, job classification, skill extraction, and experience extraction.
 - PDF, DOCX, and TXT resume upload. Matching combines `all-MiniLM-L6-v2` semantic similarity with explicit skill overlap.
-- Streamlit interface and a React interface backed by FastAPI. Both use the same local database and matching code.
+- React interface backed by FastAPI, using the same local database and matching code as the collector.
 
 This is a prototype. Match percentages are ranking scores, not validated probabilities of being hired or being eligible. Some job sources can change or become unavailable; a saved listing may have closed since it was collected. Application form automation is not implemented.
 
@@ -36,15 +36,7 @@ python run.py
 python stats.py
 ```
 
-Choose one interface:
-
-**Streamlit**
-
-```powershell
-streamlit run ui/app.py
-```
-
-**React and FastAPI** — use two terminals after installing the Python requirements:
+Run the React interface and FastAPI in two terminals after installing the Python requirements:
 
 ```powershell
 python -m uvicorn api.main:app --reload --host 127.0.0.1 --port 8000

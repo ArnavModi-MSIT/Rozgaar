@@ -19,7 +19,7 @@ def get_model():
         # PyTorch doesn't always default to using every available core for
         # CPU inference — some environments cap it lower unless told
         # otherwise. But claiming EVERY core (os.cpu_count()) is too
-        # aggressive on a machine that's also running Streamlit, SQLite,
+        # aggressive on a machine that's also running FastAPI, SQLite,
         # and network fetchers concurrently — that's CPU contention, not
         # a clean throughput win. Capped at 8 by default (diminishing
         # returns past that for a model this small anyway), overridable

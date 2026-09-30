@@ -4,9 +4,7 @@ import JobCard from "./components/JobCard";
 import Sidebar from "./components/Sidebar";
 import type { Filters, Job, ResumeState } from "./types";
 
-// Matches ui/app.py's MIN_MATCH_THRESHOLD — once a resume is loaded, jobs
-// scoring below this are hidden. Kept a constant, not a slider, same as
-// the Streamlit version.
+// Once a resume is loaded, hide jobs scoring below this threshold.
 const MIN_MATCH = 20;
 // Lowered from 2 to 0 (hide anything requiring 1+ years, not just 3+)
 // and hideHighExperience below defaults to true — per explicit request:
@@ -76,7 +74,7 @@ export default function App() {
       if (text && !j.location.toLowerCase().includes(text)) return false;
 
       // Remote / NCR / India are OR'd together — ticking more than one
-      // WIDENS the result, matching the Streamlit behaviour.
+      // widens the result.
       if (anyLocationType) {
         const hit =
           (filters.showRemote && j.is_remote) ||

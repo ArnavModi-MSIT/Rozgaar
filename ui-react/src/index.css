@@ -1,8 +1,6 @@
 @import "tailwindcss";
 
-/* Light, warm, low-chrome — matching the tone of the Streamlit app this
-   replaces, and deliberately plain: this is a personal tool for reading
-   job postings, so the type and spacing matter far more than decoration. */
+/* Light, low-chrome styling for reading job postings. */
 @theme {
   --color-ink: #1a1a1a;
   --color-muted: #6b7280;

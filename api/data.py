@@ -5,16 +5,12 @@ derived location/experience columns, and the resume-scoring state.
 DELIBERATELY reuses core/ unchanged: parse_city/parse_country/is_remote,
 the matcher's incremental embedding cache, skills, experience extraction.
 This module owns NO matching or parsing logic of its own — it is a thin
-adapter between SQLite and JSON, so the React UI and the existing
-Streamlit app (ui/app.py) can never disagree about what a job's
-`is_ncr`/`match_pct`/`experience_years` actually means. load_jobs_df()
-mirrors ui/app.py's load_jobs() field for field for exactly that reason;
-if one changes, change both.
+adapter between SQLite and JSON. Job filtering and matching reuse core/
+logic so the React UI receives the same derived fields used by the backend.
 
 STATE: this holds the loaded resume and its scores in module-level
 memory. That's deliberate and safe for what this is — a single-user tool
-running on localhost, same assumption the Streamlit app already makes
-with st.session_state. It is NOT safe for a multi-user deployment, and
+running on localhost. It is NOT safe for a multi-user deployment, and
 this backend shouldn't be exposed to one without moving this into a real
 per-session store.
 """
@@ -43,7 +39,7 @@ DB_PATH = "db/jobs.db"
 _lock = threading.Lock()
 
 _jobs_cache = {"df": None, "loaded_at": 0.0}
-_JOBS_TTL_SECONDS = 30  # same TTL the Streamlit app uses for load_jobs()
+_JOBS_TTL_SECONDS = 30
 
 _embedding_cache = None  # job_id -> (content_hash, tensor), lazily loaded
 
@@ -57,9 +53,7 @@ def connect():
 
 
 def _load_jobs_df():
-    """Reads every non-dismissed job and adds the same derived columns
-    ui/app.py's load_jobs() adds — see this module's docstring on why the
-    two are kept identical."""
+    """Read non-dismissed jobs and add fields needed by the React UI."""
     conn = connect()
     try:
         init_db(conn)  # cheap no-op once migrated; makes a fresh clone work
@@ -159,8 +153,7 @@ def resume_state():
 
 
 def custom_skill_patterns():
-    """Built-in SKILLS plus the user's custom keywords — the same
-    combination ui/app.py builds for resume extraction."""
+    """Built-in SKILLS plus the user's custom keywords."""
     conn = connect()
     try:
         return build_patterns(get_custom_skills(conn))

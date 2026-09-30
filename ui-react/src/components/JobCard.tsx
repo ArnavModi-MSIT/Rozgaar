@@ -48,7 +48,7 @@ export default function JobCard({
     }
   }
 
-  // The whole point of moving off Streamlit: this click is detectable, so
+  // This click is detectable, so
   // opening a job can remove it in one action with no page reload and no
   // lost resume. The anchor still navigates natively (new tab) — the
   // dismissal is fired alongside it, not instead of it.

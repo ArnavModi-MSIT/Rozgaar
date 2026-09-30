@@ -53,7 +53,7 @@ def init_db(conn):
                status TEXT DEFAULT 'ok'
            )"""
     )
-    # User-added skill keywords (see ui/app.py's skill editor) — extends,
+    # User-added skill keywords (see the React skill editor) — extends,
     # never replaces, core/skills.py's built-in SKILLS list. Kept in the
     # DB rather than editing skills.py's source at runtime, which would
     # be fragile and mix config data with application code.
@@ -62,12 +62,12 @@ def init_db(conn):
                skill TEXT PRIMARY KEY
            )"""
     )
-    # Per-resume manual skill corrections (see ui/app.py's resume skill
+    # Per-resume manual skill corrections (see the React resume skill
     # editor) — a resume's AUTO-extracted skills can have false positives
     # (regex matched something it shouldn't have) or misses (a real skill
     # phrased in a way the regex doesn't catch); this stores the person's
     # corrected final set, keyed by resume_key (sha256 of the uploaded
-    # file's bytes — same key ui/app.py already uses to detect resume
+    # file's bytes — same key the API uses to detect resume
     # changes), so edits persist across restarts for the same resume file
     # without needing to redo them every session.
     conn.execute(
@@ -142,8 +142,8 @@ def load_dedup_keys(conn):
     got reposted under a new ATS req id (common, see module docstring),
     the repost would pass the dedup check as "new" and silently reappear,
     directly undermining what "dismiss" is supposed to mean. `dismissed`
-    should only ever affect what's DISPLAYED (see ui/app.py's load_jobs(),
-    which does filter on it) — never whether something counts as
+    should only ever affect what's DISPLAYED (see api/data.py,
+    which filters on it) — never whether something counts as
     previously seen.
 
     Calls dedup_key() rather than reconstructing the tuple format inline —
@@ -227,8 +227,7 @@ def update_skills(conn, id_skills_pairs):
 
 
 def get_custom_skills(conn):
-    """Returns the set of user-added custom skill keywords (see ui/app.py's
-    skill editor). Passed into core.skills.build_patterns() to extend the
+    """Returns the set of user-added custom skill keywords (see the React skill editor). Passed into core.skills.build_patterns() to extend the
     built-in SKILLS list wherever skill extraction happens."""
     rows = conn.execute("SELECT skill FROM custom_skills").fetchall()
     return {r[0] for r in rows}
@@ -256,7 +255,7 @@ def remove_custom_skill(conn, skill):
 def get_resume_skill_override(conn, resume_key):
     """Returns the saved corrected skill set for this resume (a set of
     strings), or None if no correction has ever been saved for it — None
-    is the signal to the caller (ui/app.py) to fall back to the raw
+    is the signal to the caller to fall back to the raw
     auto-extracted skills, distinct from "saved as an empty set" (someone
     deliberately clearing every skill)."""
     row = conn.execute(

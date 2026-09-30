@@ -1,9 +1,6 @@
 """
-FastAPI backend for the React UI (ui-react/), running ALONGSIDE the
-existing Streamlit app — ui/app.py is untouched and still works exactly
-as before. Both read the same db/jobs.db and the same core/ logic, so
-whichever you use, a dismissed job stays dismissed and a match score
-means the same thing.
+FastAPI backend for the React UI (ui-react/). It reads db/jobs.db and
+uses core/ for resume parsing, matching, and job display data.
 
 Run:
   .venv/Scripts/python.exe -m uvicorn api.main:app --reload --port 8000
@@ -22,15 +19,11 @@ Endpoints (all JSON unless noted):
   POST   /api/custom-skills            add one
   DELETE /api/custom-skills/{skill}    remove one
 
-Filtering is deliberately NOT done here. /api/jobs returns the whole
-visible pool once and the React side filters it in memory — that's the
-entire point of the rewrite: ticking "Remote" or typing a city should be
-instant, not a server round-trip per keystroke like the Streamlit
-version's rerun model.
+Filtering is done in the React UI. /api/jobs returns the visible pool,
+then the client applies location and experience filters in memory.
 """
 
 import hashlib
-import io
 import logging
 
 from fastapi import FastAPI, HTTPException, UploadFile, File
@@ -83,11 +76,7 @@ class CustomSkillRequest(BaseModel):
 
 
 class _UploadAdapter:
-    """core/resume_text.py's extract_text() expects a Streamlit
-    UploadedFile (.name / .seek / .read). FastAPI hands over an UploadFile
-    with .filename and a .file stream instead — this adapts one to the
-    other so the SAME extraction code serves both UIs rather than being
-    duplicated with a second, subtly-different implementation."""
+    """Adapt FastAPI UploadFile to the file-like interface extract_text expects."""
 
     def __init__(self, upload: UploadFile):
         self.name = upload.filename or ""
@@ -167,8 +156,7 @@ async def upload_resume(file: UploadFile = File(...)):
 
     auto_skills = data.extract_resume_skills(text)
     # A correction saved for this exact resume (by content hash) in an
-    # earlier session wins over the raw extraction — same precedence the
-    # Streamlit app applies, and it reads the same table.
+    # earlier session wins over the raw extraction.
     conn = data.connect()
     try:
         saved = get_resume_skill_override(conn, resume_key)
@@ -238,7 +226,7 @@ def create_custom_skill(req: CustomSkillRequest):
         conn.close()
     # A new keyword changes what extract_skills() finds in the RESUME
     # immediately; jobs keep their stored skills until
-    # `run.py --reprocess-skills`, exactly as the Streamlit UI warns.
+    # `run.py --reprocess-skills` is run.
     state = data.resume_state()
     if added and state["text"].strip():
         data.set_resume(state["key"], state["text"], data.extract_resume_skills(state["text"]))

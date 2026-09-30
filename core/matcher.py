@@ -38,7 +38,7 @@ than being inlined into rank_by_resume — job embeddings depend only on the
 job pool, never on the resume, so re-embedding potentially hundreds or
 thousands of job descriptions on every single resume upload (the previous
 behavior) wasted most of the "scoring jobs against resume" time on work
-that didn't need to be redone at all. Callers (ui/app.py) can now cache
+that didn't need to be redone at all. Callers can now cache
 embed_jobs()'s result keyed on the job pool alone, and only pay the (much
 cheaper, single-string) resume embedding cost on each new resume.
 """
@@ -138,7 +138,7 @@ def embed_jobs_incremental(jobs_df, cache=None):
     This is the fix for a real problem: the previous whole-pool-hash
     approach invalidated its ENTIRE cache the moment the pool changed by
     even one row — meaning dismissing 2-3 jobs (which shrinks the pool
-    once ui/app.py's cache TTL expires) forced a full re-embed of
+    once the jobs cache TTL expires) forced a full re-embed of
     potentially thousands of unrelated jobs. Per-job caching means
     removing rows costs nothing (their entries just aren't included in
     the output) and adding rows only costs embedding those specific new
@@ -195,8 +195,7 @@ DEFAULT_EMBEDDINGS_CACHE_PATH = "db/job_embeddings_cache.pt"
 
 
 def save_embedding_cache(cache, path=DEFAULT_EMBEDDINGS_CACHE_PATH):
-    """Persist the per-job embedding cache to disk — survives a Streamlit
-    RESTART, not just a session. cache: dict of job_id -> (content_hash,
+    """Persist the per-job embedding cache to disk across process restarts. cache: dict of job_id -> (content_hash,
     embedding_row_tensor), as produced by embed_jobs_incremental()."""
     os.makedirs(os.path.dirname(path) or ".", exist_ok=True)
     torch.save(cache, path)
@@ -235,8 +234,7 @@ def rank_by_resume(jobs_df, resume_text, job_embeddings=None, resume_skills=None
 
     resume_skills: optional pre-computed/corrected skill set — if given,
     used INSTEAD of auto-extracting from resume_text via
-    core.skills.extract_skills(). Lets a caller (ui/app.py's resume skill
-    editor) apply manual corrections — a false positive removed, a real
+    core.skills.extract_skills(). Lets the API apply manual corrections — a false positive removed, a real
     skill the regex missed added back in — without needing to fake the
     resume text itself to influence extraction."""
     jobs_df = jobs_df.copy()

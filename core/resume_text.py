@@ -1,16 +1,16 @@
 """
 Extract plain text from an uploaded resume file (pdf, docx, or txt).
-Used by ui/app.py before handing text to core/matcher.py.
+Used by the FastAPI resume upload endpoint before matching.
 """
 
 import io
 
 
 def extract_text(uploaded_file):
-    """uploaded_file: a Streamlit UploadedFile (has .name and .read())."""
+    """Read a named, seekable uploaded file with a read() method."""
     name = uploaded_file.name.lower()
     # seek(0) before read — UploadedFile is a stream; if it was already
-    # read once (e.g. a Streamlit rerun reusing the same object), a bare
+    # read once earlier, a bare
     # .read() silently returns b"" instead of raising, producing an empty
     # resume with no error signal.
     uploaded_file.seek(0)

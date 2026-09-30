@@ -95,7 +95,7 @@ def process_backlog(conn):
     (e.g. core/experience.py) against an existing jobs.db without waiting
     on every platform to re-fetch."""
     # Loaded once per call (not per-job) — user-added custom skills (see
-    # ui/app.py's skill editor) extend the built-in SKILLS list for every
+    # the React skill editor) extend the built-in SKILLS list for every
     # extraction below.
     skill_patterns = build_patterns(get_custom_skills(conn))
 
@@ -254,7 +254,7 @@ def run():
         # --- Cleanup ---------------------------------------------------------------
         # Runs automatically every pass now (was --cleanup-only before) —
         # jobs.db grew unbounded otherwise, which slowly degrades every
-        # query in this file and in ui/app.py. Same 365-day default as the
+        # query in this file and in api/data.py. Same 365-day default as the
         # manual flag; harmless/cheap to run every time since it's a single
         # indexed-by-nothing DELETE on first_seen, small relative to the
         # fetch/classify work already done this run.
