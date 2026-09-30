@@ -72,7 +72,7 @@ The `standard` adapter handles Greenhouse, Lever, and Ashby. Other adapters cove
 2. `run.py` preloads existing IDs and repost keys from **all** saved jobs, including dismissed ones.
 3. It submits every entry in `core.collector.PLATFORMS` to a thread pool with one shared deadline (`RUN_DEADLINE_SECONDS`, default 600 seconds). Network fetching overlaps; SQLite writes happen in the main thread.
 4. For each returned posting, it drops locations confidently outside India. Unknown locations are kept. It updates `last_seen` for an existing `job_id`, then checks the repost key for new IDs, then inserts new jobs. Missing postings are never automatically marked closed.
-5. It writes one `run_stats` row per platform. A raised platform error receives `status='failed'`; other platforms continue. The legacy `jobs_matched` statistic currently equals `jobs_fetched` and is **not** a count of resume matches.
+5. It writes one `run_stats` row per platform. A raised platform error receives `status='failed'`; the standard ATS and Unstop collectors can also return `status='partial'` when some boards or pages fail. Their reasons are saved in `run_stats.error`. Other platforms still return plain job lists and cannot yet signal internal partial failure. The legacy `jobs_matched` statistic currently equals `jobs_fetched` and is **not** a count of resume matches.
 6. `process_backlog()` fills missing category, skills, and experience fields. The three processors have separate error handling, so a classification failure does not prevent skill or experience extraction.
 7. It removes rows whose `first_seen` is older than 365 days. This is age-based cleanup, not verification that a posting is still open.
 
@@ -93,7 +93,7 @@ The stable ID is `company:source_id` when the source provides an ID; otherwise i
 | Table | Important fields | Purpose |
 | --- | --- | --- |
 | `jobs` | `id`, `company`, `title`, `location`, `url`, `description`, `source`, `first_seen`, `last_seen`, `dismissed`, `category`, `skills`, `experience_years` | Saved postings and derived fields. `last_seen` is the latest observation of an exact source ID, not confirmed open status. The `score` column is legacy and not the current resume match. |
-| `run_stats` | `run_id`, `timestamp`, `platform`, fetched/saved counts, runtime, `status` | Per-platform collection history. |
+| `run_stats` | `run_id`, `timestamp`, `platform`, fetched/saved counts, runtime, `status`, `error` | Per-platform collection history. |
 | `custom_skills` | `skill` | User-added terms used by the regex skill extractor. |
 | `resume_skill_overrides` | `resume_key`, `skills` | Corrected skill set keyed by SHA-256 of the uploaded file bytes. |
 
@@ -152,13 +152,13 @@ In development, Vite on port 5173 proxies `/api` to FastAPI on `127.0.0.1:8000`.
 | Recalculate every job's skill list | `python run.py --reprocess-skills` |
 | Recalculate every job's experience requirement | `python run.py --reprocess-experience` |
 | Remove jobs older than 365 days | `python run.py --cleanup` (also runs after a normal collection) |
-| Inspect collection history | `python stats.py`, `python stats.py --summary`, or `python stats.py --all` |
+| Inspect collection history | `python stats.py`, `python stats.py --summary`, `python stats.py --all`, or `python stats.py --health` |
 | Add or change a company | Edit `config.py` and the relevant `fetchers/` adapter. |
 | Add a platform | Write an adapter returning the common job dictionary, then register it in `core/collector.py`. |
 | Change score behavior | Inspect `core/matcher.py`, `core/skills.py`, `config.TARGET_ROLE_RE`, and the browser's fixed 20-point display threshold together. |
 | Change UI fields | Update `api/data.py`, `api/main.py`, `ui-react/src/types.ts`, and consuming components together. |
 
-The repository currently has no automated test suite or CI. `python -m compileall -q api core fetchers run.py` checks syntax and imports can be smoke-tested locally; `npm ci && npm run build` checks the React build. Live source behavior requires separate network checks because source sites can change.
+The offline fixture tests in `tests/` cover Unstop, Greenhouse, source-health classification, and the `run_stats` migration. Run `python -m unittest discover -s tests -v`. `python -m compileall -q api core fetchers run.py stats.py` checks syntax; `npm ci && npm run build` checks the React build. Live source behavior requires separate network checks because source sites can change. There is no CI yet.
 
 ## Important limits
 

@@ -50,7 +50,8 @@ def init_db(conn):
                jobs_matched INTEGER,
                jobs_saved INTEGER,
                runtime_seconds REAL,
-               status TEXT DEFAULT 'ok'
+               status TEXT DEFAULT 'ok',
+               error TEXT
            )"""
     )
     # User-added skill keywords (via API endpoints) — extends,
@@ -94,6 +95,7 @@ def init_db(conn):
     # returned 0 jobs" in run_stats — previously a crashed platform had no
     # row at all for that run, indistinguishable from an empty result.
     _add_column_if_missing(conn, "ALTER TABLE run_stats ADD COLUMN status TEXT DEFAULT 'ok'")
+    _add_column_if_missing(conn, "ALTER TABLE run_stats ADD COLUMN error TEXT")
     # Migration: experience_years is filled in by core/experience.py after
     # saving — the minimum years of experience the posting appears to
     # require, parsed from title+description. Unlike skills/category, 0 is
@@ -360,11 +362,11 @@ def reset_experience_years(conn):
     return cur.rowcount
 
 
-def record_stats(conn, run_id, platform, fetched, matched, saved, runtime_seconds, status="ok"):
+def record_stats(conn, run_id, platform, fetched, matched, saved, runtime_seconds, status="ok", error=None):
     conn.execute(
         "INSERT INTO run_stats (run_id, timestamp, platform, jobs_fetched, jobs_matched, "
-        "jobs_saved, runtime_seconds, status) VALUES (?,?,?,?,?,?,?,?)",
-        (run_id, int(time.time()), platform, fetched, matched, saved, runtime_seconds, status),
+        "jobs_saved, runtime_seconds, status, error) VALUES (?,?,?,?,?,?,?,?,?)",
+        (run_id, int(time.time()), platform, fetched, matched, saved, runtime_seconds, status, error),
     )
 
 

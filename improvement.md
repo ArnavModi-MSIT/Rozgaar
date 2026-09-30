@@ -27,9 +27,9 @@ The current experience extractor in [`core/experience.py`](core/experience.py) c
 
 ### Monitor source health
 
-[`run.py`](run.py) already stores per-source run statistics. Turn those into a simple health report: last successful fetch, fetched count, saved count, failure reason, and unusual drops. Keep rate limits and source access rules in mind; do not work around blocked or private endpoints.
+[`run.py`](run.py) stores per-platform run statistics, and `python stats.py --health` now reports latest status, last successful fetch, fetched/saved counts, failure reason, and unusual drops. Extend the report to per-company boards and add an explicit completeness signal to the remaining fetchers. Keep rate limits and source access rules in mind; do not work around blocked or private endpoints.
 
-**Done when:** a broken collector is visible without inspecting a long console log, and one source failure does not invalidate other sources.
+**Done when:** every collector distinguishes a complete empty result from an interrupted or partial fetch, and a broken company board is visible without inspecting a long console log.
 
 ## 2. Measure and improve matching
 

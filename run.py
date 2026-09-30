@@ -213,7 +213,8 @@ def run():
                     # absent from run_stats, indistinguishable from "returned
                     # 0 jobs" when reviewing history later.
                     record_stats(conn, run_id, platform_name, 0, 0, 0,
-                                 round(time.monotonic() - platform_start, 2), status="failed")
+                                 round(time.monotonic() - platform_start, 2),
+                                 status="failed", error=str(e)[:300])
                     continue
                 platforms_run.append(platform_name)
                 for job in jobs:
@@ -240,7 +241,9 @@ def run():
                 # filter step anymore, but stats.py's schema/queries still expect
                 # the column, so this avoids touching that file too.
                 record_stats(conn, run_id, platform_name, p_fetched, p_fetched, p_saved,
-                             round(time.monotonic() - platform_start, 2), status="ok")
+                             round(time.monotonic() - platform_start, 2),
+                             status=getattr(jobs, "status", "ok"),
+                             error=getattr(jobs, "error", "")[:300] or None)
         conn.commit()  # batched commit for the fetch/save phase
 
         # --- Classification / skills / experience --------------------------------

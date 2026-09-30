@@ -1,0 +1,19 @@
+{
+  "data": {
+    "data": [
+      {
+        "id": 202,
+        "title": "Software Internship",
+        "organisation": {"name": "Example Labs"},
+        "locations": [{"city": "Noida", "country": "India"}],
+        "public_url": "internship/software-internship-202",
+        "details": "<p>Build Python tools.</p>",
+        "jobDetail": {},
+        "filters": [{"name": "Fresher"}]
+      }
+    ],
+    "total": 1,
+    "current_page": 1,
+    "last_page": 1
+  }
+}

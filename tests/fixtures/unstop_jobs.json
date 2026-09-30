@@ -1,0 +1,19 @@
+{
+  "data": {
+    "data": [
+      {
+        "id": 101,
+        "title": "Data Analyst Intern",
+        "organisation": {"name": "Example Analytics"},
+        "locations": [{"city": "Delhi", "country": "India"}],
+        "seo_url": "https://unstop.com/job/data-analyst-intern-101",
+        "details": "<p>Work with SQL and dashboards.</p>",
+        "jobDetail": {"min_experience": 1},
+        "filters": []
+      }
+    ],
+    "total": 1,
+    "current_page": 1,
+    "last_page": 1
+  }
+}

@@ -35,6 +35,8 @@ import time
 
 import requests
 
+from fetchers.result import CollectionResult
+
 log = logging.getLogger("jobbot")
 
 SEARCH_URL = "https://unstop.com/api/public/opportunity/search-result"
@@ -94,16 +96,24 @@ def _fetch_type(opportunity_type, deadline=None):
     seen_ids = set()
     page = 1
     known_total = None
+    incomplete_reason = ""
     while page <= MAX_PAGES:
         if deadline is not None and time.monotonic() >= deadline:
+            incomplete_reason = f"{opportunity_type}: deadline reached before page {page}"
             break
         data = _get(opportunity_type, page)
-        if not data:
+        if data is None:
+            incomplete_reason = f"{opportunity_type}: page {page} request failed"
             break
-        items = data.get("data") or []
+        if not isinstance(data, dict) or not isinstance(data.get("data"), list):
+            incomplete_reason = f"{opportunity_type}: page {page} response missing postings list"
+            break
+        items = data["data"]
         if known_total is None:
             known_total = data.get("total", 0)
         if not items:
+            if known_total and len(seen_ids) < known_total:
+                incomplete_reason = f"{opportunity_type}: empty page {page} before reported total"
             break
 
         new_on_page = 0
@@ -141,23 +151,34 @@ def _fetch_type(opportunity_type, deadline=None):
             })
             new_on_page += 1
         if new_on_page == 0:
+            if known_total and len(seen_ids) < known_total:
+                incomplete_reason = f"{opportunity_type}: page {page} repeated existing IDs"
             break
         page += 1
         if known_total and (page - 1) * PAGE_SIZE >= known_total:
             break
         time.sleep(0.3)
-    return jobs
+    if page > MAX_PAGES and known_total and len(seen_ids) < known_total:
+        incomplete_reason = f"{opportunity_type}: stopped at {MAX_PAGES}-page cap"
+    if incomplete_reason and not jobs:
+        raise RuntimeError(incomplete_reason)
+    return CollectionResult(jobs, status="partial" if incomplete_reason else "ok", error=incomplete_reason)
 
 
 def collect(deadline=None):
     jobs = []
     failures = 0
+    reasons = []
     for opportunity_type in ("jobs", "internships"):
         try:
-            jobs += _fetch_type(opportunity_type, deadline=deadline)
+            result = _fetch_type(opportunity_type, deadline=deadline)
+            jobs += result
+            if result.status == "partial":
+                reasons.append(result.error)
         except Exception as e:
             log.exception("unstop '%s' failed: %s", opportunity_type, e)
             failures += 1
+            reasons.append(str(e))
     if failures == 2:
         raise RuntimeError("unstop fetcher: both jobs and internships failed")
-    return jobs
+    return CollectionResult(jobs, status="partial" if reasons else "ok", error="; ".join(reasons))

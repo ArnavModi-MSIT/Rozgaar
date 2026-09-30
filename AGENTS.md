@@ -18,4 +18,5 @@ Read [ARCHITECTURE.md](ARCHITECTURE.md) before changing behavior. It describes t
 - Check both `core/matcher.py` and browser filters when changing ranking or visibility. Browser thresholds can hide a job even if it exists in SQLite.
 - Do not delete or commit `db/jobs.db`, generated embedding caches, resumes, virtual environments, `node_modules`, or build outputs. Do not add credentials or personal resume content to examples or tests.
 - Verify Python changes with focused checks and `python -m compileall -q api core fetchers run.py`; verify React changes with `npm ci` and `npm run build` in `ui-react/`. A local parser or syntax check does not prove a live career site still works.
+- Run `python -m unittest discover -s tests -v` for offline collector and source-health regressions. When adding a fetcher, distinguish a complete empty result from an interrupted fetch; the `fetchers.result.CollectionResult` status is available for partial results.
 - Update [ARCHITECTURE.md](ARCHITECTURE.md) and [README.md](README.md) when data flow, commands, API contracts, or user-visible behavior changes.

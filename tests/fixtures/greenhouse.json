@@ -1,0 +1,11 @@
+{
+  "jobs": [
+    {
+      "id": 303,
+      "title": "Analytics Engineer",
+      "location": {"name": "Gurugram, India"},
+      "absolute_url": "https://boards.greenhouse.io/example/jobs/303",
+      "content": "<p>Build models.</p><ul><li>SQL</li><li>Python</li></ul>"
+    }
+  ]
+}

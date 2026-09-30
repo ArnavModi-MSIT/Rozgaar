@@ -36,6 +36,14 @@ python run.py
 python stats.py
 ```
 
+For a per-platform health report based on recent collection history:
+
+```powershell
+python stats.py --health
+```
+
+It distinguishes failed or partial fetches from genuinely empty results and flags large drops against earlier successful runs. It does not verify whether individual saved jobs are still open.
+
 ## Local and offline use
 
 All parsing, matching, storage, and UI code runs on your computer. No paid API, hosted database, account, telemetry service, or cloud inference is required. Collecting new jobs contacts public career sites. The first dependency install and model download need internet; opening employer links also needs internet.

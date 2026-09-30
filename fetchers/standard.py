@@ -12,6 +12,7 @@ from concurrent.futures import ThreadPoolExecutor
 import requests
 
 from fetchers.http_client import DEFAULT_TIMEOUT, get_json
+from fetchers.result import CollectionResult
 
 log = logging.getLogger("jobbot")
 
@@ -74,8 +75,8 @@ def fetch_greenhouse(slug):
     # long single-field descriptions (Postman/PhonePe/Razorpay postings run
     # 7-13k raw chars; the old 3000-char default could truncate mid-post).
     data = _get(f"https://boards-api.greenhouse.io/v1/boards/{slug}/jobs?content=true")
-    if not data:
-        return []
+    if not isinstance(data, dict) or not isinstance(data.get("jobs"), list):
+        raise RuntimeError(f"greenhouse board {slug}: missing jobs list")
     return [
         {
             "company": slug,
@@ -98,8 +99,8 @@ def fetch_lever(slug):
     Reading only description (the old behavior) silently dropped every
     bullet-point section — confirmed missing on a real CRED posting."""
     data = _get(f"https://api.lever.co/v0/postings/{slug}?mode=json")
-    if not data:
-        return []
+    if not isinstance(data, list):
+        raise RuntimeError(f"lever board {slug}: expected postings list")
     jobs = []
     for j in data:
         parts = [j.get("description", "") or j.get("descriptionPlain", "")]
@@ -134,8 +135,8 @@ def _ashby_location(j):
 
 def fetch_ashby(slug):
     data = _get(f"https://api.ashbyhq.com/posting-api/job-board/{slug}")
-    if not data:
-        return []
+    if not isinstance(data, dict) or not isinstance(data.get("jobs"), list):
+        raise RuntimeError(f"ashby board {slug}: missing jobs list")
     return [
         {
             "company": slug,
@@ -156,23 +157,25 @@ def collect(greenhouse_slugs, lever_slugs, ashby_slugs):
     # fetch every company concurrently and merge results. Capped so this
     # doesn't spin up dozens of threads if the company lists grow large.
     tasks = (
-        [(lambda s=s: fetch_greenhouse(s)) for s in greenhouse_slugs]
-        + [(lambda s=s: fetch_lever(s)) for s in lever_slugs]
-        + [(lambda s=s: fetch_ashby(s)) for s in ashby_slugs]
+        [(f"greenhouse:{s}", lambda s=s: fetch_greenhouse(s)) for s in greenhouse_slugs]
+        + [(f"lever:{s}", lambda s=s: fetch_lever(s)) for s in lever_slugs]
+        + [(f"ashby:{s}", lambda s=s: fetch_ashby(s)) for s in ashby_slugs]
     )
     if not tasks:
         return []
     jobs = []
     failures = 0
+    failed_boards = []
     with ThreadPoolExecutor(max_workers=min(16, len(tasks))) as pool:
-        futures = [pool.submit(t) for t in tasks]
-        for f in futures:
+        futures = [(name, pool.submit(fn)) for name, fn in tasks]
+        for name, f in futures:
             try:
                 jobs += f.result()
             except Exception as e:
                 # A bug in one company's fetcher shouldn't take down the rest.
                 log.exception("a company fetch failed: %s", e)
                 failures += 1
+                failed_boards.append(name)
     if failures == len(tasks):
         # EVERY company errored, not just returned zero postings — without
         # this, run.py would see an empty list and record status="ok,
@@ -180,4 +183,8 @@ def collect(greenhouse_slugs, lever_slugs, ashby_slugs):
         # configured companies. Raising here lets it reach run.py's own
         # exception handling, which correctly records status="failed".
         raise RuntimeError(f"standard fetcher: all {len(tasks)} company fetch(es) failed")
-    return jobs
+    return CollectionResult(
+        jobs,
+        status="partial" if failures else "ok",
+        error=f"{failures}/{len(tasks)} boards failed: {', '.join(failed_boards)}" if failures else "",
+    )
