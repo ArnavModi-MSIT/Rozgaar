@@ -1,0 +1,20 @@
+# Guide for coding assistants
+
+Read [ARCHITECTURE.md](ARCHITECTURE.md) before changing behavior. It describes the current collection, storage, API, matching, and React flows. Use [README.md](README.md) for setup and [improvement.md](improvement.md) for proposed work. Treat code as the source of truth if documentation has drifted; update the relevant document when you find a mismatch.
+
+## Working model
+
+- This is a local, single-user prototype. `python run.py` collects jobs into SQLite; FastAPI serves that database and ranks it when a resume is uploaded; React displays and filters the results.
+- Collection fetchers return common job dictionaries and are registered in `core/collector.py`. Network fetching overlaps, while `run.py` writes to SQLite sequentially.
+- Job categories and resume matching use `all-MiniLM-L6-v2`. Skill extraction and experience parsing are separate heuristic steps. A displayed match percentage is a ranking score, not an eligibility probability.
+- The loaded resume and current scores live in API process memory. The job database, embedding cache, dismissals, and saved resume skill overrides are local state.
+- The API exposes skill correction endpoints, but the current React UI has no skill editor. Roadmap items are not implemented features.
+
+## Editing this repository
+
+- Keep source-specific HTTP and parsing logic in `fetchers/`; normalize fields before `run.py` receives them. Register new sources in `core/collector.py` and update `config.py` as needed.
+- Keep schema and persistence changes in `core/storage.py`. If a stored field changes, inspect `api/data.py`, `api/main.py`, `ui-react/src/types.ts`, and consuming components together.
+- Check both `core/matcher.py` and browser filters when changing ranking or visibility. Browser thresholds can hide a job even if it exists in SQLite.
+- Do not delete or commit `db/jobs.db`, generated embedding caches, resumes, virtual environments, `node_modules`, or build outputs. Do not add credentials or personal resume content to examples or tests.
+- Verify Python changes with focused checks and `python -m compileall -q api core fetchers run.py`; verify React changes with `npm ci` and `npm run build` in `ui-react/`. A local parser or syntax check does not prove a live career site still works.
+- Update [ARCHITECTURE.md](ARCHITECTURE.md) and [README.md](README.md) when data flow, commands, API contracts, or user-visible behavior changes.

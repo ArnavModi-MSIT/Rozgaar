@@ -66,7 +66,7 @@ SKILLS = [
 
 def build_patterns(extra_skills=None):
     """Builds the regex pattern dict for SKILLS plus any extra custom
-    skills (user-added via the UI's skill editor, persisted in
+    skills (user-added via API endpoints, persisted in
     core/storage.py's custom_skills table — see get_custom_skills()).
     Skills already in the built-in SKILLS list are deduped if also passed
     as extra (case-insensitive) rather than double-compiled."""

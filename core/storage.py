@@ -53,7 +53,7 @@ def init_db(conn):
                status TEXT DEFAULT 'ok'
            )"""
     )
-    # User-added skill keywords (see the React skill editor) — extends,
+    # User-added skill keywords (via API endpoints) — extends,
     # never replaces, core/skills.py's built-in SKILLS list. Kept in the
     # DB rather than editing skills.py's source at runtime, which would
     # be fragile and mix config data with application code.
@@ -227,7 +227,7 @@ def update_skills(conn, id_skills_pairs):
 
 
 def get_custom_skills(conn):
-    """Returns the set of user-added custom skill keywords (see the React skill editor). Passed into core.skills.build_patterns() to extend the
+    """Returns the set of user-added custom skill keywords (via API endpoints). Passed into core.skills.build_patterns() to extend the
     built-in SKILLS list wherever skill extraction happens."""
     rows = conn.execute("SELECT skill FROM custom_skills").fetchall()
     return {r[0] for r in rows}

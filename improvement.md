@@ -50,7 +50,7 @@ The current [`core/matcher.py`](core/matcher.py) blends semantic similarity and 
 
 - Detect empty or very short extraction and show a clear message; consider OCR only for scanned files.
 - Compare whole-resume matching with section-level embeddings for skills, experience, and projects.
-- Keep the existing editable skill list so the user can correct extraction mistakes.
+- Add a React skill editor using the existing `PUT /api/resume/skills` endpoint so users can correct extraction mistakes.
 
 **Done when:** a scanned or long sample resume has an understandable result, and section-level matching improves the labeled evaluation before replacing the current method.
 

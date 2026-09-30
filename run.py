@@ -94,8 +94,8 @@ def process_backlog(conn):
     fetch first — useful for backfilling a newly-added extraction feature
     (e.g. core/experience.py) against an existing jobs.db without waiting
     on every platform to re-fetch."""
-    # Loaded once per call (not per-job) — user-added custom skills (see
-    # the React skill editor) extend the built-in SKILLS list for every
+    # Loaded once per call (not per-job) — user-added custom skills (via
+    # API endpoints) extend the built-in SKILLS list for every
     # extraction below.
     skill_patterns = build_patterns(get_custom_skills(conn))
 
