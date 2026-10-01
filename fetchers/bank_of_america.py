@@ -1,4 +1,4 @@
-"""Bounded India searches from Bank of America's public career pages."""
+"""India searches from Bank of America's public career pages."""
 
 import logging
 import time
@@ -13,8 +13,7 @@ from fetchers.result import CollectionResult
 log = logging.getLogger("jobbot")
 BASE = "https://careers.bankofamerica.com"
 SEARCHES = (("general", "jobssearchservlet"), ("students", "campusjobssearchservlet"))
-PAGE_SIZE = 10
-MAX_PER_SEARCH = 30
+MAX_RESULTS_PER_SEARCH = 1000
 
 
 def _description(html):
@@ -27,46 +26,40 @@ def collect(deadline=None):
     jobs, errors, seen = [], [], set()
     with requests.Session() as session:
         for label, servlet in SEARCHES:
-            for start in range(0, MAX_PER_SEARCH, PAGE_SIZE):
+            if deadline and time.monotonic() >= deadline:
+                errors.append(f"{label}: deadline reached")
+                continue
+            payload = get_json(session, f"{BASE}/services/{servlet}", params={
+                "start": 0, "rows": MAX_RESULTS_PER_SEARCH, "search": "jobsByLocation", "searchstring": "India",
+            })
+            if not isinstance(payload, dict) or not isinstance(payload.get("jobsList"), list) or not isinstance(payload.get("totalMatches"), int):
+                errors.append(f"{label}: invalid listing response")
+                continue
+            rows, total = payload["jobsList"], payload["totalMatches"]
+            if len(rows) < total:
+                errors.append(f"{label}: received {len(rows)} of {total} listings")
+            for row in rows:
                 if deadline and time.monotonic() >= deadline:
-                    errors.append(f"{label}: deadline reached")
+                    errors.append(f"{label}: deadline reached while reading details")
                     break
-                payload = get_json(session, f"{BASE}/services/{servlet}", params={
-                    "start": start, "rows": PAGE_SIZE, "search": "jobsByLocation", "searchstring": "India",
+                job_id, path = str(row.get("jobRequisitionId") or ""), row.get("jcrURL")
+                if not job_id or not isinstance(path, str) or not path.startswith("/en-us/job-detail/"):
+                    errors.append(f"{label}: invalid job in listing")
+                    continue
+                if job_id in seen:
+                    continue
+                seen.add(job_id)
+                url = urljoin(BASE, path)
+                html = get_text(session, url)
+                description = _description(html) if html else ""
+                if not description:
+                    errors.append(f"{label}: description unavailable for {job_id}")
+                jobs.append({
+                    "company": "Bank of America", "source_id": job_id,
+                    "title": row.get("postingTitle") or "Untitled job",
+                    "location": row.get("location") or row.get("primaryLocation") or "India",
+                    "url": url, "description": description,
                 })
-                if not isinstance(payload, dict) or not isinstance(payload.get("jobsList"), list) or not isinstance(payload.get("totalMatches"), int):
-                    errors.append(f"{label}: invalid listing response at offset {start}")
-                    break
-                rows, total = payload["jobsList"], payload["totalMatches"]
-                if not rows and start < total:
-                    errors.append(f"{label}: missing listing rows at offset {start}")
-                    break
-                for row in rows:
-                    if deadline and time.monotonic() >= deadline:
-                        errors.append(f"{label}: deadline reached while reading details")
-                        break
-                    job_id, path = str(row.get("jobRequisitionId") or ""), row.get("jcrURL")
-                    if not job_id or not isinstance(path, str) or not path.startswith("/en-us/job-detail/"):
-                        errors.append(f"{label}: invalid job in offset {start}")
-                        continue
-                    if job_id in seen:
-                        continue
-                    seen.add(job_id)
-                    url = urljoin(BASE, path)
-                    html = get_text(session, url)
-                    description = _description(html) if html else ""
-                    if not description:
-                        errors.append(f"{label}: description unavailable for {job_id}")
-                    jobs.append({
-                        "company": "Bank of America", "source_id": job_id,
-                        "title": row.get("postingTitle") or "Untitled job",
-                        "location": row.get("location") or row.get("primaryLocation") or "India",
-                        "url": url, "description": description,
-                    })
-                if deadline and time.monotonic() >= deadline:
-                    break
-                if start + len(rows) >= total or len(rows) < PAGE_SIZE:
-                    break
     if errors:
         if not jobs:
             raise RuntimeError("Bank of America: " + "; ".join(errors[:5]))

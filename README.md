@@ -10,7 +10,7 @@ A local job discovery prototype for students and early career applicants in Indi
 - React interface backed by FastAPI, using the same local database and matching code as the collector.
 - The Internshala collector samples the broad internship listing and the requested salary-filtered jobs and stipend-filtered internships, with bounded pagination and duplicate checks. The sidebar also links directly to both filtered pages.
 - A bounded LinkedIn collector reads up to 20 listings from logged-out guest search pages for data engineer roles in India posted within the last 24 hours, then reads guest job descriptions. Public pages act as a fallback for ordinary failures. HTTP 429 stops LinkedIn collection for that run; `stats.py --health` reports the failure or partial result.
-- A Bank of America collector samples up to 30 postings each from the general and student India searches, then reads public job descriptions. The student search can legitimately return zero jobs; `stats.py --health` shows partial results if a page or detail request fails.
+- A Bank of America collector requests up to 1,000 postings each from the general and student India searches, then reads public job descriptions. It marks a truncated response as partial. The student search can legitimately return zero jobs; `stats.py --health` shows partial results if a request fails.
 
 This is a prototype. Relevance scores rank jobs; they are not validated probabilities of being hired or being eligible. The last-observed date does not confirm that a listing is still open. Job sources can change or become unavailable. Application form automation is not implemented.
 
