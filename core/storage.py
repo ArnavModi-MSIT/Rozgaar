@@ -179,6 +179,20 @@ def mark_observed(conn, jid, observed_at):
     conn.execute("UPDATE jobs SET last_seen = ? WHERE id = ?", (observed_at, jid))
 
 
+def refresh_mastercard_from_workday(conn, jid, job):
+    """Replace a matching legacy Phenom row with its richer Workday version."""
+    if not job.get("description"):
+        return False
+    cur = conn.execute(
+        """UPDATE jobs SET title = ?, location = ?, url = ?, description = ?,
+               source = 'mastercard_workday', category = NULL, skills = NULL,
+               experience_years = NULL
+           WHERE id = ? AND company = 'mastercard' AND source = 'phenom'""",
+        (job["title"], job["location"], job["url"], job["description"], jid),
+    )
+    return cur.rowcount > 0
+
+
 def mark_dismissed(conn, jid, dismissed=True):
     """Used by the UI's remove button. Committed
     immediately (not batched) since it's a single interactive click, not

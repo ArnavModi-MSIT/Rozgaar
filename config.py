@@ -207,7 +207,9 @@ PHENOM = [
     # analytics signal (Senior Data Scientist x2, AI Engineer, Senior Data
     # Analyst, Associate Analyst Analytics & Metrics). One of the best
     # finds this session — real Gurgaon Tech Hub volume in exactly the
-    # role family this board targets.
+    # role family this board targets. The separate mastercard_workday
+    # collector now covers its India Workday site; shared requisition IDs
+    # deduplicate overlaps while this feed retains Phenom-only jobs.
     {"company": "mastercard", "domain": "careers.mastercard.com", "refnum": "", "locale": "us/en"},
 ]
 
