@@ -71,6 +71,10 @@ def _load_jobs_df():
     df["first_seen"] = pd.to_datetime(df["first_seen"], unit="s")
     df["last_seen"] = pd.to_datetime(df["last_seen"], unit="s")
     df["country"] = df["location"].apply(parse_country)
+    # Apply the same country gate to previously saved rows. A corrected
+    # location parser should remove foreign postings from the UI immediately,
+    # without deleting local history from SQLite.
+    df = df[df["country"].isin(["India", "Unknown"])].copy()
     df["city"] = df["location"].apply(parse_city)
     df["is_remote"] = df["location"].apply(is_remote)
     df["is_ncr"] = df["location"].fillna("").apply(lambda loc: bool(config.LOCATION.search(loc)))

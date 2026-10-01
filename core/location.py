@@ -21,6 +21,9 @@ COUNTRIES = [
     "canada", "australia", "singapore", "germany", "ireland",
     "netherlands", "france", "uae", "united arab emirates", "poland",
     "philippines", "mexico", "brazil", "japan", "china", "spain",
+    "south korea", "serbia", "sweden", "italy", "switzerland",
+    "denmark", "costa rica", "new zealand", "saudi arabia",
+    "israel", "finland", "portugal", "austria",
 ]
 
 _COUNTRY_DISPLAY = {
@@ -47,6 +50,24 @@ _US_STATE_ABBREVIATIONS = {
     "or", "pa", "ri", "sc", "sd", "tn", "tx", "ut", "vt", "va", "wa", "wv",
     "wi", "wy", "dc",
 }
+
+# Some ATS boards publish the full state name, or just a well-known US city.
+# These are unambiguous location signals observed in saved Databricks/OpenAI
+# postings; unknown locations still pass through for manual review.
+_US_STATE_NAMES = {
+    "alabama", "alaska", "arizona", "arkansas", "california", "colorado",
+    "connecticut", "delaware", "florida", "georgia", "hawaii", "idaho",
+    "illinois", "indiana", "iowa", "kansas", "kentucky", "louisiana",
+    "maine", "maryland", "massachusetts", "michigan", "minnesota",
+    "mississippi", "missouri", "montana", "nebraska", "nevada",
+    "new hampshire", "new jersey", "new mexico", "new york",
+    "north carolina", "north dakota", "ohio", "oklahoma", "oregon",
+    "pennsylvania", "rhode island", "south carolina", "south dakota",
+    "tennessee", "texas", "utah", "vermont", "virginia", "washington",
+    "west virginia", "wisconsin", "wyoming",
+}
+_US_CITY_ONLY = {"san francisco", "seattle", "mountain view", "bellevue", "chicago", "boston"}
+_US_STATE_RE = re.compile(r"\b(?:" + "|".join(re.escape(name) for name in sorted(_US_STATE_NAMES, key=len, reverse=True)) + r")\b")
 
 # Tokens that show up as a location segment but aren't a real city —
 # work-arrangement descriptors. Excluded from being picked as the "city"
@@ -79,6 +100,8 @@ def parse_country(location):
     # appearing inside an unrelated word.
     segments = [s.strip() for s in re.split(r"[,;|]", text)]
     if any(seg in _US_STATE_ABBREVIATIONS for seg in segments):
+        return "United States"
+    if _US_STATE_RE.search(text) or text.strip() in _US_CITY_ONLY or re.search(r"\bwashington\s*,?\s*d\.?c\.?\b", text):
         return "United States"
     # ISO 3166-1 alpha-2 country-code prefix, e.g. "IN-Pune", "GB-London",
     # "DE-Munich" — confirmed as Snowflake's own Ashby location convention

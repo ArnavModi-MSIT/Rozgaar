@@ -79,12 +79,14 @@ The `standard` adapter handles Greenhouse, Lever, and Ashby. Its HTTP connection
 1. `init_db()` creates or migrates SQLite tables. The database directory is created at `run.py` import time.
 2. `run.py` preloads existing IDs and repost keys from **all** saved jobs, including dismissed ones.
 3. It submits every entry in `core.collector.PLATFORMS` to a thread pool with one shared deadline (`RUN_DEADLINE_SECONDS`, default 600 seconds). Network fetching overlaps; SQLite writes happen in the main thread.
-4. For each returned posting, it drops locations confidently outside India. Unknown locations are kept. It updates `last_seen` for an existing `job_id`, then checks the repost key for new IDs, then inserts new jobs. Missing postings are never automatically marked closed.
+4. For each returned posting, it drops locations confidently outside India. The parser recognizes country names, US state names and abbreviations, and several unambiguous US city-only locations. Unknown locations are kept. It updates `last_seen` for an existing `job_id`, then checks the repost key for new IDs, then inserts new jobs. Missing postings are never automatically marked closed.
 5. It writes one `run_stats` row per platform. A raised platform error receives `status='failed'`; the standard ATS, Unstop, Internshala, and LinkedIn collectors can also return `status='partial'` when some boards, pages, or descriptions fail. Their reasons are saved in `run_stats.error`. Some other platforms still return plain job lists and cannot yet signal internal partial failure. The legacy `jobs_matched` statistic currently equals `jobs_fetched` and is **not** a count of resume matches.
 6. `process_backlog()` fills missing category, skills, and experience fields. The three processors have separate error handling, so a classification failure does not prevent skill or experience extraction.
 7. It removes rows whose `first_seen` is older than 365 days. This is age-based cleanup, not verification that a posting is still open.
 
 The stable ID is `company:source_id` when the source provides an ID; otherwise it is a hash of company, title, and URL. The repost key is `(company, normalized title, parsed city, normalized description fingerprint)`. It can catch a repost with a new source ID, but it is not a perfect cross-site identity system. Dismissed jobs remain in dedup sets so they do not reappear simply because an employer reposted them.
+
+The API applies the same India-or-unknown country rule when loading previously saved jobs. This hides older foreign rows after a parser correction without deleting them from SQLite. The React location checkboxes are additional user filters, not the country gate.
 
 ### Enrichment
 
