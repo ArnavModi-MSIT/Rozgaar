@@ -1,7 +1,7 @@
 """Offline contract tests for the bounded public LinkedIn collector."""
 
 import unittest
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
 from fetchers import linkedin
 
@@ -71,6 +71,29 @@ class LinkedInTests(unittest.TestCase):
         self.assertEqual(error, "")
         self.assertEqual(get.call_args_list[0].kwargs["params"]["start"], 0)
         self.assertEqual(get.call_args_list[1].kwargs["params"]["start"], 10)
+
+    def test_http_429_is_not_a_fallback_request(self):
+        response = Mock(status_code=429)
+        with patch.object(linkedin.SESSION, "get", return_value=response) as get:
+            with self.assertRaisesRegex(linkedin.RateLimited, "HTTP 429"):
+                linkedin._get(linkedin.GUEST_DETAIL_URL.format("123"))
+        self.assertEqual(get.call_count, 1)
+
+    def test_detail_rate_limit_stops_remaining_jobs(self):
+        second = SEARCH_HTML.replace("123", "456").replace("example-123", "example-456")
+        with patch.object(linkedin, "_get", side_effect=[SEARCH_HTML + second, DETAIL_HTML, linkedin.RateLimited("HTTP 429")]) as get, \
+             patch.object(linkedin.time, "sleep"):
+            result = linkedin.collect()
+        self.assertEqual(result.status, "partial")
+        self.assertEqual(len(result), 1)
+        self.assertIn("HTTP 429", result.error)
+        self.assertEqual(get.call_count, 3)
+
+    def test_search_rate_limit_stops_before_details(self):
+        with patch.object(linkedin, "_get", side_effect=linkedin.RateLimited("HTTP 429")) as get:
+            with self.assertRaises(linkedin.RateLimited):
+                linkedin.collect()
+        self.assertEqual(get.call_count, 1)
 
 
 if __name__ == "__main__":

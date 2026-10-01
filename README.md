@@ -9,7 +9,7 @@ A local job discovery prototype for students and early career applicants in Indi
 - PDF, DOCX, and TXT resume upload (5 MB limit). Matching combines `all-MiniLM-L6-v2` semantic similarity with explicit skill overlap. Resume skills can be corrected in the React sidebar.
 - React interface backed by FastAPI, using the same local database and matching code as the collector.
 - The Internshala collector samples the broad internship listing and the requested salary-filtered jobs and stipend-filtered internships, with bounded pagination and duplicate checks. The sidebar also links directly to both filtered pages.
-- A bounded LinkedIn collector reads up to 20 listings from logged-out guest search pages for data engineer roles in India posted within the last 24 hours, then reads guest job descriptions. Public pages act as a fallback. It reports partial results when a page or description cannot be fetched.
+- A bounded LinkedIn collector reads up to 20 listings from logged-out guest search pages for data engineer roles in India posted within the last 24 hours, then reads guest job descriptions. Public pages act as a fallback for ordinary failures. HTTP 429 stops LinkedIn collection for that run; `stats.py --health` reports the failure or partial result.
 
 This is a prototype. Relevance scores rank jobs; they are not validated probabilities of being hired or being eligible. The last-observed date does not confirm that a listing is still open. Job sources can change or become unavailable. Application form automation is not implemented.
 
@@ -45,6 +45,8 @@ python stats.py --health
 ```
 
 It distinguishes failed or partial fetches from genuinely empty results, labels unconfigured Workable as such, and flags large drops against earlier successful runs. The baseline appears after three earlier successful nonzero runs for a platform. It does not verify whether individual saved jobs are still open.
+
+If a source is `partial` or `failed`, its error line identifies the board or request to investigate. A 429 means that source rate limited the run; retrying immediately will not help. The Postman and PhonePe Greenhouse board slugs were removed after both returned 404 on 1 October 2026; their official career pages need separately verified adapters before they can be collected again.
 
 ## Local and offline use
 

@@ -10,6 +10,7 @@ import re
 from concurrent.futures import ThreadPoolExecutor
 
 import requests
+from requests.adapters import HTTPAdapter
 
 from fetchers.http_client import DEFAULT_TIMEOUT, get_json
 from fetchers.result import CollectionResult
@@ -30,6 +31,9 @@ MAX_DESCRIPTION_CHARS = 3000  # some Greenhouse descriptions run 20-50KB;
 
 SESSION = requests.Session()
 SESSION.headers["User-Agent"] = "jobbot/1.0"
+# collect() can make 16 Greenhouse/Lever/Ashby requests concurrently. Keep
+# that many pooled connections instead of triggering urllib3's pool-full logs.
+SESSION.mount("https://", HTTPAdapter(pool_connections=16, pool_maxsize=16))
 
 _TAG_RE = re.compile(r"<[^>]+>")
 _BLOCK_BREAK_RE = re.compile(r"</(p|div|li|br|h[1-6])\s*/?>", re.I)

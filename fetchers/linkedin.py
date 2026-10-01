@@ -28,11 +28,18 @@ TIMEOUT = 15
 SESSION = requests.Session()
 SESSION.headers.update({"User-Agent": "Mozilla/5.0"})
 JOB_ID_RE = re.compile(r"jobPosting:(\d+)")
+REQUEST_GAP_SECONDS = 1.0
+
+
+class RateLimited(RuntimeError):
+    """The source asked this run to stop requesting LinkedIn pages."""
 
 
 def _get(url, *, params=None):
     try:
         response = SESSION.get(url, params=params, timeout=TIMEOUT)
+        if response.status_code == 429:
+            raise RateLimited("linkedin returned HTTP 429; stopped this run")
         response.raise_for_status()
         if "/uas/login" in response.url or "security check" in response.text[:2000].lower():
             return None
@@ -103,16 +110,22 @@ def collect(deadline=None):
         seen.add(job["source_id"])
         if deadline is not None and time.monotonic() >= deadline:
             return CollectionResult(jobs, status="partial", error="linkedin deadline before all descriptions")
-        detail = _get(GUEST_DETAIL_URL.format(job["source_id"]))
-        job["description"] = _description(detail) if detail else ""
-        if not job["description"]:
-            fallback = _get(job["url"])
-            job["description"] = _description(fallback) if fallback else ""
+        try:
+            detail = _get(GUEST_DETAIL_URL.format(job["source_id"]))
+            job["description"] = _description(detail) if detail else ""
+            if not job["description"]:
+                fallback = _get(job["url"])
+                job["description"] = _description(fallback) if fallback else ""
+        except RateLimited as exc:
+            if not jobs:
+                raise
+            reasons = [reason for reason in (search_error, str(exc)) if reason]
+            return CollectionResult(jobs, status="partial", error="; ".join(reasons))
         if not job["description"]:
             failures += 1
         jobs.append(job)
         if len(jobs) < MAX_JOBS:
-            time.sleep(0.3)
+            time.sleep(REQUEST_GAP_SECONDS)
 
     if not jobs:
         raise RuntimeError("linkedin public search had no parsable cards")

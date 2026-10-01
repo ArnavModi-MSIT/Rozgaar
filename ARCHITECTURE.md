@@ -30,7 +30,7 @@ The embedding cache is generated locally. The React client does not fetch career
 
 The Internshala adapter samples three listing paths: broad internships (up to 30 pages), salary-filtered jobs (up to 10 pages), and stipend-filtered internships (up to 10 pages). It deduplicates source IDs across those searches and reports a partial source result if one search fails. The sidebar also opens the two filtered searches directly in a browser tab.
 
-The LinkedIn adapter uses the logged-out `jobs-guest` search and detail fragments for India data engineer jobs from the last 24 hours. It reads at most two pages of 10 cards and requests each guest description. If a guest route fails, it tries the public search or job page. This is a small sample; if both routes fail, the source fails or reports partial results rather than silently claiming success.
+The LinkedIn adapter uses the logged-out `jobs-guest` search and detail fragments for India data engineer jobs from the last 24 hours. It reads at most two pages of 10 cards and requests each guest description, pacing detail requests one second apart. An ordinary guest failure falls back to the public search or job page. HTTP 429 stops LinkedIn requests for that run without a fallback; the run is marked failed or partial. This is a small sample, not a complete listing.
 
 ## Repository map
 
@@ -68,7 +68,7 @@ Each collector returns job dictionaries with the common fields below. The collec
 }
 ```
 
-The `standard` adapter handles Greenhouse, Lever, and Ashby. Other adapters cover Oracle, Workday, SmartRecruiters, SuccessFactors, Phenom, iCIMS, Eightfold, Workable, Unstop, Internshala, Google Careers, Amazon, and several company-specific sites. Most use public JSON endpoints; some parse HTML. An adapter must normalize the same fields even if its source uses different names. `config.WORKABLE` is currently empty, so the registered Workable collector is reported as skipped rather than as a successful zero-job fetch.
+The `standard` adapter handles Greenhouse, Lever, and Ashby. Its HTTP connection pool matches its 16 board-fetch workers. Postman and PhonePe were removed from its Greenhouse list after their board slugs returned 404 on 1 October 2026; their career pages need new, verified adapters. Other adapters cover Oracle, Workday, SmartRecruiters, SuccessFactors, Phenom, iCIMS, Eightfold, Workable, Unstop, Internshala, LinkedIn, Google Careers, Amazon, and several company-specific sites. Most use public JSON endpoints; some parse HTML. An adapter must normalize the same fields even if its source uses different names. `config.WORKABLE` is currently empty, so the registered Workable collector is reported as skipped rather than as a successful zero-job fetch.
 
 ### What `python run.py` does
 
@@ -76,7 +76,7 @@ The `standard` adapter handles Greenhouse, Lever, and Ashby. Other adapters cove
 2. `run.py` preloads existing IDs and repost keys from **all** saved jobs, including dismissed ones.
 3. It submits every entry in `core.collector.PLATFORMS` to a thread pool with one shared deadline (`RUN_DEADLINE_SECONDS`, default 600 seconds). Network fetching overlaps; SQLite writes happen in the main thread.
 4. For each returned posting, it drops locations confidently outside India. Unknown locations are kept. It updates `last_seen` for an existing `job_id`, then checks the repost key for new IDs, then inserts new jobs. Missing postings are never automatically marked closed.
-5. It writes one `run_stats` row per platform. A raised platform error receives `status='failed'`; the standard ATS and Unstop collectors can also return `status='partial'` when some boards or pages fail. Their reasons are saved in `run_stats.error`. Other platforms still return plain job lists and cannot yet signal internal partial failure. The legacy `jobs_matched` statistic currently equals `jobs_fetched` and is **not** a count of resume matches.
+5. It writes one `run_stats` row per platform. A raised platform error receives `status='failed'`; the standard ATS, Unstop, Internshala, and LinkedIn collectors can also return `status='partial'` when some boards, pages, or descriptions fail. Their reasons are saved in `run_stats.error`. Some other platforms still return plain job lists and cannot yet signal internal partial failure. The legacy `jobs_matched` statistic currently equals `jobs_fetched` and is **not** a count of resume matches.
 6. `process_backlog()` fills missing category, skills, and experience fields. The three processors have separate error handling, so a classification failure does not prevent skill or experience extraction.
 7. It removes rows whose `first_seen` is older than 365 days. This is age-based cleanup, not verification that a posting is still open.
 
