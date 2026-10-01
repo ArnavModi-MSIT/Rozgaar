@@ -22,13 +22,15 @@ Card structure (confirmed real against an actual card, not guessed):
 """
 
 import logging
+import re
 import time
-from concurrent.futures import ThreadPoolExecutor
+from urllib.parse import urlencode
 
 import requests
 from bs4 import BeautifulSoup
 
 from fetchers.standard import strip_html
+from fetchers.result import CollectionResult
 
 log = logging.getLogger("jobbot")
 
@@ -37,6 +39,7 @@ TIMEOUT = 15
 RETRIES = 3
 RETRY_BACKOFF = (1, 2, 4)
 PAGE_SIZE = 20  # confirmed from a real response ("Showing 1 to 20 of 30 rows")
+MAX_PAGES = 50
 
 SESSION = requests.Session()
 SESSION.headers.update({
@@ -115,51 +118,66 @@ def fetch_google(cfg, deadline=None):
     location = cfg.get("location", "India")
     target_levels = cfg.get("target_levels", [])
 
-    query = f"location={location}"
-    for lvl in target_levels:
-        query += f"&target_level={lvl}"
+    params = []
+    if cfg.get("e"):
+        params.append(("e", cfg["e"]))
+    params.extend(("target_level", lvl) for lvl in target_levels)
+    params.append(("location", location))
+    query = urlencode(params)
 
     jobs = []
-    page = 1
-    while True:
+    errors = []
+    for page in range(1, MAX_PAGES + 1):
         if deadline is not None and time.monotonic() >= deadline:
+            errors.append(f"{query}: deadline reached before page {page}")
             break
         url = f"{BASE}jobs/results?{query}"
         if page > 1:
             url += f"&page={page}"
         html = _get(url)
         if not html:
+            errors.append(f"{query}: request failed on page {page}")
             break
         soup = BeautifulSoup(html, "html.parser")
         cards = soup.find_all("div", class_="sMn82b")
-        if not cards:
+        match = re.search(r"\b([\d,]+) jobs matched\b", soup.get_text(" ", strip=True))
+        if not match:
+            errors.append(f"{query}: result count missing on page {page}")
+            break
+        total = int(match.group(1).replace(",", ""))
+        if not cards and total:
+            errors.append(f"{query}: missing cards on page {page} of {total}")
             break
         for card in cards:
             job = _parse_card(card)
             if job["title"]:
                 jobs.append(job)
+        if page * PAGE_SIZE >= total:
+            break
         if len(cards) < PAGE_SIZE:
-            break  # short page — genuinely the last one
-        page += 1
+            errors.append(f"{query}: short page {page} of {total}")
+            break
         time.sleep(0.3)  # polite gap between page requests
-    return jobs
+    else:
+        errors.append(f"{query}: exceeded {MAX_PAGES} pages")
+    return CollectionResult(jobs, status="partial" if errors else "ok", error="; ".join(errors[:5]))
 
 
 def collect(configs, deadline=None):
-    # Parallelized across configs (e.g. different location/target_level
-    # combinations) — was fully sequential before. Same pattern as
-    # fetchers/oracle.py's collect(); pagination within a single config
-    # still runs sequentially inside fetch_google() since each page
-    # depends on the previous one not being short.
     if not configs:
-        return []
-    jobs = []
-    with ThreadPoolExecutor(max_workers=min(8, len(configs))) as pool:
-        futures = {pool.submit(fetch_google, cfg, deadline): cfg for cfg in configs}
-        for f in futures:
-            cfg = futures[f]
-            try:
-                jobs += f.result()
-            except Exception as e:
-                log.exception("google careers fetch failed for %s: %s", cfg.get("company"), e)
-    return jobs
+        return CollectionResult(status="skipped", error="no Google Careers searches configured")
+    jobs, errors, seen = [], [], set()
+    for cfg in configs:
+        result = fetch_google(cfg, deadline)
+        if result.status == "partial":
+            errors.append(result.error)
+        for job in result:
+            key = job["source_id"] or job["url"]
+            if key and key not in seen:
+                seen.add(key)
+                jobs.append(job)
+    if errors and not jobs:
+        raise RuntimeError("Google Careers: " + "; ".join(errors))
+    if errors:
+        log.warning("Google Careers partial collection: %s", "; ".join(errors))
+    return CollectionResult(jobs, status="partial" if errors else "ok", error="; ".join(errors[:5]))

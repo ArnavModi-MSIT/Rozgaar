@@ -34,6 +34,8 @@ The LinkedIn adapter uses the logged-out `jobs-guest` search and detail fragment
 
 The Bank of America adapter reads the public JSON requests behind the general and student India search pages. The site's offset query currently returns no rows after the first page, so the adapter requests up to 1,000 results from offset zero and checks the count against the reported total. It deduplicates requisition IDs and reads each public detail page for the description. A valid zero-result student search is successful; a truncated response, failed request, or missing description makes the source partial when other jobs were fetched.
 
+The Google Careers adapter collects both the broad India search and the requested early-level India search (`e=72477625&target_level=EARLY`). It parses server-rendered cards, follows the displayed total through pages of 20 with a 50-page safety limit, and deduplicates job IDs across searches. Its description contains the card's level and minimum qualifications rather than full detail-page text. Missing pages or result counts mark the source partial.
+
 ## Repository map
 
 | Path | Responsibility |

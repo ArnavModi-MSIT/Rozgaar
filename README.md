@@ -11,6 +11,7 @@ A local job discovery prototype for students and early career applicants in Indi
 - The Internshala collector samples the broad internship listing and the requested salary-filtered jobs and stipend-filtered internships, with bounded pagination and duplicate checks. The sidebar also links directly to both filtered pages.
 - A bounded LinkedIn collector reads up to 20 listings from logged-out guest search pages for data engineer roles in India posted within the last 24 hours, then reads guest job descriptions. Public pages act as a fallback for ordinary failures. HTTP 429 stops LinkedIn collection for that run; `stats.py --health` reports the failure or partial result.
 - A Bank of America collector requests up to 1,000 postings each from the general and student India searches, then reads public job descriptions. It marks a truncated response as partial. The student search can legitimately return zero jobs; `stats.py --health` shows partial results if a request fails.
+- Google Careers collects the broad India search and the requested early-level India search, follows result pages, and deduplicates overlapping job IDs. It stores the card's level and minimum qualifications as the description; incomplete searches appear as partial in `stats.py --health`.
 
 This is a prototype. Relevance scores rank jobs; they are not validated probabilities of being hired or being eligible. The last-observed date does not confirm that a listing is still open. Job sources can change or become unavailable. Application form automation is not implemented.
 
