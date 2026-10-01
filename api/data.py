@@ -60,7 +60,12 @@ def _load_jobs_df():
     try:
         init_db(conn)  # cheap no-op once migrated; makes a fresh clone work
         df = pd.read_sql_query(
-            "SELECT * FROM jobs WHERE dismissed = 0 ORDER BY first_seen DESC", conn
+            """SELECT * FROM jobs
+               WHERE dismissed = 0
+                 AND NOT (source = 'unstop' AND
+                          (lower(url) LIKE '%unstop.com/internships/%' OR
+                           lower(url) LIKE '%unstop.com/internship/%'))
+               ORDER BY first_seen DESC""", conn
         )
     finally:
         conn.close()

@@ -30,6 +30,8 @@ The embedding cache is generated locally. The React client does not fetch career
 
 The Internshala adapter samples three listing paths: broad internships (up to 30 pages), salary-filtered jobs (up to 10 pages), and stipend-filtered internships (up to 10 pages). It deduplicates source IDs across those searches and reports a partial source result if one search fails. The sidebar also opens the two filtered searches directly in a browser tab.
 
+The Unstop adapter fetches open jobs only. It no longer requests the internships opportunity type. The API excludes previously saved Unstop internship URLs from results without deleting those rows from SQLite.
+
 The LinkedIn adapter uses the logged-out `jobs-guest` search and detail fragments for India data engineer jobs from the last 24 hours. It reads at most two pages of 10 cards and requests each guest description, pacing detail requests one second apart. An ordinary guest failure falls back to the public search or job page. HTTP 429 stops LinkedIn requests for that run without a fallback; the run is marked failed or partial. This is a small sample, not a complete listing.
 
 The Bank of America adapter reads the public JSON requests behind the general and student India search pages. The site's offset query currently returns no rows after the first page, so the adapter requests up to 1,000 results from offset zero and checks the count against the reported total. It deduplicates requisition IDs and reads each public detail page for the description. A valid zero-result student search is successful; a truncated response, failed request, or missing description makes the source partial when other jobs were fetched.
@@ -174,7 +176,7 @@ The offline fixture tests in `tests/` cover Unstop, Greenhouse, source-health cl
 
 - A stored posting is not guaranteed to be open today; `last_seen` records an observation, but there is no confirmed-closed workflow. Old rows migrated from earlier versions start with `last_seen = first_seen`.
 - Save-time filtering only rejects confidently non-India locations. Unknown locations are kept and treated as potentially India-relevant in the UI.
-- Unstop currently fetches open jobs and internships broadly; it does not reproduce student, course, specialization, or passing-year filters from a search URL.
+- Unstop currently fetches open jobs broadly; it does not reproduce student or course filters from a search URL.
 - Resume scoring and category assignment have no labeled evaluation in this repo. Match percentages are ranking heuristics.
 - The API has no authentication, per-user state, upload-size limit, or multi-user isolation. Bind it to localhost.
 - Browser application automation and automatic submission are not implemented.

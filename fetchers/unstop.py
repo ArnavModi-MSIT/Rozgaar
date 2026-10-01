@@ -1,7 +1,7 @@
 """
 Fetcher for Unstop (unstop.com) — a real, public, unauthenticated API:
   GET https://unstop.com/api/public/opportunity/search-result
-      ?opportunity={jobs|internships}&page=N&per_page=50&oppstatus=open
+      ?opportunity=jobs&page=N&per_page=50&oppstatus=open
 Confirmed live via a real Playwright network capture, then verified
 directly with plain `requests` (no special headers/Referer needed, unlike
 several ATS platforms this project has hit). Response:
@@ -24,20 +24,17 @@ the exact real number Unstop already computed, instead of re-guessing it
 from prose, with zero schema changes (same "prefer enrichment over new
 infrastructure" call already made for the Workday facet investigation).
 
-Confirmed live: ~1003 jobs + ~751 internships, ~43-44% Fresher-tagged in
-a live sample, all India-located in the sample checked (no country
+Confirmed live: jobs include Fresher-tagged postings, all India-located in
+a sample checked (no country
 filter needed or found). Full HTML description included per posting
 (`details` field) — no separate detail-fetch needed.
 """
 
-import logging
 import time
 
 import requests
 
 from fetchers.result import CollectionResult
-
-log = logging.getLogger("jobbot")
 
 SEARCH_URL = "https://unstop.com/api/public/opportunity/search-result"
 DETAIL_BASE = "https://unstop.com"
@@ -45,9 +42,7 @@ TIMEOUT = 15
 RETRIES = 3
 RETRY_BACKOFF = (1, 2, 4)
 PAGE_SIZE = 50
-MAX_PAGES = 30  # ~1750 postings combined / 50 per page ~= 35 pages at
-# last check across both types; generous headroom, hard cap only to
-# guarantee termination if volume grows further.
+MAX_PAGES = 30  # hard cap to guarantee termination if volume grows.
 
 SESSION = requests.Session()
 SESSION.headers.update({
@@ -166,19 +161,4 @@ def _fetch_type(opportunity_type, deadline=None):
 
 
 def collect(deadline=None):
-    jobs = []
-    failures = 0
-    reasons = []
-    for opportunity_type in ("jobs", "internships"):
-        try:
-            result = _fetch_type(opportunity_type, deadline=deadline)
-            jobs += result
-            if result.status == "partial":
-                reasons.append(result.error)
-        except Exception as e:
-            log.exception("unstop '%s' failed: %s", opportunity_type, e)
-            failures += 1
-            reasons.append(str(e))
-    if failures == 2:
-        raise RuntimeError("unstop fetcher: both jobs and internships failed")
-    return CollectionResult(jobs, status="partial" if reasons else "ok", error="; ".join(reasons))
+    return _fetch_type("jobs", deadline=deadline)

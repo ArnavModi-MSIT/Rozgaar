@@ -25,7 +25,7 @@ class LocationFilterTests(unittest.TestCase):
             self.assertEqual(parse_country(location), "India")
         self.assertTrue(is_india_or_unknown("Location to be confirmed"))
 
-    def test_api_hides_existing_foreign_rows_without_deleting_them(self):
+    def test_api_hides_existing_foreign_and_unstop_internship_rows(self):
         from api import data
 
         with tempfile.TemporaryDirectory() as directory:
@@ -33,15 +33,21 @@ class LocationFilterTests(unittest.TestCase):
             with closing(sqlite3.connect(db_path)) as conn:
                 init_db(conn)
                 conn.executemany(
-                    "INSERT INTO jobs (id, company, title, location, url, description, source, first_seen, dismissed) VALUES (?, 'test', 'Analyst', ?, 'https://example.com', '', 'test', 1, 0)",
-                    [("india", "Bengaluru, India"), ("us", "San Francisco, California"), ("unknown", "Location to be confirmed")],
+                    "INSERT INTO jobs (id, company, title, location, url, description, source, first_seen, dismissed) VALUES (?, 'test', 'Analyst', ?, ?, '', ?, 1, 0)",
+                    [
+                        ("india", "Bengaluru, India", "https://example.com", "test"),
+                        ("us", "San Francisco, California", "https://example.com", "test"),
+                        ("unknown", "Location to be confirmed", "https://example.com", "test"),
+                        ("unstop-job", "Delhi, India", "https://unstop.com/jobs/analyst-1", "unstop"),
+                        ("unstop-internship", "Delhi, India", "https://unstop.com/internships/analyst-2", "unstop"),
+                    ],
                 )
                 conn.commit()
             with patch.object(data, "DB_PATH", db_path):
                 visible = data._load_jobs_df()
-            self.assertEqual(set(visible["id"]), {"india", "unknown"})
+            self.assertEqual(set(visible["id"]), {"india", "unknown", "unstop-job"})
             with closing(sqlite3.connect(db_path)) as conn:
-                self.assertEqual(conn.execute("SELECT count(*) FROM jobs").fetchone()[0], 3)
+                self.assertEqual(conn.execute("SELECT count(*) FROM jobs").fetchone()[0], 5)
 
 
 if __name__ == "__main__":

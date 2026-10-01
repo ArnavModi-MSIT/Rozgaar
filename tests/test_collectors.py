@@ -16,19 +16,14 @@ def fixture(name):
 
 
 class UnstopTests(unittest.TestCase):
-    def test_jobs_and_internships_are_normalized(self):
-        responses = {
-            "jobs": fixture("unstop_jobs.json")["data"],
-            "internships": fixture("unstop_internships.json")["data"],
-        }
-        with patch.object(unstop, "_get", side_effect=lambda kind, page: responses[kind]), patch.object(unstop.time, "sleep"):
+    def test_collect_fetches_jobs_only(self):
+        with patch.object(unstop, "_get", return_value=fixture("unstop_jobs.json")["data"]) as get:
             result = unstop.collect()
         self.assertEqual(result.status, "ok")
-        self.assertEqual(len(result), 2)
+        self.assertEqual(len(result), 1)
         self.assertEqual(result[0]["location"], "Delhi, India")
         self.assertIn("Experience required: 1 years.", result[0]["description"])
-        self.assertEqual(result[1]["url"], "https://unstop.com/internship/software-internship-202")
-        self.assertIn("Fresher-eligible", result[1]["description"])
+        get.assert_called_once_with("jobs", 1)
 
     def test_later_page_failure_is_partial(self):
         first = fixture("unstop_jobs.json")["data"]
@@ -44,14 +39,11 @@ class UnstopTests(unittest.TestCase):
             with self.assertRaisesRegex(RuntimeError, "page 1 request failed"):
                 unstop._fetch_type("jobs")
 
-    def test_one_type_failure_marks_combined_result_partial(self):
-        internship = fixture("unstop_internships.json")["data"]
-        with patch.object(unstop, "_get", side_effect=[None, internship]), patch.object(unstop.time, "sleep"):
-            with self.assertLogs("jobbot", level="ERROR"):
-                result = unstop.collect()
-        self.assertEqual(result.status, "partial")
-        self.assertEqual(len(result), 1)
-        self.assertIn("jobs: page 1 request failed", result.error)
+    def test_collect_fails_when_jobs_request_fails(self):
+        with patch.object(unstop, "_get", return_value=None) as get:
+            with self.assertRaisesRegex(RuntimeError, "jobs: page 1 request failed"):
+                unstop.collect()
+        get.assert_called_once_with("jobs", 1)
 
 
 class GreenhouseTests(unittest.TestCase):
