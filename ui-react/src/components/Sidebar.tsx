@@ -223,7 +223,7 @@ export default function Sidebar({
 
       <div>
         <h2 className="text-sm font-semibold tracking-wide uppercase text-gray-500 mb-2">
-          Internshala searches
+          Internshala jobs
         </h2>
         <div className="space-y-2 text-sm">
           <a
@@ -233,14 +233,6 @@ export default function Sidebar({
             className="block text-amber-800 underline hover:text-amber-950"
           >
             Jobs — salary filter ↗
-          </a>
-          <a
-            href="https://internshala.com/internships/stipend-10000"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="block text-amber-800 underline hover:text-amber-950"
-          >
-            Internships — stipend filter ↗
           </a>
         </div>
       </div>

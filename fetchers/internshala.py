@@ -1,13 +1,9 @@
 """
-Fetch public Internshala listing cards from three bounded searches:
-  /internships/                         existing broad sample
-  /jobs/salary-6/                       requested salary-filtered jobs
-  /internships/stipend-10000/           requested stipend-filtered internships
+Fetch public Internshala listing cards from the salary-filtered jobs search:
+  /jobs/salary-6/
 
-Each search uses its own page-N path and shares one source-ID dedup set.
-The HTML contains `div.individual_internship` cards for both jobs and
-internships. This is a bounded sample, not a complete crawl; the live
-search pages can change independently of this parser.
+The HTML uses `div.individual_internship` cards even for jobs. This is a
+bounded sample, not a complete crawl; the live page can change.
 """
 
 import logging
@@ -25,13 +21,9 @@ BASE = "https://internshala.com"
 TIMEOUT = 15
 RETRIES = 3
 RETRY_BACKOFF = (1, 2, 4)
-MAX_PAGES = 30  # ~40-50 cards/page -> ~1200-1500 postings sampled per
-# run for the existing broad internship search.
-FILTERED_MAX_PAGES = 10  # limit extra requests to each requested search
+MAX_PAGES = 10
 SEARCHES = (
-    ("internships", MAX_PAGES),
-    ("jobs/salary-6", FILTERED_MAX_PAGES),
-    ("internships/stipend-10000", FILTERED_MAX_PAGES),
+    ("jobs/salary-6", MAX_PAGES),
 )
 
 SESSION = requests.Session()
@@ -112,6 +104,8 @@ def _fetch_search(search_path, max_pages, seen_ids, deadline=None):
         new_on_page = 0
         for card in cards:
             job = _parse_card(card)
+            if "/internship/" in job["url"] or "/internships/" in job["url"]:
+                continue
             if not job["title"] or not job["url"] or job["source_id"] in seen_on_search:
                 continue
             seen_on_search.add(job["source_id"])

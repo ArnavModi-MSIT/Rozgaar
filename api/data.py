@@ -65,6 +65,8 @@ def _load_jobs_df():
                  AND NOT (source = 'unstop' AND
                           (lower(url) LIKE '%unstop.com/internships/%' OR
                            lower(url) LIKE '%unstop.com/internship/%'))
+                 AND NOT (source IN ('internshala', 'internshala_jobs', 'internshala_internships') AND
+                          lower(url) LIKE '%internshala.com/internship/%')
                ORDER BY first_seen DESC""", conn
         )
     finally:

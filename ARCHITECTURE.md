@@ -28,7 +28,7 @@ flowchart LR
 
 The embedding cache is generated locally. The React client does not fetch career sites itself.
 
-The Internshala adapter samples three listing paths: broad internships (up to 30 pages), salary-filtered jobs (up to 10 pages), and stipend-filtered internships (up to 10 pages). It deduplicates source IDs across those searches and reports a partial source result if one search fails. The sidebar also opens the two filtered searches directly in a browser tab.
+The Internshala adapter samples the salary-filtered jobs path (up to 10 pages). It no longer requests either internship search. The API hides previously saved Internshala internship URLs without deleting those rows from SQLite, and the sidebar links only to the jobs search.
 
 The Unstop adapter fetches open jobs only. It no longer requests the internships opportunity type. The API excludes previously saved Unstop internship URLs from results without deleting those rows from SQLite.
 
