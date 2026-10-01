@@ -75,6 +75,13 @@ def _load_jobs_df():
     if df.empty:
         return df
 
+    # Old Atlassian rows stored iCIMS apply-dialog URLs. Give the UI a
+    # usable first-party detail link even before the next collector run.
+    atlassian_ids = df["source"].eq("atlassian") & df["id"].str.match(r"^atlassian:\d+$")
+    df.loc[atlassian_ids, "url"] = (
+        "https://www.atlassian.com/company/careers/details/"
+        + df.loc[atlassian_ids, "id"].str.removeprefix("atlassian:")
+    )
     df["first_seen"] = pd.to_datetime(df["first_seen"], unit="s")
     df["last_seen"] = pd.to_datetime(df["last_seen"], unit="s")
     df["country"] = df["location"].apply(parse_country)

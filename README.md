@@ -15,6 +15,7 @@ A local job discovery prototype for students and early career applicants in Indi
 - A Bank of America collector requests up to 1,000 postings each from the general and student India searches, then reads public job descriptions. It marks a truncated response as partial. The student search can legitimately return zero jobs; `stats.py --health` shows partial results if a request fails.
 - Google Careers collects the broad India search and the requested early-level India search, follows result pages, and deduplicates overlapping job IDs. It stores the card's level and minimum qualifications as the description; incomplete searches appear as partial in `stats.py --health`.
 - Mastercard now collects from its India-filtered Workday `CorporateCareers` feed as well as the existing Phenom careers feed. Shared requisition IDs avoid duplicate jobs; Workday supplies full descriptions and can refresh matching older Phenom rows. `stats.py --health` shows the Workday source separately.
+- Atlassian job cards open its official details pages instead of iCIMS application dialogs. Previously saved Atlassian links are corrected in the API, and a collection run refreshes saved location and description data.
 
 This is a prototype. Relevance scores rank jobs; they are not validated probabilities of being hired or being eligible. The last-observed date does not confirm that a listing is still open. Job sources can change or become unavailable. Application form automation is not implemented.
 

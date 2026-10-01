@@ -10,11 +10,9 @@ multiple, e.g. ["Remote - Japan - Remote", "Remote - Remote"]), category,
 overview/responsibilities/qualifications (HTML), applyUrl,
 portalJobPost.id / id (numeric).
 
-Interesting: applyUrl resolves to *-atlassian.icims.com — this endpoint is
-Atlassian's own first-party wrapper around iCIMS data, not a different
-platform. Calling iCIMS's own /jobs endpoint directly returned 405
-(confirmed via debug/debug_atlassian_icims.py) — this endpoint sidesteps
-that entirely.
+The API's applyUrl points at an iCIMS application dialog. Job cards should
+instead link to Atlassian's own /company/careers/details/{id} page, where
+the role description and Apply button render normally.
 
 No location scoping in the request itself (all 222 postings are global,
 across every country) — India-scoping happens the same way as every other
@@ -76,20 +74,23 @@ def _parse_job(j):
     locations = j.get("locations") or []
     location = ", ".join(locations) if locations else ""
 
+    source_id = str(j.get("id") or (j.get("portalJobPost") or {}).get("id") or "")
+    detail_url = (f"https://www.atlassian.com/company/careers/details/{source_id}"
+                  if source_id.isdigit() else j.get("applyUrl", ""))
     return {
         "company": "atlassian",
-        "source_id": str(j.get("id", "")),
+        "source_id": source_id,
         "title": j.get("title", ""),
         "location": location,
-        "url": j.get("applyUrl", ""),
+        "url": detail_url,
         "description": strip_html(combined, max_chars=None)[:6000] if combined else "",
     }
 
 
 def fetch_all():
     data = _get()
-    if not data:
-        return []
+    if not isinstance(data, list):
+        raise RuntimeError("Atlassian careers: invalid or unavailable listings response")
     jobs = []
     for j in data:
         job = _parse_job(j)

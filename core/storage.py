@@ -193,6 +193,29 @@ def refresh_mastercard_from_workday(conn, jid, job):
     return cur.rowcount > 0
 
 
+def refresh_atlassian_job(conn, jid, job):
+    """Correct saved Atlassian links and locations without changing row identity."""
+    old = conn.execute(
+        "SELECT title, location, url, description FROM jobs WHERE id = ? AND source = 'atlassian'",
+        (jid,),
+    ).fetchone()
+    if old is None:
+        return False
+    new = (job["title"], job.get("location") or "", job["url"], job.get("description") or "")
+    if old == new:
+        return False
+    reprocess = old[0] != new[0] or old[3] != new[3]
+    conn.execute(
+        """UPDATE jobs SET title = ?, location = ?, url = ?, description = ?,
+               category = CASE WHEN ? THEN NULL ELSE category END,
+               skills = CASE WHEN ? THEN NULL ELSE skills END,
+               experience_years = CASE WHEN ? THEN NULL ELSE experience_years END
+           WHERE id = ?""",
+        (*new, reprocess, reprocess, reprocess, jid),
+    )
+    return True
+
+
 def mark_dismissed(conn, jid, dismissed=True):
     """Used by the UI's remove button. Committed
     immediately (not batched) since it's a single interactive click, not

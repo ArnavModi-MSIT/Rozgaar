@@ -56,7 +56,7 @@ from core.storage import (
     get_oracle_jobs_missing_description, get_unprocessed,
     get_workday_jobs_missing_description, init_db, job_id,
     load_dedup_keys, load_existing_ids, mark_observed, prune_non_india,
-    record_stats, refresh_mastercard_from_workday,
+    record_stats, refresh_atlassian_job, refresh_mastercard_from_workday,
     reset_experience_years, reset_skills, save_job, update_categories,
     update_descriptions, update_experience, update_skills,
 )
@@ -222,12 +222,19 @@ def run():
                 for job in jobs:
                     fetched += 1
                     p_fetched += 1
+                    jid = job_id(job)
+                    if platform_name == "atlassian" and jid in existing_ids:
+                        # Correct legacy blank locations before the country
+                        # gate, so known US postings stop appearing in the UI.
+                        mark_observed(conn, jid, int(time.time()))
+                        if refresh_atlassian_job(conn, jid, job):
+                            dedup_keys.add(dedup_key(job["company"], job["title"], job.get("location"), job.get("description")))
                     if not is_india_or_unknown(job.get("location")):
                         non_india += 1
                         continue
-                    jid = job_id(job)
                     if jid in existing_ids:
-                        mark_observed(conn, jid, int(time.time()))
+                        if platform_name != "atlassian":
+                            mark_observed(conn, jid, int(time.time()))
                         if platform_name == "mastercard_workday" and refresh_mastercard_from_workday(conn, jid, job):
                             dedup_keys.add(dedup_key(job["company"], job["title"], job.get("location"), job.get("description")))
                         skipped += 1
