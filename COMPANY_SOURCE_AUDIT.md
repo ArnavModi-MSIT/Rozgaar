@@ -2,7 +2,7 @@
 
 Live snapshot: 2 October 2026. Counts are before project title, experience and UI filters. This audit does not modify SQLite.
 
-**71 companies have configured collectors; four remain unavailable.** `ok` means the collector completed its checks. `returned` means rows were received but the adapter has no completeness metadata. Neither status proves every vacancy is current. `partial` identifies an incomplete fetch or missing eligibility/description information.
+**72 companies have configured collectors; three remain unavailable.** `ok` means the collector completed its checks. `returned` means rows were received but the adapter has no completeness metadata. Neither status proves every vacancy is current. `partial` identifies an incomplete fetch or missing eligibility/description information.
 
 Google and Microsoft retain the requested early-career filters. LinkedIn here means LinkedIn as an employer only. Its general job-board collector remains removed. Automattic remote jobs have unverified geographic eligibility. HRT and Zerodha had no confirmed India jobs.
 
@@ -42,7 +42,7 @@ Google and Microsoft retain the requested early-career filters. LinkedIn here me
 | Cohesity | workday_india | ok | 15 | 15 (description) |  |
 | Oracle / OCI | oracle | returned | 17 | 17 (description) | Fetcher has no completeness metadata; returned count does not prove full coverage. |
 | Booking.com | booking | ok | 24 | 24 (description) |  |
-| Indeed | — | unavailable | — | — (none) | Official careers endpoint returned HTTP 403; no working public feed confirmed. |
+| Indeed | â€” | unavailable | â€” | â€” (none) | Official careers endpoint returned HTTP 403; no working public feed confirmed. |
 | Bloomberg | bloomberg | ok | 8 | 8 (description) |  |
 | GitLab | greenhouse | returned | 28 | 28 (description) | Fetcher has no completeness metadata; returned count does not prove full coverage. |
 | Automattic | automattic | partial | 0 | 0 (none) | Individual geographic eligibility is unspecified; review each description |
@@ -52,11 +52,11 @@ Google and Microsoft retain the requested early-career filters. LinkedIn here me
 | PhonePe | smartrecruiters | returned | 89 | 89 (description) | Fetcher has no completeness metadata; returned count does not prove full coverage. |
 | Razorpay | greenhouse | returned | 17 | 17 (description) | Fetcher has no completeness metadata; returned count does not prove full coverage. |
 | Swiggy | swiggy | ok | 75 | 75 (description) |  |
-| Zomato | — | unavailable | — | — (none) | Official careers page accessible but no vacancy feed found. Legacy Zomato1 SmartRecruiters postings dated 2015/2016 were rejected as stale. |
+| Zomato | â€” | unavailable | â€” | â€” (none) | Official careers page accessible but no vacancy feed found. Legacy Zomato1 SmartRecruiters postings dated 2015/2016 were rejected as stale. |
 | Meesho | lever | returned | 57 | 57 (description) | Fetcher has no completeness metadata; returned count does not prove full coverage. |
 | CRED | lever | returned | 8 | 8 (description) | Fetcher has no completeness metadata; returned count does not prove full coverage. |
 | Groww | greenhouse | returned | 7 | 7 (description) | Fetcher has no completeness metadata; returned count does not prove full coverage. |
-| Zepto | — | unavailable | — | — (none) | Official page returned HTTP 429; public vacancy endpoint not verified. |
+| Zepto | zepto | ok | 1 | 1 (description) | Public Darwinbox listing total verified; full JD returned. |
 | Zerodha | zerodha | ok | 0 | 0 (none) |  |
 | American Express | oracle | returned | 60 | 60 (description) | Fetcher has no completeness metadata; returned count does not prove full coverage. |
 | Visa | workday | returned | 79 | 0 (none) | Fetcher has no completeness metadata; returned count does not prove full coverage. |
@@ -74,7 +74,7 @@ Google and Microsoft retain the requested early-career filters. LinkedIn here me
 | AlphaGrep | greenhouse | returned | 7 | 7 (description) | Fetcher has no completeness metadata; returned count does not prove full coverage. |
 | WorldQuant | greenhouse | returned | 8 | 8 (description) | Fetcher has no completeness metadata; returned count does not prove full coverage. |
 | Hudson River Trading | hrt | ok | 0 | 0 (none) |  |
-| Citadel Securities | — | unavailable | — | — (none) | Official listing returned HTTP 403. |
+| Citadel Securities | â€” | unavailable | â€” | â€” (none) | Official listing returned HTTP 403. |
 | IMC Trading | greenhouse | returned | 16 | 16 (description) | Fetcher has no completeness metadata; returned count does not prove full coverage. |
 | Optiver | greenhouse | returned | 4 | 4 (description) | Fetcher has no completeness metadata; returned count does not prove full coverage. |
 | Squarepoint Capital | greenhouse | returned | 23 | 23 (description) | Fetcher has no completeness metadata; returned count does not prove full coverage. |
@@ -96,6 +96,7 @@ The JSON records UTC check times, returned counts, unknown locations, duration a
 ## Unavailable sources
 
 - Indeed employer: official careers endpoint returned 403.
-- Zepto: official career page returned 429; vacancy destination not verified.
 - Citadel Securities: official vacancies endpoint returned 403.
 - Zomato: Eternal careers has no discovered public vacancy feed. The accessible Zomato1 SmartRecruiters board contains 2015/2016 postings and was rejected as stale.
+
+Zepto was connected on 2 October 2026 using the supplied Darwinbox URL. Its current opening is Manager I - Delivery Hub Manager in Bengaluru (operations, not a coding role).

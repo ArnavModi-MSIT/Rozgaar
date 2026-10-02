@@ -696,3 +696,5 @@ WORKDAY_INDIA = [
 ]
 
 DISPLAY_NAMES.update({"hrt":"Hudson River Trading", "bloomberg":"Bloomberg", "linkedin_company":"LinkedIn"})
+
+DISPLAY_NAMES["zepto"] = "Zepto"

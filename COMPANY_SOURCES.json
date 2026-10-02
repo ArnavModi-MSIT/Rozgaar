@@ -198,8 +198,7 @@
   {
     "name": "Zepto",
     "key": "zepto",
-    "career_url": "https://www.zepto.com/s/careers",
-    "availability_note": "Official page returned HTTP 429; public vacancy endpoint not verified."
+    "career_url": "https://zepto.darwinbox.in/ms/candidatev2/main/careers/allJobs"
   },
   {
     "name": "Zerodha",

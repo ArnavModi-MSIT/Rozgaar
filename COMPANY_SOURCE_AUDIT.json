@@ -622,11 +622,17 @@
   {
     "name": "Zepto",
     "key": "zepto",
-    "source": null,
-    "checked_at": "2026-10-02T11:29:49.568647+00:00",
-    "status": "unavailable",
-    "note": "Official page returned HTTP 429; public vacancy endpoint not verified.",
-    "career_url": "https://www.zepto.com/s/careers"
+    "career_url": "https://zepto.darwinbox.in/ms/candidatev2/main/careers/allJobs",
+    "source": "zepto",
+    "checked_at": "2026-10-02T12:01:20.583451+00:00",
+    "status": "ok",
+    "total_returned": 1,
+    "india_jobs": 1,
+    "unknown_locations": 0,
+    "india_descriptions": 1,
+    "description_type": "description",
+    "note": "",
+    "elapsed_seconds": 0.2
   },
   {
     "name": "Zerodha",
