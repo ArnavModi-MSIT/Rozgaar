@@ -447,15 +447,7 @@ SUCCESSFACTORS = [
 #   apply_domain: host that job detail links resolve to (click a listing,
 #     read the URL's host — usually careers-<slug>.icims.com)
 #
-# ZS Associates (jobs.zs.com) tested and DISABLED: the site returns the
-# Angular app shell (HTML) instead of JSON for every header combination we
-# tried (User-Agent, Accept, Referer, X-Requested-With, Sec-Fetch-*, warmed-
-# up session cookies matching a real browser exactly). Identical response
-# length every time regardless of headers points to bot detection at the
-# TLS/HTTP2 fingerprint level, which `requests` can't replicate — that's a
-# different problem than a missing header, and not one worth chasing further
-# for one company. Re-enable only if a future approach (e.g. a headless
-# browser) becomes worth the added complexity.
+# ZS uses the dedicated public /api/jobs wrapper in fetchers/zs.py.
 ICIMS = [
     # Cvent (Jibe variant) — confirmed via debug/debug_cvent.py: /api/jobs
     # returns clean JSON with full descriptions; server-side location

@@ -5,8 +5,7 @@ assets, cdn*.icims.com requests, and a same-origin JSON jobs endpoint).
 Two deployment variants confirmed so far:
 - ZS Associates (jobs.zs.com): endpoint at /jobs?page=N, jobs nested under
   a "data" key, detail links on a separate apply_domain
-  (careers-zs.icims.com). Site itself turned out Akamai-blocked — kept as
-  the reference for this variant's shape.
+  (careers-zs.icims.com). The current ZS /api/jobs endpoint is handled by fetchers/zs.py.
 - Cvent (careers.cvent.com): endpoint at /api/jobs?page=N (confirmed via
   debug/debug_cvent.py — 200, real JSON, full description field in the
   list response), job objects flat (no "data" wrapper), detail URL is

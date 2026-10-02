@@ -66,7 +66,7 @@ python stats.py --health
 
 It distinguishes failed or partial fetches from genuinely empty results, labels unconfigured Workable as such, and flags large drops against earlier successful runs. The baseline appears after three earlier successful nonzero runs for a platform. It does not verify whether individual saved jobs are still open.
 
-If a source is `partial` or `failed`, its error line identifies the board or request to investigate. A 429 means that source rate limited the run; retrying immediately will not help. The Postman and PhonePe Greenhouse board slugs were removed after both returned 404 on 1 October 2026; their official career pages need separately verified adapters before they can be collected again.
+If a source is `partial` or `failed`, its error line identifies the board or request to investigate. A 429 means that source rate limited the run; retrying immediately will not help. Postman remains disconnected after its old board returned 404. PhonePe is connected through its verified SmartRecruiters board.
 
 ## Local and offline use
 
@@ -129,3 +129,5 @@ Tower Research Capital uses its official `towerresearchcapital` Greenhouse board
 PhonePe uses SmartRecruiters tenant `PHONEPELIMITED`, verified against the 89 PUBLIC postings linked by the official careers feed. The existing adapter reads listing pages and descriptions. India ISO country code `in` is normalized to `India` to prevent confusion with the US state abbreviation.
 
 Swiggy collects the public NextHire `reqlist/get` response used by its careers frontend, with the same careers payload. All returned postings are read in one request, deduplicated by reqId, with included descriptions and source minimum experience. Links use the frontend job-detail context. Invalid responses fail the source; malformed listings or missing descriptions produce partial results; valid empty lists succeed. The API supplies no independent total, so coverage is verified against its returned list rather than a separate vacancy count.
+
+ZS Associates uses the public `/api/jobs` endpoint with the requested Bengaluru, Gurgaon, Noida and Pune filters. The adapter follows totalCount pagination, deduplicates IDs, includes descriptions, and uses first-party `/all/jobs/{slug}` links. Failed initial requests raise errors; interrupted pages, missing totals or descriptions produce partial results.
