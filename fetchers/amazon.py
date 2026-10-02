@@ -19,6 +19,7 @@ from concurrent.futures import ThreadPoolExecutor
 
 import requests
 
+from fetchers.result import CollectionResult
 from fetchers.http_client import get_json
 from fetchers.standard import strip_html
 
@@ -65,71 +66,79 @@ def _parse_job(j):
     }
 
 
-def fetch_query(cfg, deadline=None, max_pages=10):
-    """cfg controls the search: loc_query/country scope location,
-    industry_experience/base_query narrow further (e.g.
-    industry_experience="less_than_1_year" for fresher/intern-level roles,
-    matching this project's original real Amazon URL). max_pages caps
-    pagination — Amazon's India job count can be large, this keeps a
-    single query bounded."""
+def fetch_query(cfg, deadline=None, max_pages=1000):
+    """Read the reported result set; interrupted searches are partial."""
     jobs = []
+    seen = set()
     offset = 0
-    result_limit = RESULTS_PER_PAGE
-    while offset // result_limit < max_pages:
+    total = None
+    errors = []
+    for _ in range(max_pages):
         if deadline is not None and time.monotonic() >= deadline:
+            errors.append("deadline reached")
             break
         params = {
-            "offset": offset,
-            "result_limit": result_limit,
-            "sort": "relevant",
-            "loc_query": cfg.get("loc_query", "India"),
+            "offset": offset, "result_limit": RESULTS_PER_PAGE,
+            "sort": "relevant", "loc_query": cfg.get("loc_query", "India"),
             "country": cfg.get("country", "IND"),
         }
-        if cfg.get("industry_experience"):
-            params["industry_experience"] = cfg["industry_experience"]
-        if cfg.get("base_query"):
-            params["base_query"] = cfg["base_query"]
-
+        for field in ("industry_experience", "base_query"):
+            if cfg.get(field):
+                params[field] = cfg[field]
         data = _get(f"{BASE}/en/search.json", params)
-        if not data:
+        if not isinstance(data, dict) or not isinstance(data.get("jobs"), list):
+            if offset == 0:
+                raise RuntimeError("Amazon: first search page unavailable")
+            errors.append(f"page at offset {offset} unavailable")
             break
-        page_jobs = data.get("jobs", [])
-        # hits defaulting to 0 (found via review, same failure class as
-        # fetchers/icims.py and fetchers/oracle.py) would make
-        # "offset >= total" trivially true after just page one if this
-        # field were ever missing or zero. "not page_jobs" (page came
-        # back empty) is the real stop signal; only trust the total-based
-        # check when a real (truthy) total came back.
-        total = data.get("hits", 0)
-        if not page_jobs:
+        reported = data.get("hits")
+        if isinstance(reported, int) and reported >= 0:
+            total = reported
+        else:
+            errors.append("reported total missing")
+        batch = data["jobs"]
+        if not batch:
             break
-        for j in page_jobs:
-            job = _parse_job(j)
-            if job["title"]:
+        fresh = 0
+        for raw in batch:
+            job = _parse_job(raw)
+            key = job["source_id"] or job["url"]
+            if job["title"] and key and key not in seen:
                 jobs.append(job)
-        offset += result_limit
-        if total and offset >= total:
+                seen.add(key)
+                fresh += 1
+        if not fresh:
+            errors.append(f"repeated results at offset {offset}")
+            break
+        offset += len(batch)
+        if total is not None and offset >= total:
             break
         time.sleep(0.3)
-    return jobs
+    else:
+        errors.append("pagination safety limit reached")
+    if total is not None and len(jobs) != total:
+        errors.append(f"received {len(jobs)} of {total} listings")
+    return CollectionResult(jobs, status="partial" if errors else "ok", error="; ".join(dict.fromkeys(errors)))
 
 
 def collect(configs, deadline=None):
-    # Parallelized across configs — was fully sequential before. Same
-    # pattern as fetchers/oracle.py's collect(); pagination within a
-    # single config still runs sequentially inside fetch_query().
     if not configs:
-        return []
+        return CollectionResult(status="skipped", error="no Amazon searches configured")
     jobs = []
-    failures = 0
+    errors = []
+    successes = 0
     with ThreadPoolExecutor(max_workers=min(8, len(configs))) as pool:
         futures = [pool.submit(fetch_query, cfg, deadline) for cfg in configs]
-        for f in futures:
+        for future in futures:
             try:
-                jobs += f.result()
-            except Exception as e:
-                log.exception("amazon query failed: %s", e)
-                failures += 1
-    if failures == len(configs):
-        raise RuntimeError(f"amazon fetcher: all {len(configs)} quer(ies) failed")
-    return jobs
+                result = future.result()
+                jobs.extend(result)
+                successes += 1
+                if result.error:
+                    errors.append(result.error)
+            except Exception as exc:
+                errors.append(str(exc))
+    if not successes:
+        raise RuntimeError("Amazon: all searches failed: " + "; ".join(errors))
+    unique = {(job["company"], job["source_id"] or job["url"]): job for job in jobs}
+    return CollectionResult(unique.values(), status="partial" if errors else "ok", error="; ".join(errors))

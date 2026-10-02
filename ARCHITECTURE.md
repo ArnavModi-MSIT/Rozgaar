@@ -46,6 +46,8 @@ Mastercard is collected from both its Phenom careers site and the `CorporateCare
 
 Barclays collects every page of its public India search using `?p=` and reads official job descriptions. Posting IDs are deduplicated; incomplete pages, totals, or descriptions produce a partial source result.
 
+Amazon collects the complete India search with `industry_experience=less_than_1_year` and no keyword restriction. It follows the JSON endpoint's reported total, retaining descriptions and qualifications. Failed pages, repeated pages, deadlines, or the 1,000-page safety limit produce partial source results. The app applies its existing filters after collection.
+
 ## Repository map
 
 | Path | Responsibility |

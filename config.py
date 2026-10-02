@@ -167,13 +167,11 @@ GOOGLE_CAREERS = [
 # Confirmed via debug/debug_amazon.py: the public search page has no data
 # in raw HTML, but amazon.jobs/en/search.json (same query params) returns
 # complete structured data directly — full description, qualifications,
-# clean location. No bot-blocking encountered. Scoped to fresher/intern-
-# level roles (industry_experience="less_than_1_year") — matches what the
-# original real Amazon URL was already targeting, not all of Amazon India
-# (which would be thousands of senior roles too).
+# clean location. Read the full India search without keywords, preserving
+# industry_experience from the user's URL. Source filters do not guarantee
+# fresher eligibility; local experience and relevance filters still apply.
 AMAZON = [
-    {"loc_query": "India", "country": "IND", "industry_experience": "less_than_1_year", "base_query": "data"},
-    {"loc_query": "India", "country": "IND", "industry_experience": "less_than_1_year", "base_query": "intern"},
+    {"loc_query": "India", "country": "IND", "industry_experience": "less_than_1_year"},
 ]
 
 # --- Phenom People --------------------------------------------------------------
