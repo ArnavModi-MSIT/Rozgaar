@@ -541,6 +541,9 @@ INDIAMART = [
 # For companies whose slug casing looks wrong via .title() (phonepe -> PhonePe).
 # Anything not listed here falls back to slug.title().
 DISPLAY_NAMES = {
+    "deshaw": "D. E. Shaw India",
+    "quadeye": "Quadeye",
+    "rippling": "Rippling",
     "PHONEPELIMITED": "PhonePe",
     "towerresearchcapital": "Tower Research Capital",
     "gravitonresearchcapital": "Graviton Research Capital LLP",
