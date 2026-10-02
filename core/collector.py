@@ -8,7 +8,7 @@ import logging
 from concurrent.futures import ThreadPoolExecutor
 
 import config
-from fetchers import ainterviews, amazon, apple, atlassian, bank_of_america, barclays, blackrock, deloitte, deshaw, deutsche_bank, eightfold, expedia, flipkart, goldman_sachs, google_careers, icims, indiamart, intuit, mastercard_workday, meta, oracle, paypal, phenom, quadeye, rippling, smartrecruiters, standard, successfactors, swiggy, tower_research, uber, workable, workday, zs
+from fetchers import amd, booking, target, tesco, juspay, mediatek, millennium, ainterviews, amazon, apple, atlassian, bank_of_america, barclays, blackrock, deloitte, deshaw, deutsche_bank, eightfold, expedia, flipkart, goldman_sachs, google_careers, icims, indiamart, intuit, mastercard_workday, meta, oracle, paypal, phenom, quadeye, rippling, smartrecruiters, standard, successfactors, swiggy, tower_research, uber, workable, workday, zs
 from fetchers.result import CollectionResult
 log = logging.getLogger("jobbot")
 
@@ -19,6 +19,14 @@ log = logging.getLogger("jobbot")
 # runs once/day), but keeping the fast/high-yield platforms first still
 # means partial logs are more useful if something fails partway through.
 PLATFORMS = [
+    ("amd", lambda deadline: amd.collect(deadline=deadline)),
+    ("booking", lambda deadline: booking.collect(deadline=deadline)),
+    ("target", lambda deadline: target.collect(deadline=deadline)),
+    ("tesco", lambda deadline: tesco.collect(deadline=deadline)),
+    ("juspay", lambda deadline: juspay.collect(deadline=deadline)),
+    ("mediatek", lambda deadline: mediatek.collect(deadline=deadline)),
+    ("millennium", lambda deadline: millennium.collect(deadline=deadline)),
+
     ("paypal", lambda deadline: paypal.collect(deadline=deadline)),
     ("blackrock", lambda deadline: blackrock.collect(deadline=deadline)),
     ("intuit", lambda deadline: intuit.collect(deadline=deadline)),

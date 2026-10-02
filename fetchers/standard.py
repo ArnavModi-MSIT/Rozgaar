@@ -14,6 +14,9 @@ from requests.adapters import HTTPAdapter
 
 from fetchers.http_client import DEFAULT_TIMEOUT, get_json
 from fetchers.result import CollectionResult
+from core.location import parse_country
+
+INDIA_SCOPED_BOARDS = {"alphagrepsecurities", "nksecuritiesresearch", "worldquant", "imc", "optiverus", "mongodb", "datadog"}
 
 log = logging.getLogger("jobbot")
 
@@ -81,6 +84,10 @@ def _greenhouse_location(slug, job):
             location = location.strip() + ", India" if location.strip() else "India"
     if slug == "arcesiumllc" and location and all(part.strip().lower() in {"bengaluru", "bangalore", "gurugram", "gurgaon", "hyderabad"} for part in location.split(";")):
         location += ", India"
+    if slug in {"alphagrepsecurities", "worldquant", "mongodb"} and location:
+        parts = re.split(r";|\s+OR\s+", location, flags=re.I)
+        if all(part.strip().lower() in {"bengaluru", "bangalore", "gurugram", "gurgaon", "hyderabad", "mumbai", "chennai", "delhi", "new delhi", "pune"} for part in parts):
+            location = location.strip() + ", India"
     return location
 
 
@@ -103,6 +110,7 @@ def fetch_greenhouse(slug):
             "description": strip_html(j.get("content", ""), max_chars=None)[:6000],
         }
         for j in data.get("jobs", [])
+        if slug not in INDIA_SCOPED_BOARDS or parse_country(_greenhouse_location(slug, j)) == "India"
     ]
 
 
@@ -174,6 +182,7 @@ def fetch_ashby(slug):
             )[:6000],
         }
         for j in data.get("jobs", [])
+        if slug != "confluent" or parse_country(_ashby_location(j)) == "India"
     ]
 
 

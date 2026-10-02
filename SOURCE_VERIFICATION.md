@@ -56,3 +56,25 @@ Counts are a live snapshot, not a guarantee of future availability. Existing Wor
 | Expedia Group | 4 in final partial run | Intermittent HTTP 403: initial check returned 162 global / 27 India; final check returned 100 global / 4 India and failed page 5. Completeness is unverified; team summaries only. |
 
 Expedia failures now propagate to source health instead of silently appearing as successful empty or truncated collections. Counts are current snapshots, not guaranteed stable totals. Offline checks: 77 tests and compileall passed. Database history remains untouched.
+
+## Fifteen additional company sources (2026-10-02)
+
+| Company | Confirmed India jobs | Live verification |
+| --- | ---: | --- |
+| AlphaGrep | 7 | 15 raw Greenhouse rows; full descriptions; ambiguous multiple-location records omitted |
+| NK Securities Research | 12 | 14 raw Greenhouse rows; full descriptions |
+| WorldQuant | 8 | 96 raw Greenhouse rows; city-only India locations normalized |
+| IMC | 16 | 167 raw Greenhouse rows, includes mixed international/India locations |
+| Optiver | 4 | 168 raw rows on `optiverus`; `optiver` is an empty obsolete board |
+| Confluent | 1 | 17 raw Ashby rows; full description. Branded portal returned 429; broader portal coverage unverified |
+| MongoDB | 83 | 393 raw Greenhouse rows; India city combinations normalized |
+| Datadog | 8 | 440 raw Greenhouse rows; full descriptions |
+| Juspay | 0 | Official main page explicitly says no global openings; successful empty result. Indexed detail URLs exist but are not linked from that current page and were not assumed active |
+| AMD | 200 | Public India API pagination status ok; all descriptions; country metadata normalized |
+| MediaTek | 17 | All 617 global records across 7 pages checked; 17 India office records with descriptions, status ok |
+| Target | 67 | All five India search pages and full descriptions, status ok |
+| Tesco | 25 | All three official India search pages and full descriptions, status ok |
+| Booking.com | 24 | Public India API status ok, full descriptions; sample public job link HTTP 200 |
+| Millennium | 39 | Public legacy Eightfold India search status ok; department summaries only |
+
+Final tests: 86 offline unittest tests passed and Python compileall passed. Primary branded pages can be blocked while their linked public ATS listings work. Full descriptions remain subject to the adapters' documented character limits. No production collection or database cleanup was performed during these checks.

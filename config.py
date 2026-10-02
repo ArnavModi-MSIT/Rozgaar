@@ -31,6 +31,7 @@ SALESFORCE_RELEVANT = re.compile(
 # hard way: it doesn't resolve in DNS.) A plain slug string always uses the
 # one real API host; no region tuple needed.
 GREENHOUSE = [
+    "alphagrepsecurities", "nksecuritiesresearch", "worldquant", "imc", "optiverus", "mongodb", "datadog",
     "arcesiumllc",
     "gravitonresearchcapital",  # Board linked by Graviton careers. 
     "airbnb",  # Official India careers page IDs match this public board. 
@@ -70,6 +71,7 @@ GREENHOUSE = [
 ]
 LEVER = ["meesho", "cred", "paytm", "fampay", "zeta"]
 ASHBY = [
+    "confluent",
     "navi", "sarvam",
     # 746 postings live (debug/check_slugs.py) — India presence NOT
     # independently confirmed, unlike anthropic/dialpad above. Worth
@@ -533,6 +535,19 @@ DISPLAY_NAMES = {
     "paloaltonetworks": "Palo Alto Networks",  # .title() would give "Paloaltonetworks"
     "phonepe": "PhonePe",
     "cred": "CRED",
+    "alphagrepsecurities": "AlphaGrep",
+    "nksecuritiesresearch": "NK Securities Research",
+    "worldquant": "WorldQuant",
+    "imc": "IMC",
+    "optiverus": "Optiver",
+    "mongodb": "MongoDB",
+    "datadog": "Datadog",
+    "amd": "AMD",
+    "mediatek": "MediaTek",
+    "tesco": "Tesco",
+    "booking": "Booking.com",
+    "juspay": "Juspay",
+    "millennium": "Millennium",
     "paypal": "PayPal",
     "blackrock": "BlackRock",
     "expedia": "Expedia Group",
