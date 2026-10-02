@@ -40,6 +40,7 @@ class LocationFilterTests(unittest.TestCase):
                         ("unknown", "Location to be confirmed", "https://example.com", "test"),
                         ("unstop-job", "Delhi, India", "https://unstop.com/jobs/analyst-1", "unstop"),
                         ("unstop-internship", "Delhi, India", "https://unstop.com/internships/analyst-2", "unstop"),
+                        ("linkedin-job", "Delhi, India", "https://linkedin.com/jobs/view/1", "linkedin"),
                         ("internshala-job", "Delhi, India", "https://internshala.com/job/detail/analyst-1", "internshala"),
                         ("internshala-internship", "Delhi, India", "https://internshala.com/internship/detail/analyst-2", "internshala"),
                     ],
@@ -47,9 +48,9 @@ class LocationFilterTests(unittest.TestCase):
                 conn.commit()
             with patch.object(data, "DB_PATH", db_path):
                 visible = data._load_jobs_df()
-            self.assertEqual(set(visible["id"]), {"india", "unknown", "internshala-job"})
+            self.assertEqual(set(visible["id"]), {"india", "unknown"})
             with closing(sqlite3.connect(db_path)) as conn:
-                self.assertEqual(conn.execute("SELECT count(*) FROM jobs").fetchone()[0], 7)
+                self.assertEqual(conn.execute("SELECT count(*) FROM jobs").fetchone()[0], 8)
 
 
 if __name__ == "__main__":

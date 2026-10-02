@@ -18,7 +18,8 @@ def fixture(name):
 
 class RegistryTests(unittest.TestCase):
     def test_unstop_is_not_collected(self):
-        self.assertNotIn("unstop", [name for name, _ in PLATFORMS])
+        for source in ("unstop", "linkedin", "internshala"):
+            self.assertNotIn(source, [name for name, _ in PLATFORMS])
 
 
 class GreenhouseTests(unittest.TestCase):

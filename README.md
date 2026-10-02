@@ -9,9 +9,7 @@ A local job discovery prototype for students and early career applicants in Indi
 - Collection and the API exclude locations confidently outside India, including US state names such as `California` and clear city-only cases such as `San Francisco`. Unresolved locations stay visible for review; older foreign rows remain in SQLite but are hidden by the API.
 - PDF, DOCX, and TXT resume upload (5 MB limit). Matching combines `all-MiniLM-L6-v2` semantic similarity with explicit skill overlap. Resume skills can be corrected in the React sidebar.
 - React interface backed by FastAPI, using the same local database and matching code as the collector.
-- Internshala collects salary-filtered jobs only, with bounded pagination. Previously saved Internshala internships remain in SQLite but are hidden from API results; the sidebar links only to the jobs search.
 - Unstop is no longer collected. Previously saved Unstop jobs and internships remain in local SQLite history but are hidden from API results.
-- A bounded LinkedIn collector reads up to 20 listings from logged-out guest search pages for data engineer roles in India posted within the last 24 hours, then reads guest job descriptions. Public pages act as a fallback for ordinary failures. HTTP 429 stops LinkedIn collection for that run; `stats.py --health` reports the failure or partial result.
 - A Bank of America collector requests up to 1,000 postings each from the general and student India searches, then reads public job descriptions. It marks a truncated response as partial. The student search can legitimately return zero jobs; `stats.py --health` shows partial results if a request fails.
 - Google Careers collects the combined India search for Early and Intern & Apprentice roles, follows result pages, and deduplicates job IDs. It stores the card's level and minimum qualifications as the description; incomplete searches appear as partial in `stats.py --health`.
 - Mastercard now collects from its India-filtered Workday `CorporateCareers` feed as well as the existing Phenom careers feed. Shared requisition IDs avoid duplicate jobs; Workday supplies full descriptions and can refresh matching older Phenom rows. `stats.py --health` shows the Workday source separately.
@@ -119,3 +117,5 @@ The app is intended for local, single-user use. The FastAPI server has no authen
 `db/jobs.db` stores collected listings and local actions such as dismissals. `db/job_embeddings_cache.pt` stores generated embeddings. Both are excluded from Git, along with virtual environments, React dependencies, and build output. A fresh clone starts with an empty database until the collector runs.
 
 Airbnb careers are included through its public Greenhouse board, with descriptions and the existing India location and app filters.
+
+LinkedIn and Internshala collectors and sidebar links have been removed. The API hides all saved rows with their current or historical source labels; SQLite history is preserved.

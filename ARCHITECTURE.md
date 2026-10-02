@@ -30,11 +30,9 @@ flowchart LR
 
 The embedding cache is generated locally. The React client does not fetch career sites itself.
 
-The Internshala adapter samples the salary-filtered jobs path (up to 10 pages). It no longer requests either internship search. The API hides previously saved Internshala internship URLs without deleting those rows from SQLite, and the sidebar links only to the jobs search.
 
 Unstop is not registered as a collector. The API excludes all previously saved Unstop rows from results without deleting local SQLite history.
 
-The LinkedIn adapter uses the logged-out `jobs-guest` search and detail fragments for India data engineer jobs from the last 24 hours. It reads at most two pages of 10 cards and requests each guest description, pacing detail requests one second apart. An ordinary guest failure falls back to the public search or job page. HTTP 429 stops LinkedIn requests for that run without a fallback; the run is marked failed or partial. This is a small sample, not a complete listing.
 
 The Atlassian adapter reads its first-party listings endpoint and builds first-party `/company/careers/details/{id}` links. The endpoint's `applyUrl` points to an iCIMS application dialog and is unsuitable for the job card. Existing saved Atlassian URLs are normalized when the API loads them; a later collector run also refreshes saved locations and descriptions while keeping job IDs and dismissals. A failed listings request now raises a source error instead of appearing as an empty successful fetch.
 
@@ -94,7 +92,7 @@ Each collector returns job dictionaries with the common fields below. The collec
 }
 ```
 
-The `standard` adapter handles Greenhouse, Lever, and Ashby. Its HTTP connection pool matches its 16 board-fetch workers. Postman and PhonePe were removed from its Greenhouse list after their board slugs returned 404 on 1 October 2026; their career pages need new, verified adapters. Other adapters cover Oracle, Workday, SmartRecruiters, SuccessFactors, Phenom, iCIMS, Eightfold, Workable, Internshala, LinkedIn, Bank of America, Google Careers, Amazon, and several company-specific sites. Most use public JSON endpoints; some parse HTML. An adapter must normalize the same fields even if its source uses different names. `config.WORKABLE` is currently empty, so the registered Workable collector is reported as skipped rather than as a successful zero-job fetch.
+The `standard` adapter handles Greenhouse, Lever, and Ashby. Its HTTP connection pool matches its 16 board-fetch workers. Postman and PhonePe were removed from its Greenhouse list after their board slugs returned 404 on 1 October 2026; their career pages need new, verified adapters. Other adapters cover Oracle, Workday, SmartRecruiters, SuccessFactors, Phenom, iCIMS, Eightfold, Workable, Bank of America, Google Careers, Amazon, and several company-specific sites. Most use public JSON endpoints; some parse HTML. An adapter must normalize the same fields even if its source uses different names. `config.WORKABLE` is currently empty, so the registered Workable collector is reported as skipped rather than as a successful zero-job fetch.
 
 ### What `python run.py` does
 
@@ -102,7 +100,7 @@ The `standard` adapter handles Greenhouse, Lever, and Ashby. Its HTTP connection
 2. `run.py` preloads existing IDs and repost keys from **all** saved jobs, including dismissed ones.
 3. It submits every entry in `core.collector.PLATFORMS` to a thread pool with one shared deadline (`RUN_DEADLINE_SECONDS`, default 600 seconds). Network fetching overlaps; SQLite writes happen in the main thread.
 4. For each returned posting, it drops locations confidently outside India. The parser recognizes country names, US state names and abbreviations, and several unambiguous US city-only locations. Unknown locations are kept. It updates `last_seen` for an existing `job_id`, then checks the repost key for new IDs, then inserts new jobs. Matching existing Atlassian rows refresh their URLs, locations, and descriptions. Missing postings are never automatically marked closed.
-5. It writes one `run_stats` row per platform. A raised platform error receives `status='failed'`; the standard ATS, Internshala, LinkedIn, and Mastercard Workday collectors can also return `status='partial'` when some boards, pages, or descriptions fail. Their reasons are saved in `run_stats.error`. Some other platforms still return plain job lists and cannot yet signal internal partial failure. The legacy `jobs_matched` statistic currently equals `jobs_fetched` and is **not** a count of resume matches.
+5. It writes one `run_stats` row per platform. A raised platform error receives `status='failed'`; the standard ATS and Mastercard Workday collectors can also return `status='partial'` when some boards, pages, or descriptions fail. Their reasons are saved in `run_stats.error`. Some other platforms still return plain job lists and cannot yet signal internal partial failure. The legacy `jobs_matched` statistic currently equals `jobs_fetched` and is **not** a count of resume matches.
 6. `process_backlog()` fills missing category, skills, and experience fields. The three processors have separate error handling, so a classification failure does not prevent skill or experience extraction.
 7. It removes rows whose `first_seen` is older than 365 days. This is age-based cleanup, not verification that a posting is still open.
 
@@ -205,3 +203,5 @@ Use [improvement.md](improvement.md) for proposed changes, not as evidence that 
 ### Airbnb collection
 
 Airbnb uses the existing standard Greenhouse collector (`airbnb` board). The board returns all postings in one request with descriptions; `run.py` applies the shared India-or-unknown location filter before saving. The five India posting IDs on the official filtered careers page matched the feed during verification. App filters can hide saved roles based on experience or resume matching.
+
+LinkedIn and Internshala collectors and sidebar links have been removed. The API hides all saved rows with their current or historical source labels; SQLite history is preserved.

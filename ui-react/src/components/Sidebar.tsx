@@ -223,22 +223,6 @@ export default function Sidebar({
 
       <div>
         <h2 className="text-sm font-semibold tracking-wide uppercase text-gray-500 mb-2">
-          Internshala jobs
-        </h2>
-        <div className="space-y-2 text-sm">
-          <a
-            href="https://internshala.com/jobs/salary-6"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="block text-amber-800 underline hover:text-amber-950"
-          >
-            Jobs — salary filter ↗
-          </a>
-        </div>
-      </div>
-
-      <div>
-        <h2 className="text-sm font-semibold tracking-wide uppercase text-gray-500 mb-2">
           Bulk remove
         </h2>
         <div className="space-y-1.5">
