@@ -72,6 +72,16 @@ def _get(url):
     return get_json(SESSION, url)
 
 
+def _greenhouse_location(slug, job):
+    location = (job.get("location") or {}).get("name", "")
+    # Rubrik department pages group city-only jobs under explicit India offices.
+    if slug == "rubrik" and not re.search(r"\bindia\b", location, re.I):
+        offices = job.get("offices") or []
+        if any(re.search(r"\bindia\b", office.get("name", ""), re.I) for office in offices):
+            location = location.strip() + ", India" if location.strip() else "India"
+    return location
+
+
 def fetch_greenhouse(slug):
     # content=true pulls the full HTML job description so INCLUDE can catch
     # postings that only mention "internship"/"campus hire" in the body.
@@ -86,7 +96,7 @@ def fetch_greenhouse(slug):
             "company": slug,
             "source_id": str(j.get("id", "")),
             "title": j["title"],
-            "location": (j.get("location") or {}).get("name", ""),
+            "location": _greenhouse_location(slug, j),
             "url": j["absolute_url"],
             "description": strip_html(j.get("content", ""), max_chars=None)[:6000],
         }

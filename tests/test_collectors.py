@@ -54,3 +54,14 @@ class GreenhouseTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class RubrikLocationTests(unittest.TestCase):
+    def test_india_office_normalizes_city_only_location(self):
+        job = {"location": {"name": "Bangalore"}, "offices": [{"name": "Bangalore, India Office"}]}
+        self.assertEqual(standard._greenhouse_location("rubrik", job), "Bangalore, India")
+        self.assertEqual(standard._greenhouse_location("other", job), "Bangalore")
+
+    def test_foreign_office_stays_foreign(self):
+        job = {"location": {"name": "Palo Alto, CA"}, "offices": [{"name": "Palo Alto, CA HQ Office"}]}
+        self.assertEqual(standard._greenhouse_location("rubrik", job), "Palo Alto, CA")

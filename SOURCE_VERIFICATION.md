@@ -6,7 +6,7 @@ The checks did not populate SQLite. Run `python run.py` to save postings.
 | Company | Result | India roles | Description coverage | Link check |
 | --- | --- | ---: | --- | --- |
 | Databricks | Existing Greenhouse feed: 873 global postings | 94 | 94 descriptions | One India branded detail link returned 200 |
-| Rubrik | Existing Greenhouse feed: 129 global postings | 21 | 21 descriptions | Branded detail returned 403; Greenhouse detail redirects to the same branded page |
+| Rubrik | Existing Greenhouse feed: 129 global postings, India office metadata normalized | 32 | 32 descriptions | Branded detail returned 403; Greenhouse detail redirects to the same branded page |
 | Uber | Existing India feed: partial, 19 unique of 20 reported | 19 | 19 descriptions | One detail link returned 200 |
 | Goldman Sachs | Existing GraphQL feed: 774 global postings | 122 | Division/function/skills summaries, not full job descriptions | One detail link returned 200 |
 | JPMorgan Chase | Existing Oracle India location facet | 322 | 322 descriptions | One Oracle detail link returned 200 |
@@ -25,3 +25,5 @@ Official career pages:
 - Rippling: https://www.rippling.com/careers/open-roles
 - D. E. Shaw India: https://www.deshawindia.com/careers
 - Quadeye: https://www.quadeye.com/jobs
+
+Rubrik department coverage verified: Engineering has 8 India roles and Information Technology & Services has 3. The complete feed already includes all those postings. Office metadata normalization increases the recognized India total from 21 to 32 across all departments without creating duplicate collectors.
