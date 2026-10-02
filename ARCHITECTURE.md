@@ -52,6 +52,8 @@ Microsoft uses India Intern and Entry searches with remote jobs included and rel
 
 American Express uses the India location facet `300000000228786` from its branded careers URL through the existing Oracle endpoint. Pagination and full-description collection remain active.
 
+Flipkart collects the public TurboHire feed linked from its official career navigation, with full descriptions, source experience, and skills. An anonymous API token is obtained in memory without an account. The static `/jobslist` page has truncated cards and nonfunctional Show More code, so its displayed count is not used. Missing records or descriptions produce partial results.
+
 ## Repository map
 
 | Path | Responsibility |
