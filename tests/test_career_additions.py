@@ -34,3 +34,10 @@ class CareerAdditionsTests(unittest.TestCase):
         data = {'total': 1, 'jobPostings': [{'title': '(USA) Engineer', 'locationsText': '2 Locations', 'externalPath': '/job/1'}]}
         with patch.object(workday, '_post', return_value=data):
             self.assertEqual(workday.fetch_workday(cfg)[0]['location'], '2 Locations, United States')
+
+    def test_walmart_ambiguous_locations_use_detail_country(self):
+        cfg = {'company': 'walmart', 'tenant': 'walmart', 'wd_server': 'wd504', 'site': 'WalmartExternal'}
+        data = {'total': 1, 'jobPostings': [{'title': 'Engineer', 'locationsText': '2 Locations', 'externalPath': '/job/1'}]}
+        detail = {'jobPostingInfo': {'country': {'descriptor': 'United States of America'}, 'location': 'Sunnyvale', 'additionalLocations': ['Bentonville']}}
+        with patch.object(workday, '_post', return_value=data), patch.object(workday, '_get', return_value=detail):
+            self.assertEqual(workday.fetch_workday(cfg)[0]['location'], 'Sunnyvale; Bentonville, United States of America')

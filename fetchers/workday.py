@@ -211,6 +211,22 @@ def fetch_workday(cfg, deadline=None):
             break
         time.sleep(0.3)  # small gap between pages — Workday rate-limits bursts
 
+    # Walmart also has multi-location records without a country title prefix.
+    # Resolve those from the same public CXS detail metadata before filtering.
+    if cfg["company"] == "walmart":
+        for job in jobs:
+            if job["location"].endswith("Locations"):
+                if deadline is not None and time.monotonic() >= deadline:
+                    break
+                data = _get(f"{base}/wday/cxs/{tenant}/{site}{job['_ext_path']}", referer)
+                info = (data or {}).get("jobPostingInfo") or {}
+                country = (info.get("country") or {}).get("descriptor", "")
+                locations = [info.get("location", "")] + (info.get("additionalLocations") or [])
+                if any(loc.startswith("IN ") or loc.startswith("(IND)") for loc in locations):
+                    country = "India"
+                if country:
+                    job["location"] = "; ".join(filter(None, locations)) + ", " + country
+
     detail_filter = cfg.get("fetch_details_filter")
     enrich_enabled = cfg.get("fetch_details") or detail_filter
     if enrich_enabled and jobs and not (deadline is not None and time.monotonic() >= deadline):

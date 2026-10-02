@@ -36,9 +36,9 @@ Rubrik department coverage verified: Engineering has 8 India roles and Informati
 | Intuit | 26 | All 26, both country-facet pages; new TalentBrew collector status ok |
 | Salesforce | 45 (1514 global) | All 45 full descriptions after enabling details |
 | Adobe | 80 (530 global) | 80 description teasers, not full JDs |
-| Walmart Global Tech | 220 (403 search results) | All 220 full descriptions; 152 US records now recognized and filtered; 31 locations still unknown |
+| Walmart Global Tech | 226 (403 search results) | Full-description fetching enabled; 220 India descriptions directly counted before resolving ambiguous locations. Detail country metadata resolved all remaining records: 226 India, 177 US, zero unknown. |
 | ServiceNow | 76 (711 global) | All 76 full descriptions |
 | Palo Alto Networks | 152 (1505 global) | All 152 full descriptions after enabling details |
 | Snowflake | 13 (345 global) | All 13 full descriptions |
 
-Counts are a live snapshot, not a guarantee of future availability. Existing Workday fetchers return plain lists and do not expose per-company completeness status. Unknown locations can pass the current India-or-unknown filter. No database history was deleted. Offline verification: 71 tests and Python compileall passed.
+Counts are a live snapshot, not a guarantee of future availability. Existing Workday fetchers return plain lists and do not expose per-company completeness status. Unknown locations can pass the current India-or-unknown filter. No database history was deleted. Offline verification: 72 tests and Python compileall passed.
