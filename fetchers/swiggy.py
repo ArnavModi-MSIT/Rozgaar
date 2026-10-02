@@ -9,6 +9,10 @@ from fetchers.standard import strip_html
 
 ENDPOINT = "https://swiggy.mynexthire.com/employer/careers/reqlist/get"
 SESSION = requests.Session()
+INDIA_CITIES = {'Vishakapatnam', 'Ooty', 'Mathura', 'Nizamabad', 'Thiruvallur', 'Trichy', 'Srinagar', 'Surat', 'Erode', 'Salem', 'Bharatpur', 'Karimnagar', 'Belgaum', 'Chittoor', 'Delhi', 'Ambala', 'Faridkot', 'Dharmapuri', 'Jaipur', 'Mumbai', 'Jamshedpur', 'Kota', 'Bengaluru', 'Pune', 'Bangalore', 'Krishnagiri', 'Ahmedabad', 'Bharuch', 'Sawai Madhopur', 'Baddi', 'Pondicherry', 'Sri Ganganagar', 'Kurnool', 'Nandyal', 'Hosur', 'Mumbai City', 'Chandigarh', 'Chennai', 'Patna', 'Sivakasi', 'Nagercoil', 'Raipur', 'Hyderabad', 'Kolkata', 'Vijayawada', 'Mangalore', 'Ongole', 'Nagpur', 'Coimbatore', 'Mysore', 'Udaipur', 'Alwar', 'Tirunelveli', 'Puri'}
+
+def normalize_location(value):
+    return value + ", India" if value in INDIA_CITIES else value
 
 
 def job_url(req_id):
@@ -41,7 +45,7 @@ def collect(deadline=None):
             description += f"\nSource minimum experience: {record['expMin']} years."
         jobs.append({"company": "swiggy", "source_id": str(req_id),
                      "title": record["reqTitle"],
-                     "location": record.get("location") or record.get("locationAddress") or "",
+                     "location": normalize_location(record.get("location") or record.get("locationAddress") or ""),
                      "description": description.strip(), "url": job_url(req_id)})
     errors = []
     if invalid:

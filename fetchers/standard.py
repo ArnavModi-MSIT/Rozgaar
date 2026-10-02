@@ -16,7 +16,7 @@ from fetchers.http_client import DEFAULT_TIMEOUT, get_json
 from fetchers.result import CollectionResult
 from core.location import parse_country
 
-INDIA_SCOPED_BOARDS = {"alphagrepsecurities", "nksecuritiesresearch", "worldquant", "imc", "optiverus", "mongodb", "datadog"}
+INDIA_SCOPED_BOARDS = {"roku", "gleanwork", "okta", "purestorage", "gitlab", "squarepointcapital", "quberesearchandtechnologies","alphagrepsecurities", "nksecuritiesresearch", "worldquant", "imc", "optiverus", "mongodb", "datadog"}
 
 log = logging.getLogger("jobbot")
 
@@ -88,6 +88,8 @@ def _greenhouse_location(slug, job):
         parts = re.split(r";|\s+OR\s+", location, flags=re.I)
         if all(part.strip().lower() in {"bengaluru", "bangalore", "gurugram", "gurgaon", "hyderabad", "mumbai", "chennai", "delhi", "new delhi", "pune"} for part in parts):
             location = location.strip() + ", India"
+    if "india" not in location.lower() and slug in {"squarepointcapital", "quberesearchandtechnologies", "razorpaysoftwareprivatelimited"} and re.search(r"\b(bangalore|bengaluru|mumbai|gurgaon|gurugram|hyderabad|delhi|chennai|pune)\b", location, re.I):
+        location += ", India"
     return location
 
 

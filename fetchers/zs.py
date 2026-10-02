@@ -36,7 +36,7 @@ def collect(deadline=None):
             description = strip_html(d.get("description", ""), max_chars=None)[:10000]
             if not description:
                 errors.append(f"description unavailable: {req_id}")
-            location = d.get("location_name") or ", ".join(str(d[k]) for k in ("city", "state", "country") if d.get(k))
+            location = ", ".join(str(d[k]) for k in ("city", "state", "country") if d.get(k)) or d.get("location_name", "")
             jobs.append({"company": "zs", "source_id": str(req_id), "title": d["title"],
                          "location": location, "description": description,
                          "url": f"https://jobs.zs.com/all/jobs/{d.get('slug') or req_id}"})

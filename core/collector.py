@@ -8,7 +8,7 @@ import logging
 from concurrent.futures import ThreadPoolExecutor
 
 import config
-from fetchers import amd, booking, target, tesco, juspay, mediatek, millennium, ainterviews, amazon, apple, atlassian, bank_of_america, barclays, blackrock, deloitte, deshaw, deutsche_bank, eightfold, expedia, flipkart, goldman_sachs, google_careers, icims, indiamart, intuit, mastercard_workday, meta, oracle, paypal, phenom, quadeye, rippling, smartrecruiters, standard, successfactors, swiggy, tower_research, uber, workable, workday, zs
+from fetchers import hrt, bloomberg, linkedin_company, netflix, workday_india, automattic, zerodha, amd, booking, target, tesco, juspay, mediatek, millennium, ainterviews, amazon, apple, atlassian, bank_of_america, barclays, blackrock, deloitte, deshaw, deutsche_bank, eightfold, expedia, flipkart, goldman_sachs, google_careers, icims, indiamart, intuit, mastercard_workday, meta, oracle, paypal, phenom, quadeye, rippling, smartrecruiters, standard, successfactors, swiggy, tower_research, uber, workable, workday, zs
 from fetchers.result import CollectionResult
 log = logging.getLogger("jobbot")
 
@@ -19,6 +19,13 @@ log = logging.getLogger("jobbot")
 # runs once/day), but keeping the fast/high-yield platforms first still
 # means partial logs are more useful if something fails partway through.
 PLATFORMS = [
+    ("hrt", lambda deadline: hrt.collect(deadline)),
+    ("bloomberg", lambda deadline: bloomberg.collect(deadline)),
+    ("linkedin_company", lambda deadline: linkedin_company.collect(deadline)),
+    ("workday_india", lambda deadline: workday_india.collect(config.WORKDAY_INDIA, deadline)),
+    ("netflix", lambda deadline: netflix.collect(deadline)),
+    ("automattic", lambda deadline: automattic.collect(deadline)),
+    ("zerodha", lambda deadline: zerodha.collect(deadline)),
     ("amd", lambda deadline: amd.collect(deadline=deadline)),
     ("booking", lambda deadline: booking.collect(deadline=deadline)),
     ("target", lambda deadline: target.collect(deadline=deadline)),

@@ -31,11 +31,12 @@ SALESFORCE_RELEVANT = re.compile(
 # hard way: it doesn't resolve in DNS.) A plain slug string always uses the
 # one real API host; no region tuple needed.
 GREENHOUSE = [
+    "roku", "gleanwork", "okta", "purestorage", "gitlab", "squarepointcapital", "quberesearchandtechnologies",
     "alphagrepsecurities", "nksecuritiesresearch", "worldquant", "imc", "optiverus", "mongodb", "datadog",
     "arcesiumllc",
     "gravitonresearchcapital",  # Board linked by Graviton careers. 
     "airbnb",  # Official India careers page IDs match this public board. 
-    # Postman Greenhouse returned 404; PhonePe now uses SmartRecruiters.
+    # Postman uses WORKDAY_INDIA; PhonePe uses SmartRecruiters.
     "groww", "razorpaysoftwareprivatelimited", "thoughtworks",
     # Added after cross-referencing santifer/career-ops's company list against
     # real India presence (verified via web search + debug/check_slugs.py —
@@ -535,6 +536,11 @@ DISPLAY_NAMES = {
     "paloaltonetworks": "Palo Alto Networks",  # .title() would give "Paloaltonetworks"
     "phonepe": "PhonePe",
     "cred": "CRED",
+    "roku":"Roku", "gleanwork":"Glean", "okta":"Okta", "purestorage":"Pure Storage",
+    "gitlab":"GitLab", "squarepointcapital":"Squarepoint Capital",
+    "quberesearchandtechnologies":"Qube Research & Technologies",
+    "crowdstrike":"CrowdStrike", "broadcom":"Broadcom", "cohesity":"Cohesity",
+    "postman":"Postman", "netflix":"Netflix", "automattic":"Automattic", "zerodha":"Zerodha",
     "alphagrepsecurities": "AlphaGrep",
     "nksecuritiesresearch": "NK Securities Research",
     "worldquant": "WorldQuant",
@@ -680,3 +686,13 @@ TARGET_ROLE_RE = re.compile(
 )
 
 RELEVANCE_FILTERS = {}
+
+# First-party Workday boards with live India facet discovery and full descriptions.
+WORKDAY_INDIA = [
+    {"company":"broadcom", "tenant":"broadcom", "wd_server":"wd1", "site":"External_Career"},
+    {"company":"crowdstrike", "tenant":"crowdstrike", "wd_server":"wd5", "site":"crowdstrikecareers"},
+    {"company":"cohesity", "tenant":"cohesity", "wd_server":"wd5", "site":"Cohesity_Careers"},
+    {"company":"postman", "tenant":"postman", "wd_server":"wd108", "site":"careers"},
+]
+
+DISPLAY_NAMES.update({"hrt":"Hudson River Trading", "bloomberg":"Bloomberg", "linkedin_company":"LinkedIn"})

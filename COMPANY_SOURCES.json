@@ -1,0 +1,310 @@
+[
+  {
+    "name": "Google",
+    "key": "google"
+  },
+  {
+    "name": "Meta",
+    "key": "meta"
+  },
+  {
+    "name": "Apple",
+    "key": "apple"
+  },
+  {
+    "name": "Microsoft",
+    "key": "microsoft"
+  },
+  {
+    "name": "Amazon",
+    "key": "amazon"
+  },
+  {
+    "name": "NVIDIA",
+    "key": "nvidia"
+  },
+  {
+    "name": "Netflix",
+    "key": "netflix"
+  },
+  {
+    "name": "LinkedIn",
+    "key": "linkedin_company"
+  },
+  {
+    "name": "Databricks",
+    "key": "databricks"
+  },
+  {
+    "name": "Stripe",
+    "key": "stripe"
+  },
+  {
+    "name": "Airbnb",
+    "key": "airbnb"
+  },
+  {
+    "name": "Atlassian",
+    "key": "atlassian"
+  },
+  {
+    "name": "Rubrik",
+    "key": "rubrik"
+  },
+  {
+    "name": "Broadcom",
+    "key": "broadcom"
+  },
+  {
+    "name": "Uber",
+    "key": "uber"
+  },
+  {
+    "name": "Rippling",
+    "key": "rippling"
+  },
+  {
+    "name": "Roku",
+    "key": "roku"
+  },
+  {
+    "name": "Glean",
+    "key": "gleanwork"
+  },
+  {
+    "name": "Snowflake",
+    "key": "snowflake"
+  },
+  {
+    "name": "Confluent",
+    "key": "confluent"
+  },
+  {
+    "name": "Coinbase",
+    "key": "coinbase"
+  },
+  {
+    "name": "Salesforce",
+    "key": "salesforce"
+  },
+  {
+    "name": "ServiceNow",
+    "key": "servicenow"
+  },
+  {
+    "name": "Adobe",
+    "key": "adobe"
+  },
+  {
+    "name": "Intuit",
+    "key": "intuit"
+  },
+  {
+    "name": "Palo Alto Networks",
+    "key": "paloaltonetworks"
+  },
+  {
+    "name": "CrowdStrike",
+    "key": "crowdstrike"
+  },
+  {
+    "name": "MongoDB",
+    "key": "mongodb"
+  },
+  {
+    "name": "Twilio",
+    "key": "twilio"
+  },
+  {
+    "name": "Okta",
+    "key": "okta"
+  },
+  {
+    "name": "Pure Storage",
+    "key": "purestorage"
+  },
+  {
+    "name": "Cohesity",
+    "key": "cohesity"
+  },
+  {
+    "name": "Oracle / OCI",
+    "key": "oracle"
+  },
+  {
+    "name": "Booking.com",
+    "key": "booking"
+  },
+  {
+    "name": "Indeed",
+    "key": "indeed_employer",
+    "career_url": "https://careers.indeed.com/",
+    "availability_note": "Official careers endpoint returned HTTP 403; no working public feed confirmed."
+  },
+  {
+    "name": "Bloomberg",
+    "key": "bloomberg"
+  },
+  {
+    "name": "GitLab",
+    "key": "gitlab"
+  },
+  {
+    "name": "Automattic",
+    "key": "automattic"
+  },
+  {
+    "name": "Postman",
+    "key": "postman"
+  },
+  {
+    "name": "PayPal",
+    "key": "paypal"
+  },
+  {
+    "name": "Flipkart",
+    "key": "flipkart"
+  },
+  {
+    "name": "PhonePe",
+    "key": "PHONEPELIMITED"
+  },
+  {
+    "name": "Razorpay",
+    "key": "razorpaysoftwareprivatelimited"
+  },
+  {
+    "name": "Swiggy",
+    "key": "swiggy"
+  },
+  {
+    "name": "Zomato",
+    "key": "zomato",
+    "career_url": "https://www.eternal.com/careers/",
+    "availability_note": "Official careers page accessible but no vacancy feed found. Legacy Zomato1 SmartRecruiters postings dated 2015/2016 were rejected as stale."
+  },
+  {
+    "name": "Meesho",
+    "key": "meesho"
+  },
+  {
+    "name": "CRED",
+    "key": "cred"
+  },
+  {
+    "name": "Groww",
+    "key": "groww"
+  },
+  {
+    "name": "Zepto",
+    "key": "zepto",
+    "career_url": "https://www.zepto.com/s/careers",
+    "availability_note": "Official page returned HTTP 429; public vacancy endpoint not verified."
+  },
+  {
+    "name": "Zerodha",
+    "key": "zerodha"
+  },
+  {
+    "name": "American Express",
+    "key": "amex"
+  },
+  {
+    "name": "Visa",
+    "key": "visa"
+  },
+  {
+    "name": "Mastercard",
+    "key": "mastercard"
+  },
+  {
+    "name": "JPMorgan Chase",
+    "key": "jpmc"
+  },
+  {
+    "name": "Goldman Sachs",
+    "key": "goldman_sachs"
+  },
+  {
+    "name": "Morgan Stanley",
+    "key": "morganstanley"
+  },
+  {
+    "name": "BlackRock",
+    "key": "blackrock"
+  },
+  {
+    "name": "Arcesium",
+    "key": "arcesiumllc"
+  },
+  {
+    "name": "D. E. Shaw India",
+    "key": "deshaw"
+  },
+  {
+    "name": "Millennium",
+    "key": "millennium"
+  },
+  {
+    "name": "Tower Research Capital",
+    "key": "towerresearchcapital"
+  },
+  {
+    "name": "Graviton Research Capital",
+    "key": "gravitonresearchcapital"
+  },
+  {
+    "name": "Quadeye",
+    "key": "quadeye"
+  },
+  {
+    "name": "AlphaGrep",
+    "key": "alphagrepsecurities"
+  },
+  {
+    "name": "WorldQuant",
+    "key": "worldquant"
+  },
+  {
+    "name": "Hudson River Trading",
+    "key": "hrt"
+  },
+  {
+    "name": "Citadel Securities",
+    "key": "citadelsecurities",
+    "career_url": "https://www.citadelsecurities.com/careers/open-opportunities/",
+    "availability_note": "Official listing returned HTTP 403."
+  },
+  {
+    "name": "IMC Trading",
+    "key": "imc"
+  },
+  {
+    "name": "Optiver",
+    "key": "optiverus"
+  },
+  {
+    "name": "Squarepoint Capital",
+    "key": "squarepointcapital"
+  },
+  {
+    "name": "Qube Research & Technologies",
+    "key": "quberesearchandtechnologies"
+  },
+  {
+    "name": "Walmart Global Tech",
+    "key": "walmart"
+  },
+  {
+    "name": "Expedia Group",
+    "key": "expedia"
+  },
+  {
+    "name": "ZS Associates",
+    "key": "zs"
+  },
+  {
+    "name": "Qualcomm",
+    "key": "qualcomm"
+  }
+]
