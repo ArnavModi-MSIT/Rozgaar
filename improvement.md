@@ -16,11 +16,11 @@ The database now records when a job was first seen and when the same source ID w
 
 ### Store eligibility as data
 
-The current experience extractor in [`core/experience.py`](core/experience.py) can miss postings that offer separate fresher and experienced tracks. [`fetchers/unstop.py`](fetchers/unstop.py) fetches open jobs and internships but does not apply student, degree, specialization, or passing-year filters from Unstop search pages.
+The current experience extractor in [`core/experience.py`](core/experience.py) can miss postings that offer separate fresher and experienced tracks. Other sources may expose explicit eligibility fields that the current common job record does not store.
 
 - Save explicit source fields for minimum experience, student eligibility, degree or course, graduation year, and deadline when available.
 - Keep `unknown` distinct from `not eligible`; do not infer eligibility from a missing field.
-- Add filters for genuinely relevant student roles, including the Unstop IT and 2027 filters if their response fields can be verified.
+- Add filters for genuinely relevant student roles when a supported source provides verifiable student, course, or graduation-year fields.
 - Check extracted experience against a small set of manually reviewed postings, especially mixed-track descriptions.
 
 **Done when:** the UI can distinguish a confirmed fresher role from a role with no stated experience requirement.
@@ -70,7 +70,7 @@ First-time embedding of a large job pool can take time. Show progress and explai
 
 ### Add automated checks
 
-- Use saved, non-sensitive response fixtures to test pagination, normalization, and failures for representative fetchers such as Greenhouse, Workday, and Unstop.
+- Use saved, non-sensitive response fixtures to test pagination, normalization, and failures for representative fetchers such as Greenhouse and Workday.
 - Test deduplication, India location handling, experience extraction, and skill matching with edge cases found in real postings.
 - Test the FastAPI resume and job endpoints using a temporary SQLite database.
 - Run Python tests and the React production build in GitHub Actions without live scraping or model downloads on every pull request.
@@ -87,6 +87,6 @@ First-time embedding of a large job pool can take time. Show progress and explai
 
 1. Label a small resume–job evaluation set and record the current top-10 quality.
 2. Add `last_seen` and a reliable open/closed/unknown status for collected jobs.
-3. Add fixture-based tests for Unstop and one ATS collector, then set up CI.
+3. Add fixture-based tests for more ATS collectors, then set up CI.
 
 These three tasks give evidence that the listings and ranking are useful before expanding the feature set.

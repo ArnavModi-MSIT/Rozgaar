@@ -25,7 +25,7 @@ class LocationFilterTests(unittest.TestCase):
             self.assertEqual(parse_country(location), "India")
         self.assertTrue(is_india_or_unknown("Location to be confirmed"))
 
-    def test_api_hides_existing_foreign_and_removed_internship_rows(self):
+    def test_api_hides_existing_foreign_unstop_and_removed_internship_rows(self):
         from api import data
 
         with tempfile.TemporaryDirectory() as directory:
@@ -47,7 +47,7 @@ class LocationFilterTests(unittest.TestCase):
                 conn.commit()
             with patch.object(data, "DB_PATH", db_path):
                 visible = data._load_jobs_df()
-            self.assertEqual(set(visible["id"]), {"india", "unknown", "unstop-job", "internshala-job"})
+            self.assertEqual(set(visible["id"]), {"india", "unknown", "internshala-job"})
             with closing(sqlite3.connect(db_path)) as conn:
                 self.assertEqual(conn.execute("SELECT count(*) FROM jobs").fetchone()[0], 7)
 

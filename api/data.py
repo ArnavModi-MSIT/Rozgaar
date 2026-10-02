@@ -62,9 +62,7 @@ def _load_jobs_df():
         df = pd.read_sql_query(
             """SELECT * FROM jobs
                WHERE dismissed = 0
-                 AND NOT (source = 'unstop' AND
-                          (lower(url) LIKE '%unstop.com/internships/%' OR
-                           lower(url) LIKE '%unstop.com/internship/%'))
+                 AND source != 'unstop'
                  AND NOT (source IN ('internshala', 'internshala_jobs', 'internshala_internships') AND
                           lower(url) LIKE '%internshala.com/internship/%')
                ORDER BY first_seen DESC""", conn

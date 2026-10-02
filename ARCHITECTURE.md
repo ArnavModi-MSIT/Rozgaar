@@ -32,7 +32,7 @@ The embedding cache is generated locally. The React client does not fetch career
 
 The Internshala adapter samples the salary-filtered jobs path (up to 10 pages). It no longer requests either internship search. The API hides previously saved Internshala internship URLs without deleting those rows from SQLite, and the sidebar links only to the jobs search.
 
-The Unstop adapter fetches open jobs only. It no longer requests the internships opportunity type. The API excludes previously saved Unstop internship URLs from results without deleting those rows from SQLite.
+Unstop is not registered as a collector. The API excludes all previously saved Unstop rows from results without deleting local SQLite history.
 
 The LinkedIn adapter uses the logged-out `jobs-guest` search and detail fragments for India data engineer jobs from the last 24 hours. It reads at most two pages of 10 cards and requests each guest description, pacing detail requests one second apart. An ordinary guest failure falls back to the public search or job page. HTTP 429 stops LinkedIn requests for that run without a fallback; the run is marked failed or partial. This is a small sample, not a complete listing.
 
@@ -80,7 +80,7 @@ Each collector returns job dictionaries with the common fields below. The collec
 }
 ```
 
-The `standard` adapter handles Greenhouse, Lever, and Ashby. Its HTTP connection pool matches its 16 board-fetch workers. Postman and PhonePe were removed from its Greenhouse list after their board slugs returned 404 on 1 October 2026; their career pages need new, verified adapters. Other adapters cover Oracle, Workday, SmartRecruiters, SuccessFactors, Phenom, iCIMS, Eightfold, Workable, Unstop, Internshala, LinkedIn, Bank of America, Google Careers, Amazon, and several company-specific sites. Most use public JSON endpoints; some parse HTML. An adapter must normalize the same fields even if its source uses different names. `config.WORKABLE` is currently empty, so the registered Workable collector is reported as skipped rather than as a successful zero-job fetch.
+The `standard` adapter handles Greenhouse, Lever, and Ashby. Its HTTP connection pool matches its 16 board-fetch workers. Postman and PhonePe were removed from its Greenhouse list after their board slugs returned 404 on 1 October 2026; their career pages need new, verified adapters. Other adapters cover Oracle, Workday, SmartRecruiters, SuccessFactors, Phenom, iCIMS, Eightfold, Workable, Internshala, LinkedIn, Bank of America, Google Careers, Amazon, and several company-specific sites. Most use public JSON endpoints; some parse HTML. An adapter must normalize the same fields even if its source uses different names. `config.WORKABLE` is currently empty, so the registered Workable collector is reported as skipped rather than as a successful zero-job fetch.
 
 ### What `python run.py` does
 
@@ -88,7 +88,7 @@ The `standard` adapter handles Greenhouse, Lever, and Ashby. Its HTTP connection
 2. `run.py` preloads existing IDs and repost keys from **all** saved jobs, including dismissed ones.
 3. It submits every entry in `core.collector.PLATFORMS` to a thread pool with one shared deadline (`RUN_DEADLINE_SECONDS`, default 600 seconds). Network fetching overlaps; SQLite writes happen in the main thread.
 4. For each returned posting, it drops locations confidently outside India. The parser recognizes country names, US state names and abbreviations, and several unambiguous US city-only locations. Unknown locations are kept. It updates `last_seen` for an existing `job_id`, then checks the repost key for new IDs, then inserts new jobs. Matching existing Atlassian rows refresh their URLs, locations, and descriptions. Missing postings are never automatically marked closed.
-5. It writes one `run_stats` row per platform. A raised platform error receives `status='failed'`; the standard ATS, Unstop, Internshala, LinkedIn, and Mastercard Workday collectors can also return `status='partial'` when some boards, pages, or descriptions fail. Their reasons are saved in `run_stats.error`. Some other platforms still return plain job lists and cannot yet signal internal partial failure. The legacy `jobs_matched` statistic currently equals `jobs_fetched` and is **not** a count of resume matches.
+5. It writes one `run_stats` row per platform. A raised platform error receives `status='failed'`; the standard ATS, Internshala, LinkedIn, and Mastercard Workday collectors can also return `status='partial'` when some boards, pages, or descriptions fail. Their reasons are saved in `run_stats.error`. Some other platforms still return plain job lists and cannot yet signal internal partial failure. The legacy `jobs_matched` statistic currently equals `jobs_fetched` and is **not** a count of resume matches.
 6. `process_backlog()` fills missing category, skills, and experience fields. The three processors have separate error handling, so a classification failure does not prevent skill or experience extraction.
 7. It removes rows whose `first_seen` is older than 365 days. This is age-based cleanup, not verification that a posting is still open.
 
@@ -176,13 +176,12 @@ In development, Vite on port 5173 proxies `/api` to FastAPI on `127.0.0.1:8000`.
 | Change score behavior | Inspect `core/matcher.py`, `core/skills.py`, `config.TARGET_ROLE_RE`, and the browser's fixed 20-point display threshold together. |
 | Change UI fields | Update `api/data.py`, `api/main.py`, `ui-react/src/types.ts`, and consuming components together. |
 
-The offline fixture tests in `tests/` cover Unstop, Greenhouse, source-health classification, and the `run_stats` migration. Run `python -m unittest discover -s tests -v`. `python -m compileall -q api core fetchers run.py stats.py` checks syntax; `npm ci && npm run build` checks the React build. Live source behavior requires separate network checks because source sites can change. There is no CI yet.
+The offline fixture tests in `tests/` cover Greenhouse, source-health classification, and the `run_stats` migration. Run `python -m unittest discover -s tests -v`. `python -m compileall -q api core fetchers run.py stats.py` checks syntax; `npm ci && npm run build` checks the React build. Live source behavior requires separate network checks because source sites can change. There is no CI yet.
 
 ## Important limits
 
 - A stored posting is not guaranteed to be open today; `last_seen` records an observation, but there is no confirmed-closed workflow. Old rows migrated from earlier versions start with `last_seen = first_seen`.
 - Save-time filtering only rejects confidently non-India locations. Unknown locations are kept and treated as potentially India-relevant in the UI.
-- Unstop currently fetches open jobs broadly; it does not reproduce student or course filters from a search URL.
 - Resume scoring and category assignment have no labeled evaluation in this repo. Match percentages are ranking heuristics.
 - The API has no authentication, per-user state, upload-size limit, or multi-user isolation. Bind it to localhost.
 - Browser application automation and automatic submission are not implemented.
