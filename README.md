@@ -29,6 +29,8 @@ No API key or `.env` file is needed for the current collectors. The database and
 
 ## Run locally
 
+After the one-time Python setup below, double-click **`Start Job Intel.cmd`** on Windows. It installs React dependencies if needed, builds the UI if its source changed, starts FastAPI at `http://127.0.0.1:8000`, opens the browser, and runs `run.py` in another console to refresh jobs. The API and collector consoles show errors; close the API console to stop the server. Each launch starts a new collection run, so wait for an earlier run to finish before launching again. If `JOB_INTEL_OFFLINE=1`, it opens saved jobs without collection. Node.js/npm must be installed for the first build.
+
 In PowerShell, from the repository root:
 
 ```powershell

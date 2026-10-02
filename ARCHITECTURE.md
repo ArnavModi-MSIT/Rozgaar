@@ -11,6 +11,8 @@ Job Intel is a **local, single-user** application. It has two separate execution
 
 There is no background scheduler, hosted service, login system, application submission bot, or cloud database. Run commands from the repository root because the Python code uses relative `db/` paths. Collection is the network step; parsing, matching, and the UI run locally. To enforce offline mode, download the model with `python scripts/download_model.py` once, then set `JOB_INTEL_OFFLINE=1`. Normal collection refuses to run in that mode; `--process-only` remains available.
 
+On Windows, `Start Job Intel.cmd` invokes `start.py` from the repository root. After the one-time Python setup, the launcher builds the React bundle if missing or stale, starts the localhost FastAPI server if it is not already responding, opens the browser, and starts one collection process. It skips collection when `JOB_INTEL_OFFLINE=1`. Each double-click launches another collection, so it is not a scheduler or process supervisor.
+
 ```mermaid
 flowchart LR
     S[Career sites and job boards] --> F[fetchers/]
