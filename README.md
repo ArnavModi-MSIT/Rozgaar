@@ -117,3 +117,5 @@ The app is intended for local, single-user use. The FastAPI server has no authen
 ## Repository data
 
 `db/jobs.db` stores collected listings and local actions such as dismissals. `db/job_embeddings_cache.pt` stores generated embeddings. Both are excluded from Git, along with virtual environments, React dependencies, and build output. A fresh clone starts with an empty database until the collector runs.
+
+Airbnb careers are included through its public Greenhouse board, with descriptions and the existing India location and app filters.

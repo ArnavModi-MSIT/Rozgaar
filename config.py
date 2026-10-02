@@ -31,6 +31,7 @@ SALESFORCE_RELEVANT = re.compile(
 # hard way: it doesn't resolve in DNS.) A plain slug string always uses the
 # one real API host; no region tuple needed.
 GREENHOUSE = [
+    "airbnb",  # Official India careers page IDs match this public board. 
     # postman and phonepe boards both returned 404 on 2026-10-01. Their
     # career sites still exist, but these Greenhouse slugs are no longer valid.
     "groww", "razorpaysoftwareprivatelimited", "thoughtworks",

@@ -201,3 +201,7 @@ The offline fixture tests in `tests/` cover Greenhouse, source-health classifica
 - Browser application automation and automatic submission are not implemented.
 
 Use [improvement.md](improvement.md) for proposed changes, not as evidence that those features already work.
+
+### Airbnb collection
+
+Airbnb uses the existing standard Greenhouse collector (`airbnb` board). The board returns all postings in one request with descriptions; `run.py` applies the shared India-or-unknown location filter before saving. The five India posting IDs on the official filtered careers page matched the feed during verification. App filters can hide saved roles based on experience or resume matching.
