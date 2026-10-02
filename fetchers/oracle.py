@@ -84,7 +84,7 @@ def fetch_oracle(cfg, deadline=None):
     testing) scopes results server-side instead of fetching every global
     posting and filtering after. For JPMC this cut 7278 global postings
     down to 434 India-only at the API level. Companies without a known
-    location_id (e.g. Amex, so far) still get the client-side
+    location_id still get the client-side
     is_india_or_unknown() filtering everywhere else already handles.
     deadline: an optional time.monotonic() timestamp — pagination stops
     once past it, returning whatever's been collected so far (same pattern

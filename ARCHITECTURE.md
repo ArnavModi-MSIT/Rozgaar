@@ -50,6 +50,8 @@ Amazon collects the complete India search with `industry_experience=less_than_1_
 
 Microsoft uses India Intern and Entry searches with remote jobs included and relocation excluded. The PCSX endpoint treats a comma-separated seniority value literally, so two searches implement the selected levels and overlapping posting IDs are deduplicated. Earlier saved Microsoft rows remain in SQLite.
 
+American Express uses the India location facet `300000000228786` from its branded careers URL through the existing Oracle endpoint. Pagination and full-description collection remain active.
+
 ## Repository map
 
 | Path | Responsibility |

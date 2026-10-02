@@ -118,7 +118,7 @@ ASHBY = [
 #   https://egug.fa.us2.oraclecloud.com/hcmUI/CandidateExperience/en/sites/CX_1/jobs
 #     tenant=egug  datacenter=us2  site=CX_1
 ORACLE = [
-    {"company": "amex", "tenant": "egug", "datacenter": "us2", "site": "CX_1"},
+    {"company": "amex", "tenant": "egug", "datacenter": "us2", "site": "CX_1", "location_id": "300000000228786"},
     # No "datacenter" key — JPMC's host is tenant.fa.oraclecloud.com, not
     # tenant.fa.DATACENTER.oraclecloud.com like Amex's (confirmed via
     # debug/debug_oracle_jpmc.py). location_id scopes the fetch to India
@@ -241,7 +241,7 @@ WORKDAY = [
     # Fidelity/Sprinklr above FAILS here (400) — so it's evidently not
     # universal across every Workday tenant after all. Left unscoped
     # (no applied_facets); client-side is_india_or_unknown() handles
-    # India-scoping downstream instead, same as Amex in config.ORACLE.
+    # India-scoping downstream instead.
     # Confirmed real India posting in the raw sample response: "Software
     # Engineering LMTS - Release Engineering | India - Hyderabad".
     # fetch_details_filter scoped to target roles, not fetch_details=True
