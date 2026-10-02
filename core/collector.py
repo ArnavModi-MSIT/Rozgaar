@@ -8,7 +8,7 @@ import logging
 from concurrent.futures import ThreadPoolExecutor
 
 import config
-from fetchers import ainterviews, amazon, apple, atlassian, bank_of_america, barclays, deutsche_bank, eightfold, expedia, flipkart, goldman_sachs, google_careers, icims, indiamart, mastercard_workday, meta, oracle, phenom, smartrecruiters, standard, successfactors, uber, workable, workday
+from fetchers import ainterviews, amazon, apple, atlassian, bank_of_america, barclays, deloitte, deutsche_bank, eightfold, expedia, flipkart, goldman_sachs, google_careers, icims, indiamart, mastercard_workday, meta, oracle, phenom, smartrecruiters, standard, successfactors, uber, workable, workday
 from fetchers.result import CollectionResult
 log = logging.getLogger("jobbot")
 
@@ -19,6 +19,7 @@ log = logging.getLogger("jobbot")
 # runs once/day), but keeping the fast/high-yield platforms first still
 # means partial logs are more useful if something fails partway through.
 PLATFORMS = [
+    ("deloitte", lambda deadline: deloitte.collect(deadline=deadline)),
     ("standard", lambda deadline: standard.collect(config.GREENHOUSE, config.LEVER, config.ASHBY)),
     ("oracle", lambda deadline: oracle.collect(config.ORACLE, deadline=deadline)),
     ("icims", lambda deadline: icims.collect(config.ICIMS, deadline=deadline)),

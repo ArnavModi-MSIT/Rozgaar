@@ -119,3 +119,5 @@ The app is intended for local, single-user use. The FastAPI server has no authen
 Airbnb careers are included through its public Greenhouse board, with descriptions and the existing India location and app filters.
 
 LinkedIn and Internshala collectors and sidebar links have been removed. The API hides all saved rows with their current or historical source labels; SQLite history is preserved.
+
+Deloitte collects the official Deloitte India category `/go/Deloitte-India/718244/`, following all pages of 25 listings (up to 120 pages) and fetching descriptions with four workers. Missing pages, totals, descriptions, or deadline interruptions produce partial source health. Existing India, seniority, and resume filters apply after collection. This source does not cover the separate Deloitte USI portal.
