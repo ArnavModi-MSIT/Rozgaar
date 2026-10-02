@@ -31,6 +31,7 @@ SALESFORCE_RELEVANT = re.compile(
 # hard way: it doesn't resolve in DNS.) A plain slug string always uses the
 # one real API host; no region tuple needed.
 GREENHOUSE = [
+    "gravitonresearchcapital",  # Board linked by Graviton careers. 
     "airbnb",  # Official India careers page IDs match this public board. 
     # postman and phonepe boards both returned 404 on 2026-10-01. Their
     # career sites still exist, but these Greenhouse slugs are no longer valid.
@@ -548,6 +549,7 @@ INDIAMART = [
 # For companies whose slug casing looks wrong via .title() (phonepe -> PhonePe).
 # Anything not listed here falls back to slug.title().
 DISPLAY_NAMES = {
+    "gravitonresearchcapital": "Graviton Research Capital LLP",
     "goldman_sachs": "Goldman Sachs",  # .title() would give "Goldman_Sachs"
     "morganstanley": "Morgan Stanley",  # .title() would give "Morganstanley"
     "indiamart": "IndiaMART",  # .title() would give "Indiamart"
