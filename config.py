@@ -33,8 +33,7 @@ SALESFORCE_RELEVANT = re.compile(
 GREENHOUSE = [
     "gravitonresearchcapital",  # Board linked by Graviton careers. 
     "airbnb",  # Official India careers page IDs match this public board. 
-    # postman and phonepe boards both returned 404 on 2026-10-01. Their
-    # career sites still exist, but these Greenhouse slugs are no longer valid.
+    # Postman Greenhouse returned 404; PhonePe now uses SmartRecruiters.
     "groww", "razorpaysoftwareprivatelimited", "thoughtworks",
     # Added after cross-referencing santifer/career-ops's company list against
     # real India presence (verified via web search + debug/check_slugs.py —
@@ -505,6 +504,7 @@ ICIMS = [
 # unconditionally; Freshworks/servicenow don't set this flag, so their
 # behavior is byte-for-byte unchanged.
 SMARTRECRUITERS = [
+    {"company_id": "PHONEPELIMITED"},
     {"company_id": "Freshworks"},
     {"company_id": "servicenow"},
     # Bosch — confirmed live via the real Posting API: real India postings
@@ -549,6 +549,7 @@ INDIAMART = [
 # For companies whose slug casing looks wrong via .title() (phonepe -> PhonePe).
 # Anything not listed here falls back to slug.title().
 DISPLAY_NAMES = {
+    "PHONEPELIMITED": "PhonePe",
     "towerresearchcapital": "Tower Research Capital",
     "gravitonresearchcapital": "Graviton Research Capital LLP",
     "goldman_sachs": "Goldman Sachs",  # .title() would give "Goldman_Sachs"

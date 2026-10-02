@@ -53,7 +53,10 @@ def _get(url):
 def _format_location(loc):
     if not loc:
         return ""
-    parts = [loc.get("city", ""), loc.get("region", ""), loc.get("country", "")]
+    country = loc.get("country", "")
+    if country.lower() == "in":
+        country = "India"
+    parts = [loc.get("city", ""), loc.get("region", ""), country]
     text = ", ".join(p for p in parts if p)
     if loc.get("remote"):
         text = f"{text} (Remote)" if text else "Remote"
