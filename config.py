@@ -31,6 +31,7 @@ SALESFORCE_RELEVANT = re.compile(
 # hard way: it doesn't resolve in DNS.) A plain slug string always uses the
 # one real API host; no region tuple needed.
 GREENHOUSE = [
+    "arcesiumllc",
     "gravitonresearchcapital",  # Board linked by Graviton careers. 
     "airbnb",  # Official India careers page IDs match this public board. 
     # Postman Greenhouse returned 404; PhonePe now uses SmartRecruiters.
@@ -230,7 +231,7 @@ WORKDAY = [
      "applied_facets": {"locationCountry": ["c4f78be1a8f14da0ab49ce1162348a5e"]},
      "fetch_details": True},
     {"company": "salesforce", "tenant": "salesforce", "wd_server": "wd12",
-     "site": "External_Career_Site", "fetch_details_filter": SALESFORCE_RELEVANT},
+     "site": "External_Career_Site", "fetch_details": True},
     {"company": "nvidia", "tenant": "nvidia", "wd_server": "wd5", "site": "NVIDIAExternalCareerSite"},
     {"company": "intel", "tenant": "intel", "wd_server": "wd1", "site": "External"},
     {"company": "samsung", "tenant": "sec", "wd_server": "wd3", "site": "Samsung_Careers"},
@@ -255,33 +256,10 @@ WORKDAY = [
     # "broad India, not NCR-exclusive" precedent as NVIDIA/Intel/Samsung.
     {"company": "hp", "tenant": "hp", "wd_server": "wd5", "site": "ExternalCareerSite"},
     {"company": "medtronic", "tenant": "medtronic", "wd_server": "wd1", "site": "MedtronicCareers"},
-    # Walmart Global Tech India — the only working tenant/site is
-    # walmart.wd504.myworkdayjobs.com/WalmartExternal, Walmart's GENERAL
-    # career site (US retail-store hiring dominates it: cashiers, cart
-    # attendants, truck drivers — total capped at 2000 even for a single
-    # unscoped page, real total almost certainly far higher). No country
-    # facet exists on this tenant at all (checked its own /jobs facets
-    # list: Time Type/Job Category/Job Family/Job Profile/Organization/
-    # Distance — no Country/Region), so unscoped pagination here would mean
-    # wading through tens of thousands of irrelevant US rows to find a
-    # few hundred real India ones — not worth the request volume against
-    # an already Akamai-sensitive platform.
-    #
-    # Fixed instead with server-side full-text search_text scoping (new
-    # cfg key, see fetchers/workday.py) — verified live: searchText=
-    # "Global Tech India" returns total=459 with genuinely real tech
-    # roles (Staff/Senior/Group Director Software Engineer, Data
-    # Scientist III, Senior Solution Consultant), every one seen carrying
-    # the literal "(IND)" title prefix Walmart Global Tech India postings
-    # use. All India volume seen is Bengaluru/Chennai — zero NCR presence
-    # in any sample checked (matches this company's real-world hub;
-    # Walmart Global Tech's India campus is Bangalore, not NCR) — same
-    # "broad India, not NCR-exclusive" class as NVIDIA/Intel/Samsung, added
-    # for the real tech volume alone. client-side is_india_or_unknown()
-    # still does the final location filtering on top of this text scoping,
-    # exactly like every other unscoped entry above.
+    # Text search is bounded but includes US and ambiguous locations.
+    # Walmart IND/USA title and IN location prefixes are normalized in the fetcher.
     {"company": "walmart", "tenant": "walmart", "wd_server": "wd504", "site": "WalmartExternal",
-     "search_text": "Global Tech India"},
+     "search_text": "Global Tech India", "fetch_details": True},
     # Adobe was fingerprinted here too (adobe.wd5.myworkdayjobs.com/
     # external_experienced, 739 postings, 45 NCR) before realizing
     # config.PHENOM already has a working "adobe" entry — careers.adobe.com
@@ -322,7 +300,7 @@ WORKDAY = [
     # Confirmed live: 1448 global postings, 153 real India (Bangalore/Pune
     # — Principal Engineer Software, Staff IT SRE, QA Lead), 5 NCR. Real
     # cybersecurity engineering volume from a genuine top-tier company.
-    {"company": "paloaltonetworks", "tenant": "paloaltonetworks", "wd_server": "wd5", "site": "panwexternalcareers"},
+    {"company": "paloaltonetworks", "tenant": "paloaltonetworks", "wd_server": "wd5", "site": "panwexternalcareers", "fetch_details": True},
 ]
 
 # --- Eightfold PCSX ---------------------------------------------------------------
@@ -566,6 +544,8 @@ DISPLAY_NAMES = {
     "Freshworks": "Freshworks",
     "servicenow": "ServiceNow",
     "salesforce": "Salesforce",
+    "arcesiumllc": "Arcesium",
+    "intuit": "Intuit",
     "nvidia": "NVIDIA",  # .title() would give "Nvidia" — wrong branding
     "BoschGroup": "Bosch",  # .title() on a no-space slug just capitalizes
                              # the first letter ("Boschgroup") — wrong

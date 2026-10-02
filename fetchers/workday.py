@@ -183,6 +183,11 @@ def fetch_workday(cfg, deadline=None):
             location = j.get("locationsText", "")
             if not location and len(bullets) > 1:
                 location = bullets[1]
+            if cfg["company"] == "walmart":
+                if location.startswith("IN ") or j.get("title", "").startswith("(IND)"):
+                    location += ", India"
+                elif j.get("title", "").startswith("(USA)"):
+                    location += ", United States"
             jobs.append({
                 "company": cfg["company"],
                 "source_id": req_id,

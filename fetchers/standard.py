@@ -79,6 +79,8 @@ def _greenhouse_location(slug, job):
         offices = job.get("offices") or []
         if any(re.search(r"\bindia\b", office.get("name", ""), re.I) for office in offices):
             location = location.strip() + ", India" if location.strip() else "India"
+    if slug == "arcesiumllc" and location and all(part.strip().lower() in {"bengaluru", "bangalore", "gurugram", "gurgaon", "hyderabad"} for part in location.split(";")):
+        location += ", India"
     return location
 
 

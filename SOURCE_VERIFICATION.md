@@ -27,3 +27,18 @@ Official career pages:
 - Quadeye: https://www.quadeye.com/jobs
 
 Rubrik department coverage verified: Engineering has 8 India roles and Information Technology & Services has 3. The complete feed already includes all those postings. Office metadata normalization increases the recognized India total from 21 to 32 across all departments without creating duplicate collectors.
+
+## Arcesium, Intuit and existing company check (2026-10-02)
+
+| Company | Recognized India listings | Description check |
+| --- | ---: | --- |
+| Arcesium | 24 (49 global) | 24 full descriptions; newly connected official Greenhouse board |
+| Intuit | 26 | All 26, both country-facet pages; new TalentBrew collector status ok |
+| Salesforce | 45 (1514 global) | All 45 full descriptions after enabling details |
+| Adobe | 80 (530 global) | 80 description teasers, not full JDs |
+| Walmart Global Tech | 220 (403 search results) | All 220 full descriptions; 152 US records now recognized and filtered; 31 locations still unknown |
+| ServiceNow | 76 (711 global) | All 76 full descriptions |
+| Palo Alto Networks | 152 (1505 global) | All 152 full descriptions after enabling details |
+| Snowflake | 13 (345 global) | All 13 full descriptions |
+
+Counts are a live snapshot, not a guarantee of future availability. Existing Workday fetchers return plain lists and do not expose per-company completeness status. Unknown locations can pass the current India-or-unknown filter. No database history was deleted. Offline verification: 71 tests and Python compileall passed.
