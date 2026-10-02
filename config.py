@@ -385,12 +385,11 @@ WORKDAY = [
 # same trade-off as Expedia.
 EIGHTFOLD = [
     {"company": "ukg", "host": "apply.ukg.com", "domain": "ukg.com", "location": "India"},
-    # Microsoft — the untested lead noted above turned out to be real:
-    # confirmed live, same PCSX product, location=India returns 242 real
-    # postings (Hyderabad/Bangalore/Noida — some Noida ones are NCR-
-    # relevant directly). One of the highest fresher-CTC employers in
-    # India and wasn't in this list at all before.
-    {"company": "microsoft", "host": "apply.careers.microsoft.com", "domain": "microsoft.com", "location": "India"},
+    # Microsoft India, limited to the requested Intern and Entry levels.
+    # PCSX does not decode the comma-separated seniority value correctly.
+    # Separate searches implement the Intern OR Entry selection.
+    {"company": "microsoft", "host": "apply.careers.microsoft.com", "domain": "microsoft.com", "location": "India", "sort_by": "distance", "filter_seniority": "Intern", "filter_include_remote": "1", "filter_include_relocation": "0"},
+    {"company": "microsoft", "host": "apply.careers.microsoft.com", "domain": "microsoft.com", "location": "India", "sort_by": "distance", "filter_seniority": "Entry", "filter_include_remote": "1", "filter_include_relocation": "0"},
     # Ericsson — found by fingerprinting careers hosts for a KNOWN platform
     # signature rather than guessing slugs (see the S&P Global note in
     # ICIMS below for why that method replaced the old one). Confirmed

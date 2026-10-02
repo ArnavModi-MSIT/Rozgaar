@@ -107,8 +107,11 @@ def fetch_eightfold(cfg, deadline=None):
             "query": "",
             "location": cfg.get("location", ""),
             "start": start,
-            "sort_by": "timestamp",
+            "sort_by": cfg.get("sort_by", "timestamp"),
         }
+        for field in ("filter_seniority", "filter_include_remote", "filter_include_relocation"):
+            if field in cfg:
+                params[field] = cfg[field]
         data = _get(host, params)
         if not data:
             break
@@ -167,4 +170,5 @@ def collect(configs, deadline=None):
                 jobs += f.result()
             except Exception as e:
                 log.exception("eightfold fetch failed for %s: %s", cfg.get("company"), e)
-    return jobs
+    unique = {(job["company"], job["source_id"] or job["url"]): job for job in jobs}
+    return list(unique.values())
