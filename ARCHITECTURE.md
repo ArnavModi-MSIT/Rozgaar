@@ -44,6 +44,8 @@ The Google Careers adapter collects both the broad India search and the requeste
 
 Mastercard is collected from both its Phenom careers site and the `CorporateCareers` Workday page. The dedicated `mastercard_workday` source discovers India location IDs from Workday's current facet response, fetches all India listing pages, and reads full job descriptions. It runs before Phenom; both feeds use `mastercard:R-...` as the stable ID, so overlapping postings are saved once and Phenom can still supply postings absent from Workday. When an existing Phenom row receives a full Workday description, its source, URL, and content are refreshed while its ID and dismissal stay intact. A failed page or description produces a partial Mastercard Workday run.
 
+Barclays collects every page of its public India search using `?p=` and reads official job descriptions. Posting IDs are deduplicated; incomplete pages, totals, or descriptions produce a partial source result.
+
 ## Repository map
 
 | Path | Responsibility |

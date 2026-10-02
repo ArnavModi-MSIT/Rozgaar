@@ -8,7 +8,7 @@ import logging
 from concurrent.futures import ThreadPoolExecutor
 
 import config
-from fetchers import ainterviews, amazon, apple, atlassian, bank_of_america, deutsche_bank, eightfold, expedia, goldman_sachs, google_careers, icims, indiamart, internshala, linkedin, mastercard_workday, oracle, phenom, smartrecruiters, standard, successfactors, workable, workday
+from fetchers import ainterviews, amazon, apple, atlassian, bank_of_america, barclays, deutsche_bank, eightfold, expedia, goldman_sachs, google_careers, icims, indiamart, internshala, linkedin, mastercard_workday, oracle, phenom, smartrecruiters, standard, successfactors, workable, workday
 from fetchers.result import CollectionResult
 log = logging.getLogger("jobbot")
 
@@ -40,6 +40,7 @@ PLATFORMS = [
     ("internshala", lambda deadline: internshala.collect(deadline=deadline)),
     ("linkedin", lambda deadline: linkedin.collect(deadline=deadline)),
     ("bank_of_america", lambda deadline: bank_of_america.collect(deadline=deadline)),
+    ("barclays", lambda deadline: barclays.collect(deadline=deadline)),
     ("eightfold", lambda deadline: eightfold.collect(config.EIGHTFOLD, deadline=deadline)),
 ]
 

@@ -19,6 +19,8 @@ A local job discovery prototype for students and early career applicants in Indi
 
 This is a prototype. Relevance scores rank jobs; they are not validated probabilities of being hired or being eligible. The last-observed date does not confirm that a listing is still open. Job sources can change or become unavailable. Application form automation is not implemented.
 
+Barclays collects all pages of its public India search using the verified `?p=` page query and reads each official job description. It deduplicates posting IDs and reports partial results when pages, reported totals, or descriptions are incomplete.
+
 ## Requirements
 
 - Python 3.10 or newer
