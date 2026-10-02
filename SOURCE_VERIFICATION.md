@@ -42,3 +42,17 @@ Rubrik department coverage verified: Engineering has 8 India roles and Informati
 | Snowflake | 13 (345 global) | All 13 full descriptions |
 
 Counts are a live snapshot, not a guarantee of future availability. Existing Workday fetchers return plain lists and do not expose per-company completeness status. Unknown locations can pass the current India-or-unknown filter. No database history was deleted. Offline verification: 72 tests and Python compileall passed.
+
+## PayPal, CRED, Groww, Meesho, BlackRock, Morgan Stanley, Expedia (2026-10-02)
+
+| Company | India jobs | Live result |
+| --- | ---: | --- |
+| PayPal | 10 | New Workday India location facets; all 10 full descriptions, status ok. Official PayPal India site links Eightfold, which also reports 10 India roles. |
+| CRED | 8 | Existing Lever board; all 8 descriptions; Bengaluru/Hyderabad labels now normalized to India. |
+| Groww | 7 | Existing Greenhouse board; all 7 India jobs have descriptions. |
+| Meesho | 57 | Existing Lever board; all 57 descriptions; confirmed India city/state labels normalized. |
+| BlackRock | 39 | New official India TalentBrew country facet; all four pages and 39 full descriptions, status ok. |
+| Morgan Stanley | 118 | Existing Eightfold India search; department summaries only. |
+| Expedia Group | 4 in final partial run | Intermittent HTTP 403: initial check returned 162 global / 27 India; final check returned 100 global / 4 India and failed page 5. Completeness is unverified; team summaries only. |
+
+Expedia failures now propagate to source health instead of silently appearing as successful empty or truncated collections. Counts are current snapshots, not guaranteed stable totals. Offline checks: 77 tests and compileall passed. Database history remains untouched.

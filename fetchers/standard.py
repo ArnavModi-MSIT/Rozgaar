@@ -106,6 +106,15 @@ def fetch_greenhouse(slug):
     ]
 
 
+def _lever_location(slug, job):
+    location = (job.get("categories") or {}).get("location", "")
+    # Only normalize confirmed city labels on these India company boards.
+    india_labels = {"bengaluru", "hyderabad", "bangalore, karnataka", "chennai, tamil nadu", "delhi ncr", "hyderabad, telangana", "jaipur, rajasthan", "kochi, kerala", "mumbai, maharashtra", "surat, gujarat"}
+    if slug in {"cred", "meesho"} and location.strip().lower() in india_labels:
+        location += ", India"
+    return location
+
+
 def fetch_lever(slug):
     """Lever splits posting content across THREE separate fields, not one:
     - description/descriptionPlain: intro blurb only
@@ -133,7 +142,7 @@ def fetch_lever(slug):
             "company": slug,
             "source_id": str(j.get("id", "")),
             "title": j["text"],
-            "location": (j.get("categories") or {}).get("location", ""),
+            "location": _lever_location(slug, j),
             "url": j["hostedUrl"],
             "description": strip_html(combined, max_chars=None)[:6000],
         })

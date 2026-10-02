@@ -533,6 +533,9 @@ DISPLAY_NAMES = {
     "paloaltonetworks": "Palo Alto Networks",  # .title() would give "Paloaltonetworks"
     "phonepe": "PhonePe",
     "cred": "CRED",
+    "paypal": "PayPal",
+    "blackrock": "BlackRock",
+    "expedia": "Expedia Group",
     "amex": "American Express",
     "jpmc": "JPMorgan Chase",
     "bcg": "Boston Consulting Group",

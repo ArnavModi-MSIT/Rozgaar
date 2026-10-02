@@ -29,6 +29,8 @@ import time
 import requests
 from bs4 import BeautifulSoup
 
+from .result import CollectionResult
+
 log = logging.getLogger("jobbot")
 
 BASE = "https://careers.expediagroup.com"
@@ -103,13 +105,16 @@ def _parse_card(card):
 
 def fetch_all(deadline=None):
     jobs = []
+    errors = []
     seen_ids = set()
     page = 1
     while page <= MAX_PAGES:
         if deadline is not None and time.monotonic() >= deadline:
+            errors.append("collection deadline reached")
             break
         html = _get(page)
         if not html:
+            errors.append(f"listing request failed on page {page}")
             break
         soup = BeautifulSoup(html, "html.parser")
         cards = soup.find_all("li", class_="Results__list__item")
@@ -132,12 +137,12 @@ def fetch_all(deadline=None):
             break
         page += 1
         time.sleep(0.3)  # polite gap between page requests
-    return jobs
+    if page > MAX_PAGES:
+        errors.append("listing page limit reached")
+    if errors and not jobs:
+        raise RuntimeError("Expedia: " + "; ".join(errors))
+    return CollectionResult(jobs, status="partial" if errors else "ok", error="; ".join(errors))
 
 
 def collect(deadline=None):
-    try:
-        return fetch_all(deadline=deadline)
-    except Exception as e:
-        log.exception("expedia fetch failed: %s", e)
-        return []
+    return fetch_all(deadline=deadline)
