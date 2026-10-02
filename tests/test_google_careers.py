@@ -1,6 +1,7 @@
 import unittest
 from unittest.mock import patch
 
+import config
 from fetchers import google_careers
 
 
@@ -11,6 +12,13 @@ def page(total, job_id=None):
 
 
 class GoogleCareersTests(unittest.TestCase):
+    @patch("fetchers.google_careers._get", return_value=page(1, "123"))
+    def test_configured_combined_search(self, get):
+        result = google_careers.collect(config.GOOGLE_CAREERS)
+        self.assertEqual(result.status, "ok")
+        get.assert_called_once()
+        self.assertIn("target_level=EARLY&target_level=INTERN_AND_APPRENTICE&location=India", get.call_args.args[0])
+
     @patch("fetchers.google_careers._get")
     def test_both_searches_deduplicate(self, get):
         get.side_effect = [page(1, "123"), page(1, "123")]

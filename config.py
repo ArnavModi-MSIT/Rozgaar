@@ -159,8 +159,7 @@ ORACLE = [
 # target_levels mirror the site's own multi-select experience-level
 # filter checkboxes.
 GOOGLE_CAREERS = [
-    {"company": "google", "location": "India", "target_levels": []},
-    {"company": "google", "location": "India", "target_levels": ["EARLY"], "e": "72477625"},
+    {"company": "google", "location": "India", "target_levels": ["EARLY", "INTERN_AND_APPRENTICE"]},
 ]
 
 # --- Amazon Jobs -----------------------------------------------------------------
