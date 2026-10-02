@@ -211,13 +211,6 @@ PHENOM = [
     {"company": "mastercard", "domain": "careers.mastercard.com", "refnum": "", "locale": "us/en"},
 ]
 
-# --- Workday -----------------------------------------------------------------
-# Config per company: {tenant, wd_server, site} pulled from the careers URL:
-#   https://accenture.wd103.myworkdayjobs.com/AccentureCareers
-#     tenant=accenture  wd_server=wd103  site=AccentureCareers
-# CAUTION: Workday commonly sits behind Akamai bot management — same category
-# of protection that blocked ZS (iCIMS). Run debug/debug_workday.py before
-# trusting a new entry; a 0-job result can mean "blocked," not "wrong config."
 WORKDAY = [
     {"company": "fractal", "tenant": "fractal", "wd_server": "wd1", "site": "Careers", "fetch_details": True},
     # Fidelity International — confirmed via debug/debug_fidelity.py:
@@ -236,35 +229,8 @@ WORKDAY = [
     {"company": "sprinklr", "tenant": "sprinklr", "wd_server": "wd1", "site": "careers",
      "applied_facets": {"locationCountry": ["c4f78be1a8f14da0ab49ce1162348a5e"]},
      "fetch_details": True},
-    # Salesforce — confirmed via debug/debug_salesforce_workday.py: wd1
-    # doesn't have this tenant at all (400); wd12 does (200, total=1515
-    # global). The shared India locationCountry GUID that works for
-    # Fidelity/Sprinklr above FAILS here (400) — so it's evidently not
-    # universal across every Workday tenant after all. Left unscoped
-    # (no applied_facets); client-side is_india_or_unknown() handles
-    # India-scoping downstream instead.
-    # Confirmed real India posting in the raw sample response: "Software
-    # Engineering LMTS - Release Engineering | India - Hyderabad".
-    # fetch_details_filter scoped to target roles, not fetch_details=True
-    # for all 1515 — same volume reasoning as Genpact above.
     {"company": "salesforce", "tenant": "salesforce", "wd_server": "wd12",
      "site": "External_Career_Site", "fetch_details_filter": SALESFORCE_RELEVANT},
-    # NVIDIA, Intel, Samsung — added after researching top fresher-CTC/
-    # semiconductor employers not yet in this list. All three confirmed
-    # live via a direct API call (not just a slug guess) and real India
-    # postings sampled from the first ~160 results each: NVIDIA
-    # (Bengaluru/Pune, incl. a "Developer Technology Engineering Intern -
-    # 2027"), Intel (Bengaluru, ~14% India yield), Samsung (Bangalore
-    # SRI-B R&D center, ~2% yield — lower but real). Like Salesforce
-    # above, the shared India locationCountry GUID FAILED (400) for all
-    # three, so all are left unscoped with client-side is_india_or_unknown()
-    # doing the real filtering. fetch_details deliberately NOT enabled for
-    # any of the three yet — same "don't add detail-fetch load onto an
-    # already Akamai-rate-limited platform without watching a real run
-    # first" caution as Genpact; NVIDIA/Intel in particular are large
-    # enough (2000/608 global) that bulk detail-fetching could meaningfully
-    # add to Workday's documented 211s-for-6-companies runtime. Revisit
-    # once a real run shows actual per-company India volume/timing.
     {"company": "nvidia", "tenant": "nvidia", "wd_server": "wd5", "site": "NVIDIAExternalCareerSite"},
     {"company": "intel", "tenant": "intel", "wd_server": "wd1", "site": "External"},
     {"company": "samsung", "tenant": "sec", "wd_server": "wd3", "site": "Samsung_Careers"},
@@ -348,17 +314,6 @@ WORKDAY = [
     # executive roles), so this is squarely a "broad India tech volume"
     # add, same precedent as NVIDIA/Intel/Visa above, not an NCR source.
     {"company": "cisco", "tenant": "cisco", "wd_server": "wd5", "site": "Cisco_Careers"},
-    # Autodesk — the user's own URL gave the tenant/site directly
-    # (autodesk.wd1.myworkdayjobs.com/Ext). MUST stay server-side scoped
-    # via applied_facets, same reason as Accenture above: locationsText is
-    # blank/multi-location for most postings here too, so an unscoped
-    # fetch found only 1/333 "Unknown"-passthrough rows that actually said
-    # India — the rest were genuinely international (Toronto, etc.)
-    # flooding through the same permissive-Unknown gap. The shared India
-    # locationCountry GUID DOES work here (200, not 400) — confirmed
-    # scoped fetch returns real India postings, all Bengaluru (Software
-    # Engineer, Software Development Engineer, Senior Implementation
-    # Consultant). Zero NCR presence.
     {"company": "autodesk", "tenant": "autodesk", "wd_server": "wd1", "site": "Ext",
      "applied_facets": {"locationCountry": ["c4f78be1a8f14da0ab49ce1162348a5e"]}},
     # Palo Alto Networks — fingerprinted from the user's own
@@ -369,13 +324,6 @@ WORKDAY = [
     # cybersecurity engineering volume from a genuine top-tier company.
     {"company": "paloaltonetworks", "tenant": "paloaltonetworks", "wd_server": "wd5", "site": "panwexternalcareers"},
 ]
-# fetch_details: opt-in per company for the extra per-job description
-# detail-fetch (confirmed working via debug/debug_workday_detail.py —
-# GET .../wday/cxs/{tenant}/{site}{externalPath} -> jobPostingInfo.jobDescription).
-# Deliberately NOT enabled for Genpact: ~2000 postings there makes bulk
-# detail-fetching a real rate-limit risk (see fetchers/workday.py's own
-# notes on 211s just for the list fetch across 6 companies). Fractal's
-# ~140 postings are a small enough, safe volume to enable it for.
 
 # --- Eightfold PCSX ---------------------------------------------------------------
 # apply.{company}.com portals — confirmed via debug/debug_ukg.py:
@@ -410,19 +358,6 @@ EIGHTFOLD = [
     # silicon engineering, so treat the NCR slice, not the total, as the
     # value here.
     {"company": "qualcomm", "host": "careers.qualcomm.com", "domain": "qualcomm.com", "location": "India"},
-    # Ascendion was added then removed — a real, well-verified entry (223
-    # India postings, 18 NCR with genuinely relevant tech roles) but
-    # fundamentally an IT-services/digital-engineering staffing firm, the
-    # same mass-hirer category as HCLTech/Accenture/Capgemini/Deloitte/
-    # Nagarro, not the high-paying/high-growth product companies this
-    # board targets.
-    # Morgan Stanley — fingerprinted from the user's own
-    # morganstanley.eightfold.ai URL, same PCSX product as Qualcomm/
-    # Microsoft above. Confirmed live: location=India returns 114 real
-    # postings (Mumbai/Bengaluru — quant, software engineering, data &
-    # analytics, KYC/ops). Zero NCR presence but a genuine top-tier
-    # high-pay employer, same "broad India, not NCR-exclusive" precedent
-    # as Visa/NVIDIA.
     {"company": "morganstanley", "host": "morganstanley.eightfold.ai", "domain": "morganstanley.com", "location": "India"},
 ]
 
@@ -448,28 +383,6 @@ SUCCESSFACTORS = [
     # any single company in this file. Small enough volume to safely
     # detail-fetch every India/unknown posting.
     {"company": "payu", "host": "careers.payu.in", "fetch_details": True},
-    # Deloitte South Asia and HCLTech were both removed — real, working
-    # entries (Deloitte: 850+ postings, 162 NCR; HCLTech: the "rmk" variant,
-    # 40/150 NCR sampled) but both are classic IT-services/consulting mass
-    # hirers, not the high-paying/high-growth companies this board targets.
-    # PayU above is now the sole tenant proving the fetcher's selectors are
-    # a platform convention rather than one customer's theme — still real
-    # validation, just narrower than when Deloitte was also present.
-    #
-    # Standard Chartered — fingerprinted from the user's own job-detail URL
-    # (jobs.standardchartered.com/go/Experienced-Professional-jobs/9783657/
-    # ...), which turned out to carry the categoryId directly (9783657).
-    # Runs the "rmk" variant like HCLTech did, but with a real difference
-    # this tenant surfaced: its list response omits location fields
-    # ENTIRELY on a plain query (confirmed empty, not just unpopulated) —
-    # only appears once facetFilters includes a location-shaped key. New
-    # "facet_filters" cfg key (see fetchers/successfactors.py) passes
-    # {"jobLocationCountry": ["India"]} through, which both fixes that AND
-    # genuinely scopes server-side to India. Confirmed live: 122-200
-    # postings across test runs (RMK_MAX_PAGES caps this at a sample, not
-    # the full pool, see that constant's own comment), 7 NCR (Delhi) —
-    # relationship/wealth management roles, not tech, but a real signal
-    # from a genuine top-tier bank, same tier as Amex/JPMC/Morgan Stanley.
     {"company": "standardchartered", "host": "jobs.standardchartered.com",
      "category_id": 9783657, "variant": "rmk",
      "facet_filters": {"jobLocationCountry": ["India"]}},
@@ -600,10 +513,6 @@ SMARTRECRUITERS = [
     # real time/rate cost for no benefit on the ~83% that aren't India-
     # relevant anyway (measured), hence detail_fetch_india_only here.
     {"company_id": "BoschGroup", "detail_fetch_india_only": True},
-    # Nagarro (company_id "nagarro1") was removed — a real, well-verified
-    # entry (902 postings, 36% India yield) but an IT/product-engineering
-    # services firm in the same mass-hirer category as HCLTech/Accenture/
-    # Capgemini/Deloitte/Ascendion, not a target company for this board.
 ]
 
 # --- Workable ----------------------------------------------------------------
@@ -632,13 +541,6 @@ AINTERVIEWS = [
 # pressed into service as a jobs-list call, since no real listing endpoint
 # exists on this vendor).
 INDIAMART = [
-    # IndiaMART — Noida-HQ'd, India's largest B2B marketplace. Confirmed
-    # live: 479 matched postings, 109 NCR (23%) — real signal from the
-    # company's actual HQ, but skewed heavily toward field sales/telesales
-    # roles rather than engineering. Left in anyway, same as this file's
-    # other mixed-relevance-but-real-volume companies (Walmart, Deloitte
-    # while it was still here) — the resume relevance gate downstream is
-    # what should filter title-level noise, not this fetcher.
     {"company": "indiamart", "customer_id": "5dd7966c6c4d197f68105048"},
 ]
 
@@ -673,20 +575,6 @@ DISPLAY_NAMES = {
     "hp": "HP",  # .title() would give "Hp" — wrong branding
 }
 
-# --- Fingerprinted, investigated, NOT added (with the reason) --------------------
-# All found by fetching the real careers host and looking for a platform
-# signature in the markup, which is how S&P Global/Ericsson/Fiserv were
-# found. Recorded so these aren't re-investigated from scratch:
-#   (HCLTech was here — SOLVED, see the SUCCESSFACTORS list below. Its
-#   /search/ path really does return zero rows because it runs the newer
-#   "rmk" SuccessFactors variant, not the classic one; a headless-browser
-#   network capture found the real JSON API underneath.)
-#   Nokia (jobs.nokia.com/en/sites/CX_1) — Oracle Recruiting Cloud, but on
-#     a custom domain: the hcmRestApi path returns 200 with non-JSON, so
-#     the real *.fa.*.oraclecloud.com tenant host is still needed.
-#   Amdocs (jobs.amdocs.com) — Eightfold, endpoint works, but location=India
-#     returned only ONE posting. Valid config, just not worth the request.
-#   Gartner (jobs.gartner.com), Moody's — no recognizable platform signature.
 
 # --- Matching filters ----------------------------------------------------------
 # Intern OR fresher/entry-level/campus/2026-27-batch hiring
@@ -703,14 +591,6 @@ EXCLUDE = re.compile(
     r"[3-9]-\d+ ?years?)\b", re.I
 )
 
-# Delhi-NCR only (most variants below reduce to substrings already covered —
-# kept explicit for readability; "new delhi" already matches on "delhi", etc.
-# "gautam buddha nagar" does NOT reduce to anything above and was a real,
-# measured gap: it's the district Noida sits in, and some ATS platforms
-# report the district instead of the city name — confirmed live via
-# HCLTech's SuccessFactors data, 8 of 150 sampled India postings used this
-# exact string with no "Noida" anywhere in the location field, which the
-# old regex silently missed.)
 LOCATION = re.compile(
     r"delhi|ncr|noida|gurugram|gurgaon|ghaziabad|faridabad|gautam buddha nagar", re.I
 )
@@ -802,14 +682,4 @@ TARGET_ROLE_RE = re.compile(
     re.I,
 )
 
-# Per-company functional relevance filter — for large BPO/consulting firms
-# that post thousands of roles across every function (F&A, HR ops, customer
-# care, insurance processing...), most of which have nothing to do with
-# DA/Analytics Engineer/BI Developer work despite being NCR-located.
-# Companies listed here must ALSO match this pattern in the title, on top
-# of the location + seniority filters, or they get dropped. Empty for now —
-# its one entry (Genpact) was removed along with the company itself (a
-# classic BPO/IT-services mass hirer, not a target company for this board)
-# — kept as a mechanism since another large BPO-style company could need
-# it again later.
 RELEVANCE_FILTERS = {}

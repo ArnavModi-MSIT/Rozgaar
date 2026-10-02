@@ -1,71 +1,12 @@
-"""
-Fetcher for SAP SuccessFactors-powered career sites (the RMK/"Career Site
-Builder" public front-end sitting on top of SuccessFactors Recruiting).
+"""Collect public SAP SuccessFactors career listings.
 
-WHY THIS EXISTS: a survey of ~30 Indian-origin/NCR companies found that
-most of them don't run on any of the Western ATS platforms this project
-already supports (Greenhouse/Lever/Ashby/Workable/Oracle/Workday/etc.) —
-SuccessFactors was the most common of the unsupported ones AND the only
-one with a confirmed-accessible public surface, so it was built first.
-
-INVESTIGATION (all confirmed live, not guessed):
-- SuccessFactors has NO public jobs API — its OData/JobRequisition API is
-  auth-gated to the employer, built for HRIS integration, not for reading
-  public postings. So this scrapes the public career site's own HTML,
-  the same way fetchers/google_careers.py and fetchers/expedia.py do.
-- The site exposes a rich XML sitemap (GET /sitemap.xml) listing every
-  job URL. Confirmed real (138 URLs for PayU) but NOT used here: the
-  location is only available baked into the URL slug
-  ("/job/Gurgaon-P3-Assistant-Manager-BSM/53951080/"), which can't be
-  split reliably from the title without already knowing one of them.
-- The /search/ listing page gives the same jobs with title, location and
-  href as SEPARATE, clean fields — strictly better, so that's what's
-  used. Confirmed: 25 rows/page, `startrow` offset pagination, a short
-  page marks the end (PayU: 138 total, last page 13 rows, startrow past
-  the end returns 0 rows).
-- Job detail pages carry NO JSON-LD (checked), but do expose clean
-  `data-careersite-propertyid` attributes — "title" and "description" —
-  which is where the description body comes from.
-
-Confirmed working against TWO independent tenants with identical
-selectors (a single-tenant check wouldn't prove the markup is a platform
-convention rather than one customer's theme):
-  careers.payu.in           -> PayU, Gurgaon/Noida/Bengaluru/Mumbai roles
-  southasiacareers.deloitte.com -> Deloitte South Asia, Bengaluru/Hyderabad/Ahmedabad
-
-cfg keys (variant="search", the default):
-  company        required — the label stored in the db's `company` column
-  host           required — career site host, e.g. "careers.payu.in"
-  fetch_details  optional (default False) — opt-in per-company per-job
-                   description fetch, gated to India/unknown-location
-                   postings only, same pattern as fetchers/oracle.py and
-                   fetchers/workday.py. Off by default because it costs
-                   one extra request per matching posting.
-
-SECOND VARIANT: "rmk" — a newer SuccessFactors product (the actual "RMK /
-Career Site Builder" the module title above is named for) that some
-tenants run instead of the classic /search/ page. Confirmed on HCLTech
-(careers.hcltech.com), found via debug/debug_hcltech_rmk investigation:
-the /search/ page this file was originally built against returns 200
-with ZERO tr.data-row rows for this tenant — not a bot block (a rendered
-headless-browser check found the same zero, no bot-check content either)
-but a genuinely different backend. Network-captured the real request a
-browser sends: POST /services/recruiting/v1/jobs, JSON body
-{"categoryId": <int>, "pageNumber": N, ...}, PAGE_SIZE 10/page. The
-categoryId itself was found the same way — it's baked into the site's own
-country-scoped URL (careers.hcltech.com/go/India/9553955/), not guessable.
-
-cfg keys (variant="rmk"):
-  company        required
-  host           required — e.g. "careers.hcltech.com"
-  category_id    required — country/region scope id, from the site's own
-                   /go/<Country>/<id>/ URL (browser DevTools or Network tab)
-  max_pages      optional override of RMK_MAX_PAGES (see its own comment
-                   for why HCLTech's real cap differs from the default)
-
-No description field exists in the RMK list response (checked the full
-field set on a real record) and no working detail endpoint was found —
-list-only for this variant, same trade-off as fetchers/expedia.py.
+The default search variant parses HTML cards with startrow pagination and
+optionally fetches descriptions for India-or-unknown locations.
+The RMK variant posts to /services/recruiting/v1/jobs with categoryId,
+pageNumber and optional facetFilters. Its list response lacks descriptions.
+Configure company, host, variant, category_id, max_pages and facet_filters
+as appropriate for the actual tenant. Shared parsing supports custom location
+field names; these are not guaranteed to be uniform across employers.
 """
 
 import logging
@@ -84,33 +25,11 @@ log = logging.getLogger("jobbot")
 
 PAGE_SIZE = 25  # confirmed from real responses — the site serves 25 rows
 # per page regardless of any parameter we pass.
-MAX_PAGES = 120  # hard cap for termination safety (3,000 postings) — the
-# real stop signal is a short/empty page, same as every other paginating
-# fetcher here. Raised from an initial 40 (1,000) after measuring a real
-# tenant: Deloitte South Asia returned a full page at startrow=2000 and
-# nothing at 3000, i.e. ~2,000-3,000 postings — the old cap was silently
-# discarding well over half of them. Hitting this cap is now logged as a
-# warning (see fetch_successfactors) rather than passing as a normal
-# result, since "truncated" and "that's all there is" must never look the
-# same in the logs. run.py's own RUN_DEADLINE_SECONDS budget is the outer
-# bound that keeps a very large tenant from running away.
+MAX_PAGES = 120  # Safety cap: 3,000 listings.
 
 RMK_PAGE_SIZE = 10  # confirmed from real responses — the API always
 # returns 10 records regardless of the page number requested.
 RMK_MAX_PAGES = 100  # hard cap for termination safety (1,000 postings).
-# Deliberately NOT high enough to walk HCLTech's full pool (confirmed
-# live: totalJobs=9077) — no server-side location filter was found for
-# this variant (facetFilters/location/keywords all tried, none narrow the
-# result set; see the module docstring), so getting ALL of it means
-# paginating blind through the whole company. A 100-page/1,000-job sample
-# is a deliberate, accepted tradeoff, not an oversight — same "capped
-# sample, client-side filter" pattern already used for NVIDIA/Intel/
-# Samsung elsewhere in this project. Confirmed the sample is NOT thin on
-# NCR specifically: a live 150-job sample (default sort) already found 40
-# NCR matches (26.7%, Noida alone at 38) — HCLTech's own Noida HQ appears
-# to dominate this tenant's postings regardless of where in the ranking
-# you sample, unlike a generic global company where NCR could be diluted
-# arbitrarily deep. Revisit if a real run shows this isn't representative.
 
 SESSION = requests.Session()
 SESSION.headers.update({
@@ -311,13 +230,13 @@ def _rmk_location(record):
     """RMK's list response gives city and country as SEPARATE fields, but
     the exact field NAMES are tenant-specific custom SuccessFactors config,
     not a platform standard — confirmed two genuinely different shapes:
-      HCLTech:            custprimecity / custCountryRegion
+      Custom tenant:            custprimecity / custCountryRegion
       Standard Chartered: jobLocationShort / jobLocationCountry (and only
         present at all when the query's facetFilters includes a location
         key — confirmed live: an unfiltered/keyword-only query silently
         omits these fields entirely, they're not just empty)
     Tries both, first non-empty wins. custprimecity is also genuinely None
-    on some HCLTech records (e.g. certain "Technical Architect" postings)
+    on some records (e.g. certain "Technical Architect" postings)
     — falls back to country alone rather than crashing on a None.join()."""
     city = record.get("custprimecity") or ""
     countries = record.get("custCountryRegion") or []
@@ -343,7 +262,7 @@ def fetch_successfactors_rmk(cfg, deadline=None):
     facetFilters contains a location-shaped key — see _rmk_location's own
     docstring; (2) it also genuinely scopes the result set server-side
     (confirmed: facetFilters={"jobLocationCountry": ["India"]} returns
-    only India postings). Omit for tenants like HCLTech where the plain
+    only India postings). Omit for tenants where the plain
     {} query already includes location fields and no server-side scoping
     was found to work at all."""
     host = cfg["host"]

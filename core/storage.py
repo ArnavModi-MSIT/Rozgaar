@@ -473,7 +473,7 @@ def get_workday_jobs_missing_description(conn, company):
     Returns (job_id, title, url) tuples — title included so callers (see
     `run.py --refetch-workday`) can re-apply a company's
     fetch_details_filter instead of blindly refetching every empty row,
-    which matters a lot for a company like Genpact where "every empty row"
+    which matters a lot for a large employer where "every empty row"
     is ~2000 rows and only a small title-matched subset is meant to ever
     get detail-fetched. Used to backfill without a full re-scrape."""
     return conn.execute(

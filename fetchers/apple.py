@@ -20,7 +20,7 @@ Detail URL confirmed live:
   https://jobs.apple.com/en-in/details/{positionId}/{transformedPostingTitle}?team={teamCode}
 Every field needed is already in the search response itself
 (jobSummary = full description), so no separate detail fetch is needed —
-same simplicity win as fetchers/capgemini.py had before it was removed.
+The collector stores the search response summary.
 
 Real India volume at last check: 171 postings, heavily Bengaluru (79) and
 Hyderabad (61) — Apple's real India engineering hub. Only 4 NCR hits

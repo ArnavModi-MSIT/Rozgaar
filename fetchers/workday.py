@@ -20,8 +20,8 @@ Two opt-in ways a company's config.py entry can enable this:
   - fetch_details_filter=<compiled regex>: fetch only for postings whose
     title matches, on top of the same India/unknown check (used for large
     companies where fetching everything would be a rate-limit risk, e.g.
-    Genpact — ~2000 postings total, but only the Data/Analytics/AI subset
-    matching GENPACT_RELEVANT in config.py actually gets detail-fetched)
+    a large tenant — thousands of postings total, but only the Data/Analytics/AI subset
+    matching the configured relevance pattern actually gets detail-fetched)
 Neither is automatic — a company with neither key set gets no detail-fetch
 at all, same as before this feature existed.
 """
@@ -121,8 +121,8 @@ def fetch_workday(cfg, deadline=None):
     "fetch_details": bool (optional), "fetch_details_filter": compiled
     regex (optional) — see module docstring for what each does}
     All four core values come from the company's careers URL, e.g.
-      https://accenture.wd103.myworkdayjobs.com/AccentureCareers
-        tenant=accenture  wd_server=wd103  site=AccentureCareers
+      https://example.wd1.myworkdayjobs.com/Careers
+        tenant=example  wd_server=wd1  site=Careers
     deadline: an optional time.monotonic() timestamp — pagination stops
     (returning whatever's been collected so far) once past it, since a
     single company's fetch can otherwise run far longer than the overall
@@ -180,10 +180,6 @@ def fetch_workday(cfg, deadline=None):
             ext_path = j.get("externalPath", "")
             bullets = j.get("bulletFields") or []
             req_id = bullets[0] if bullets else ext_path
-            # Some tenants (confirmed: Accenture) don't populate locationsText
-            # at all — the location shows up as a second bulletFields entry
-            # instead. Fall back to it, skipping anything that looks like
-            # another req-id-shaped token rather than a place name.
             location = j.get("locationsText", "")
             if not location and len(bullets) > 1:
                 location = bullets[1]
