@@ -6,11 +6,7 @@ import config
 
 
 def matches(job):
-    # Location filter, plus a narrow seniority exclude (senior/director/
-    # executive). config.INCLUDE (intern/fresher gate) is kept defined for
-    # debug_titles.py's display columns but is no longer applied here.
-    if config.EXCLUDE_SENIOR.search(job["title"]):
-        return False
+    # Seniority words in the title are not an eligibility gate.
     if not config.LOCATION.search(job.get("location") or ""):
         return False
     # Some companies (large BPO/consulting firms) post across every

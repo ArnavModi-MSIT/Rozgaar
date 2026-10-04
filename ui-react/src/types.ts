@@ -66,6 +66,5 @@ export interface Filters {
   showRemote: boolean;
   showNcr: boolean;
   showIndia: boolean;
-  hideSenior: boolean;
   hideHighExperience: boolean;
 }

@@ -12,8 +12,8 @@ interface Props {
   resumeError: string | null;
   autoRemove: boolean;
   onAutoRemoveChange: (v: boolean) => void;
-  counts: { belowThreshold: number; senior: number; highExperience: number };
-  onBulkDismiss: (which: "match" | "senior" | "experience") => void;
+  counts: { belowThreshold: number; highExperience: number };
+  onBulkDismiss: (which: "match" | "experience") => void;
   minMatch: number;
 }
 
@@ -196,13 +196,8 @@ export default function Sidebar({
 
         <div className="mt-3 pt-3 border-t border-gray-100">
           <Check
-            label="Hide senior/lead/manager titles"
-            checked={filters.hideSenior}
-            onChange={(v) => onFilterChange({ hideSenior: v })}
-          />
-          <Check
-            label="Hide jobs needing 1+ years"
-            hint="Jobs with an unknown requirement are kept"
+            label="Hide jobs needing 2+ years"
+            hint="Based on the description; unknown requirements are kept"
             checked={filters.hideHighExperience}
             onChange={(v) => onFilterChange({ hideHighExperience: v })}
           />
@@ -234,20 +229,12 @@ export default function Sidebar({
               Remove {counts.belowThreshold} below {minMatch}% match
             </button>
           )}
-          {counts.senior > 0 && (
-            <button
-              onClick={() => onBulkDismiss("senior")}
-              className="w-full text-left rounded-md border border-gray-200 px-2.5 py-1.5 text-xs hover:bg-gray-50"
-            >
-              Remove {counts.senior} senior/lead/manager
-            </button>
-          )}
           {counts.highExperience > 0 && (
             <button
               onClick={() => onBulkDismiss("experience")}
               className="w-full text-left rounded-md border border-gray-200 px-2.5 py-1.5 text-xs hover:bg-gray-50"
             >
-              Remove {counts.highExperience} needing 1+ years
+              Remove {counts.highExperience} needing 2+ years
             </button>
           )}
         </div>

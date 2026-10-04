@@ -23,7 +23,7 @@ from pathlib import Path
 import pandas as pd
 
 import config
-from core.experience import extract_experience_sentences
+from core.experience import extract_experience_sentences, extract_min_experience
 from core.location import is_remote, parse_city, parse_country
 from core.matcher import (
     embed_jobs_incremental, load_embedding_cache, rank_by_resume,
@@ -92,9 +92,9 @@ def _load_jobs_df():
     df["skills"] = df["skills"].fillna("")
     df["category"] = df["category"].fillna("")
     df["description"] = df["description"].fillna("")
-    df["experience_years"] = (
-        pd.to_numeric(df["experience_years"], errors="coerce").fillna(-1).astype(int)
-    )
+    # Recompute from descriptions so existing rows follow the current policy
+    # without changing SQLite or requiring another network collection.
+    df["experience_years"] = df["description"].apply(extract_min_experience).fillna(-1).astype(int)
     return df
 
 

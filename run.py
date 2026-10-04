@@ -153,7 +153,7 @@ def process_backlog(conn):
         try:
             pairs = []
             for jid, title, desc in to_experience:
-                years = extract_min_experience(f"{title} {desc or ''}")
+                years = extract_min_experience(desc or "")
                 pairs.append((jid, years if years is not None else -1))
             update_experience(conn, pairs)
             log.info("experience extraction done")

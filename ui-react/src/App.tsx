@@ -6,12 +6,8 @@ import type { Filters, Job, ResumeState } from "./types";
 
 // Once a resume is loaded, hide jobs scoring below this threshold.
 const MIN_MATCH = 20;
-// Lowered from 2 to 0 (hide anything requiring 1+ years, not just 3+)
-// and hideHighExperience below defaults to true — per explicit request:
-// a college student's board targeting fresher/0-experience roles as the
-// standing default, not an occasional filter. Still a real toggle in
-// Sidebar.tsx, not a hardcoded rule.
-const EXPERIENCE_THRESHOLD = 0;
+// Keep 0/1-year and unknown requirements; hide stated minimums of 2+ years.
+const EXPERIENCE_THRESHOLD = 1;
 const PAGE_SIZE = 40;
 
 const DEFAULT_FILTERS: Filters = {
@@ -19,7 +15,6 @@ const DEFAULT_FILTERS: Filters = {
   showRemote: false,
   showNcr: false,
   showIndia: false,
-  hideSenior: false,
   hideHighExperience: true,
 };
 
@@ -83,7 +78,6 @@ export default function App() {
         if (!hit) return false;
       }
 
-      if (filters.hideSenior && j.is_senior) return false;
       if (
         filters.hideHighExperience &&
         j.experience_years >= 0 &&
@@ -114,7 +108,6 @@ export default function App() {
       belowThreshold: jobs.filter(
         (j) => j.match_pct !== null && j.match_pct < MIN_MATCH,
       ).length,
-      senior: jobs.filter((j) => j.is_senior).length,
       highExperience: jobs.filter(
         (j) => j.experience_years >= 0 && j.experience_years > EXPERIENCE_THRESHOLD,
       ).length,
@@ -134,10 +127,9 @@ export default function App() {
   }, [refresh]);
 
   const bulkDismiss = useCallback(
-    async (which: "match" | "senior" | "experience") => {
+    async (which: "match" | "experience") => {
       const targets = jobs.filter((j) => {
         if (which === "match") return j.match_pct !== null && j.match_pct < MIN_MATCH;
-        if (which === "senior") return j.is_senior;
         return j.experience_years >= 0 && j.experience_years > EXPERIENCE_THRESHOLD;
       });
       const ids = new Set(targets.map((j) => j.id));
