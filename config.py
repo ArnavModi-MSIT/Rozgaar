@@ -689,6 +689,7 @@ RELEVANCE_FILTERS = {}
 
 # First-party Workday boards with live India facet discovery and full descriptions.
 WORKDAY_INDIA = [
+    {"company":"kla", "tenant":"kla", "wd_server":"wd1", "site":"Search"},
     {"company":"broadcom", "tenant":"broadcom", "wd_server":"wd1", "site":"External_Career"},
     {"company":"crowdstrike", "tenant":"crowdstrike", "wd_server":"wd5", "site":"crowdstrikecareers"},
     {"company":"cohesity", "tenant":"cohesity", "wd_server":"wd5", "site":"Cohesity_Careers"},
@@ -700,3 +701,5 @@ DISPLAY_NAMES.update({"hrt":"Hudson River Trading", "bloomberg":"Bloomberg", "li
 DISPLAY_NAMES["zepto"] = "Zepto"
 
 DISPLAY_NAMES["unitedhealthgroup"] = "UnitedHealth Group / Optum"
+
+DISPLAY_NAMES["kla"] = "KLA"
