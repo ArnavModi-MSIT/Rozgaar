@@ -1,5 +1,6 @@
 """Start the local Job Intel UI and a collection run on Windows."""
 
+import argparse
 import json
 import os
 from pathlib import Path
@@ -36,7 +37,10 @@ def ui_needs_build():
     return any(path.is_file() and path.stat().st_mtime > built_at for path in watched)
 
 
-def main():
+def main(argv=None):
+    parser = argparse.ArgumentParser(description="Open Job Intel locally, optionally collecting jobs.")
+    parser.add_argument("--no-scrape", action="store_true", help="Open the site using saved jobs without running run.py")
+    args = parser.parse_args(argv)
     if os.name != "nt":
         raise RuntimeError("This launcher is for Windows. See README.md for manual commands.")
     os.chdir(ROOT)
@@ -67,7 +71,9 @@ def main():
         print("API is already running.", flush=True)
 
     webbrowser.open(URL)
-    if os.environ.get("JOB_INTEL_OFFLINE") == "1":
+    if args.no_scrape:
+        print("Site only; using saved jobs without collection.", flush=True)
+    elif os.environ.get("JOB_INTEL_OFFLINE") == "1":
         print("Offline mode is on; skipping job collection.", flush=True)
     else:
         print("Starting job collection in a separate console...", flush=True)

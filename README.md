@@ -201,3 +201,11 @@ Experience extraction recognizes Basic/Required/Minimum Qualifications separatel
 ### Experience section headings (2026-10-05)
 
 The experience parser also recognizes explicit `Experience:` sections. Bosch Data Provisioning Expert (744000149775909) resolves to 5 required years; a separate preference for global-team collaboration does not override that minimum. An explicitly preferred numeric requirement remains unknown rather than a mandatory minimum.
+
+
+## Windows launchers
+
+- `Start Job Intel.cmd`: opens the site and launches `python run.py` to collect jobs (collection is skipped in offline mode).
+- `Open Job Intel.cmd`: opens the site using saved jobs, without running the scraper. It calls `start.py --no-scrape`.
+
+Both launchers build the UI if needed and start or reuse the localhost API. Double-click the desired `.cmd` file.
