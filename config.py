@@ -176,6 +176,9 @@ GOOGLE_CAREERS = [
 # fresher eligibility; local experience and relevance filters still apply.
 AMAZON = [
     {"loc_query": "India", "country": "IND", "industry_experience": "less_than_1_year"},
+    # Student searches intentionally omit the industry-experience facet.
+    {"loc_query": "India", "country": "IND", "base_query": "intern"},
+    {"loc_query": "India", "country": "IND", "base_query": "apprentice"},
 ]
 
 # --- Phenom People --------------------------------------------------------------

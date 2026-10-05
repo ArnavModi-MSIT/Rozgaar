@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { api } from "./api";
 import JobCard from "./components/JobCard";
 import Sidebar from "./components/Sidebar";
+import StudentPrograms from "./components/StudentPrograms";
 import type { Filters, Job, ResumeState } from "./types";
 
 // Once a resume is loaded, hide jobs scoring below this threshold.
@@ -23,6 +24,7 @@ export default function App() {
     try { const value = Number(localStorage.getItem("job-intel-last-visit")); return Number.isFinite(value) && value > 0 ? value : 0; } catch { return 0; }
   });
   const [onlyNew, setOnlyNew] = useState(false);
+  const [studentOnly, setStudentOnly] = useState(false);
   const [visitRecorded, setVisitRecorded] = useState(false);
   const [jobs, setJobs] = useState<Job[]>([]);
   const [loading, setLoading] = useState(true);
@@ -80,6 +82,8 @@ export default function App() {
 
     let out = jobs.filter((j) => {
       if (onlyNew && j.first_seen_ms <= visitBaseline) return false;
+      // Discovery by title only; enrollment eligibility must be checked in the JD.
+      if (studentOnly && !/\b(intern(?:ship)?|apprentice(?:ship)?|student|summer analyst|summer associate)\b/i.test(j.title)) return false;
       if (text && !j.location.toLowerCase().includes(text)) return false;
 
       // Remote / NCR / India are OR'd together — ticking more than one
@@ -111,11 +115,11 @@ export default function App() {
       ? out.sort((a, b) => (b.match_pct ?? 0) - (a.match_pct ?? 0))
       : out.sort((a, b) => b.first_seen.localeCompare(a.first_seen));
     return out;
-  }, [jobs, filters, resume.loaded, onlyNew, visitBaseline]);
+  }, [jobs, filters, resume.loaded, onlyNew, visitBaseline, studentOnly]);
 
   useEffect(() => {
     setVisibleCount(PAGE_SIZE);
-  }, [filters, resume.loaded, onlyNew, visitBaseline]);
+  }, [filters, resume.loaded, onlyNew, visitBaseline, studentOnly]);
 
   const bulkCounts = useMemo(
     () => ({
@@ -219,6 +223,7 @@ export default function App() {
       <main className="flex-1 h-screen overflow-y-auto">
         <div className="max-w-4xl mx-auto px-6 py-6">
           <h1 className="text-2xl font-semibold mb-4">Job Intel</h1>
+          <StudentPrograms />
 
           <div className="flex gap-8 border-b border-gray-200 pb-4 mb-5">
             <div>
@@ -248,6 +253,7 @@ export default function App() {
           </div>
 
           <div className="flex flex-wrap items-center gap-3 mb-4 text-sm">
+            <label title="Matches student-related job titles; check the description for eligibility."><input type="checkbox" checked={studentOnly} onChange={e => setStudentOnly(e.target.checked)} /> Intern / apprentice / student titles</label>
             <label><input type="checkbox" checked={onlyNew} onChange={e => setOnlyNew(e.target.checked)} /> New since last visit ({newCount})</label>
             <button disabled={loading || !!loadError} className="underline disabled:opacity-50" onClick={() => { const now = Date.now(); setVisitBaseline(now); try { localStorage.setItem("job-intel-last-visit", String(now)); } catch { /* Optional storage. */ } }}>Mark current jobs reviewed</button>
             <button className="underline" onClick={() => void refresh()}>Refresh jobs</button>
