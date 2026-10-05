@@ -27,8 +27,8 @@ const programs = [
   },
   {
     "company": "Meta",
-    "url": "",
-    "note": "India jobs feed connected; separate student page needed."
+    "url": "https://www.metacareers.com/jobsearch/?offices[0]=Mumbai%2C%20India&offices[1]=Gurgaon%2C%20India&offices[2]=Bangalore%2C%20India&offices[3]=Hyderabad%2C%20India&offices[4]=New%20Delhi%2C%20India&roles[0]=Internship",
+    "note": "India internship search; existing all-role India feed includes these offices. No internships returned when checked."
   },
   {
     "company": "Goldman Sachs",
