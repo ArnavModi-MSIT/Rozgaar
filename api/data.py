@@ -94,7 +94,7 @@ def _load_jobs_df():
     df["description"] = df["description"].fillna("")
     # Recompute from descriptions so existing rows follow the current policy
     # without changing SQLite or requiring another network collection.
-    df["experience_years"] = df["description"].apply(extract_min_experience).fillna(-1).astype(int)
+    df["experience_years"] = df["description"].apply(extract_min_experience).astype("Int64").fillna(-1).astype(int)
     return df
 
 

@@ -1,6 +1,6 @@
 """
 Best-effort extraction of the minimum years of experience a job posting
-asks for, scanned from free text (title + description). Heuristic, like
+asks for, scanned from description text. Heuristic, like
 core/classify.py and core/location.py — not authoritative, just good
 enough to filter by.
 
@@ -69,7 +69,7 @@ _FRESHER_RE = re.compile(
 )
 
 
-def extract_min_experience(text):
+def _extract_min_experience_legacy(text):
     """Returns an int (minimum years required) or None if the text gives
     no signal either way."""
     if not text:
@@ -115,6 +115,67 @@ def extract_min_experience(text):
         return 0
 
     return None
+
+
+_SECTION_RE = re.compile(r"\b(basic qualifications|required qualifications|minimum qualifications|preferred qualifications|preferred skills|responsibilities|benefits)\s*:?[ \t]*", re.I)
+
+def _long_requirement_years(text):
+
+    """Catch long clauses without crossing other year counts or sentence boundaries."""
+
+    values=[]
+
+    for match in _YEAR_NUM_RE.finditer(text):
+
+        tail=text[match.end():match.end()+600]
+
+        # A wrapped line is allowed; a separate numbered requirement is not.
+
+        tail=re.split(r"[;.!?]|\n\s*[-•]|\b\d+\s*\+?\s*(?:years?|yrs?)\b",tail,maxsplit=1)[0]
+
+        if re.search(r"\bexperience\b",tail,re.I):
+
+            values.append(int(match.group(1)))
+
+    return values
+
+def extract_min_experience(text):
+
+    """Description-based heuristic; required sections outrank preferred sections."""
+
+    if not text:return None
+
+    headings=list(_SECTION_RE.finditer(text))
+
+    if not headings:return _extract_min_experience_legacy(text)
+
+    required=[]
+
+    remaining=[text[:headings[0].start()]]
+
+    for index,heading in enumerate(headings):
+
+        section=text[heading.end():headings[index+1].start() if index+1<len(headings) else len(text)]
+
+        name=heading.group(1).lower()
+
+        if name.startswith(('basic','required','minimum')):
+
+            years=_long_requirement_years(section)
+
+            legacy=_extract_min_experience_legacy(section)
+
+            if legacy is not None:years.append(legacy)
+
+            required.extend(years)
+
+        elif not name.startswith('preferred'):
+
+            remaining.append(section)
+
+    if required:return min(required)
+
+    return _extract_min_experience_legacy('\n'.join(remaining))
 
 
 _SENTENCE_SPLIT_RE = re.compile(r"(?<=[.!?])\s+|\n+")

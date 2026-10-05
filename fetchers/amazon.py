@@ -44,7 +44,7 @@ def _get(url, params):
 def _parse_job(j):
     parts = []
     if j.get("description"):
-        parts.append(j["description"])
+        parts.append(strip_html(j["description"], max_chars=None)[:6000])
     if j.get("basic_qualifications"):
         parts.append(f"Basic Qualifications:\n{j['basic_qualifications']}")
     if j.get("preferred_qualifications"):
@@ -62,7 +62,7 @@ def _parse_job(j):
         "title": j.get("title", ""),
         "location": j.get("normalized_location") or j.get("location", ""),
         "url": url,
-        "description": strip_html(combined, max_chars=None)[:6000] if combined else "",
+        "description": strip_html(combined, max_chars=None) if combined else "",
     }
 
 
