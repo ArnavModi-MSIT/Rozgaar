@@ -42,8 +42,8 @@ const programs = [
   },
   {
     "company": "Morgan Stanley",
-    "url": "https://www.morganstanley.com/people-opportunities/students-graduates/",
-    "note": "India Eightfold feed connected; separate student portal requires manual checking."
+    "url": "https://www.morganstanley.com/careers/career-opportunities-search?opportunity=sg",
+    "note": "Separate student feed connected with descriptions; only India programs are saved."
   },
   {
     "company": "Salesforce",
