@@ -706,3 +706,17 @@ DISPLAY_NAMES["zepto"] = "Zepto"
 DISPLAY_NAMES["unitedhealthgroup"] = "UnitedHealth Group / Optum"
 
 DISPLAY_NAMES["kla"] = "KLA"
+
+
+# Separate university board and student discovery outside Walmart's narrow
+# "Global Tech India" search. Check all India listing pages before selecting
+# Walmart student titles; fetch full descriptions only for selected titles.
+STUDENT_TITLE_RE = re.compile(
+    r"\b(intern(?:ship)?|apprentice(?:ship)?|student|summer analyst|"
+    r"summer associate|industrial trainee|co[ -]?op)\b", re.I,
+)
+WORKDAY_STUDENTS = [
+    {"company": "visa", "tenant": "visa", "wd_server": "wd5", "site": "Visa_Early_Careers"},
+    {"company": "walmart", "tenant": "walmart", "wd_server": "wd504", "site": "WalmartExternal",
+     "title_pattern": STUDENT_TITLE_RE},
+]

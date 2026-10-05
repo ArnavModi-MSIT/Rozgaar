@@ -53,6 +53,12 @@ def fetch(cfg,deadline=None):
             time.sleep(0.3)
         else:errors.append("page limit reached")
     if total is None or len(jobs)!=total:errors.append(f"received {len(jobs)} of {total} listings")
+    # Verify complete India pagination before selecting student titles.
+    # Workday text search also matches descriptions (e.g. "internal"), so it
+    # cannot be used as proof that a result is an internship.
+    title_pattern = cfg.get("title_pattern")
+    if title_pattern is not None:
+        jobs = [job for job in jobs if title_pattern.search(job["title"])]
     def description(job):
         if deadline is not None and time.monotonic()>=deadline:return ""
         with requests.Session() as session:data=get_json(session,root+job["_path"],headers=headers)

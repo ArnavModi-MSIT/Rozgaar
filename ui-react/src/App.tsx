@@ -83,7 +83,7 @@ export default function App() {
     let out = jobs.filter((j) => {
       if (onlyNew && j.first_seen_ms <= visitBaseline) return false;
       // Discovery by title only; enrollment eligibility must be checked in the JD.
-      if (studentOnly && !/\b(intern(?:ship)?|apprentice(?:ship)?|student|summer analyst|summer associate)\b/i.test(j.title)) return false;
+      if (studentOnly && !/\b(intern(?:ship)?|apprentice(?:ship)?|student|summer analyst|summer associate|industrial trainee|co[ -]?op)\b/i.test(j.title)) return false;
       if (text && !j.location.toLowerCase().includes(text)) return false;
 
       // Remote / NCR / India are OR'd together — ticking more than one

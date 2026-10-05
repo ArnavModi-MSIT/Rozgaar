@@ -19,6 +19,7 @@ log = logging.getLogger("jobbot")
 # runs once/day), but keeping the fast/high-yield platforms first still
 # means partial logs are more useful if something fails partway through.
 PLATFORMS = [
+    ("workday_students", lambda deadline: workday_india.collect(config.WORKDAY_STUDENTS, deadline)),
     ("morgan_stanley_students", lambda deadline: morgan_stanley_students.collect(deadline)),
     ("unitedhealthgroup", lambda deadline: unitedhealthgroup.collect(deadline)),
     ("zepto", lambda deadline: zepto.collect(deadline)),
