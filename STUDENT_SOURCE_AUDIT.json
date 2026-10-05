@@ -313,12 +313,24 @@
   {
     "company": "Qualcomm",
     "key": "qualcomm",
-    "program_url": "https://www.qualcomm.com/company/careers/internships-and-early-in-career-opportunities",
+    "program_url": "https://careers.qualcomm.com/careers?domain=qualcomm.com&start=0&location=india&sort_by=distance&filter_include_remote=0&filter_include_relocation=0&filter_seniority=Intern",
     "checked_on": "2026-10-05",
-    "coverage": "limited",
-    "note": "India rows observed: 583; student titles: 0. Eightfold descriptions are department summaries; review the full employer description before applying.",
+    "coverage": "new",
+    "note": "Dedicated India Intern search: 2 internships with full descriptions. Earlier title count missed Intern_2027 because underscore is a word character.",
     "page_http_status": 200,
     "listing_check": {
+      "scope": "complete India Intern search",
+      "reported_total": 2,
+      "rows_read": 2,
+      "india_rows_read": 2,
+      "student_titles_read": 2,
+      "sample_titles": [
+        "Interim Engineering Intern_2027_HW",
+        "Interim Engineering Intern_2027_SW"
+      ],
+      "adapter_status": "ok"
+    },
+    "previous_listing_check": {
       "company": "qualcomm",
       "scope": "complete adapter",
       "reported_total": null,

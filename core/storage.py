@@ -490,3 +490,16 @@ def update_descriptions(conn, id_description_pairs):
         [(desc, jid) for jid, desc in id_description_pairs],
     )
     conn.commit()
+
+
+def refresh_qualcomm_student(conn, jid, job):
+    """Enrich a saved Qualcomm internship without resetting user state."""
+    if not job.get("description"):
+        return False
+    cur = conn.execute(
+        """UPDATE jobs SET description = ?, url = ?, source = 'qualcomm_students',
+               category = NULL, skills = NULL, experience_years = NULL
+           WHERE id = ? AND company = 'qualcomm' AND description != ?""",
+        (job["description"], job["url"], jid, job["description"]),
+    )
+    return cur.rowcount > 0

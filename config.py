@@ -720,3 +720,12 @@ WORKDAY_STUDENTS = [
     {"company": "walmart", "tenant": "walmart", "wd_server": "wd504", "site": "WalmartExternal",
      "title_pattern": STUDENT_TITLE_RE},
 ]
+
+
+# Explicit public India Intern search; pid is deliberately omitted because
+# it selects one detail pane rather than defining the list coverage.
+QUALCOMM_STUDENTS = {
+    "company": "qualcomm", "host": "careers.qualcomm.com", "domain": "qualcomm.com",
+    "location": "india", "sort_by": "distance", "filter_include_remote": "0",
+    "filter_include_relocation": "0", "filter_seniority": "Intern",
+}

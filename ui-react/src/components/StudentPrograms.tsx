@@ -134,8 +134,8 @@ const programs = [
   },
   {
     "company": "Qualcomm",
-    "url": "https://www.qualcomm.com/company/careers/internships-and-early-in-career-opportunities",
-    "note": "India rows observed: 583; student titles: 0. Eightfold descriptions are department summaries; review the full employer description before applying."
+    "url": "https://careers.qualcomm.com/careers?domain=qualcomm.com&start=0&location=india&sort_by=distance&filter_include_remote=0&filter_include_relocation=0&filter_seniority=Intern",
+    "note": "Dedicated India Intern search connected: 2 internships for 2027 (hardware and software), with full descriptions. Check enrollment and graduation requirements."
   },
   {
     "company": "Walmart Global Tech",
