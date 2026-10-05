@@ -13,7 +13,7 @@ interface Props {
 function experienceLabel(years: number): string | null {
   // -1 is the project-wide "couldn't determine" sentinel — deliberately
   // shown as nothing rather than "0 years", which would be a real claim.
-  if (years < 0) return null;
+  if (years < 0) return "Experience requirement unknown — review description";
   if (years === 0) return "Fresher-friendly (0 years stated)";
   return `${years}+ year(s) required`;
 }
@@ -123,6 +123,12 @@ export default function JobCard({
               )}
               {detail && (
                 <>
+                  <h3 className="text-sm font-semibold mb-2">Eligibility evidence</h3>
+                  <p className="text-xs text-gray-500 mb-2">{detail.eligibility.note}</p>
+                  {([ ["Education", detail.eligibility.education_evidence], ["Graduation year", detail.eligibility.graduation_evidence], ["Mandatory skills", detail.eligibility.mandatory_skill_evidence] ] as [string, string[]][]).map(([label, lines]) => (
+                    <div key={label} className="text-xs mb-2"><strong>{label}</strong>{lines.length ? <ul>{lines.map((line, i) => <li key={i}>{line}</li>)}</ul> : <p className="text-gray-500">Not identified — verify the posting.</p>}</div>
+                  ))}
+                  {resumeLoaded && detail.eligibility.missing_mandatory_skills.length > 0 && <p className="text-xs text-amber-800 mb-2">Missing recognized mandatory skills: {detail.eligibility.missing_mandatory_skills.join(", ")}</p>}
                   {detail.experience_lines.length > 0 ? (
                     <ul className="text-xs text-gray-700 space-y-1 mb-2">
                       {detail.experience_lines.slice(0, 12).map((line, i) => (

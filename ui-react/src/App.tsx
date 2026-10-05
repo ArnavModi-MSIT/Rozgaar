@@ -19,6 +19,11 @@ const DEFAULT_FILTERS: Filters = {
 };
 
 export default function App() {
+  const [visitBaseline, setVisitBaseline] = useState(() => {
+    try { const value = Number(localStorage.getItem("job-intel-last-visit")); return Number.isFinite(value) && value > 0 ? value : 0; } catch { return 0; }
+  });
+  const [onlyNew, setOnlyNew] = useState(false);
+  const [visitRecorded, setVisitRecorded] = useState(false);
   const [jobs, setJobs] = useState<Job[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
@@ -55,6 +60,14 @@ export default function App() {
     void refresh();
   }, [refresh]);
 
+  useEffect(() => {
+    if (!loading && !loadError && !visitRecorded) {
+      try { localStorage.setItem("job-intel-last-visit", String(Date.now())); } catch { /* Storage may be disabled. */ }
+      setVisitRecorded(true);
+    }
+  }, [loading, loadError, visitRecorded]);
+  const newCount = jobs.filter(j => j.first_seen_ms > visitBaseline).length;
+
   const resumeSkills = useMemo(() => new Set(resume.skills), [resume.skills]);
 
   // All filtering happens in memory. With a few thousand jobs this is well
@@ -66,6 +79,7 @@ export default function App() {
       filters.showRemote || filters.showNcr || filters.showIndia;
 
     let out = jobs.filter((j) => {
+      if (onlyNew && j.first_seen_ms <= visitBaseline) return false;
       if (text && !j.location.toLowerCase().includes(text)) return false;
 
       // Remote / NCR / India are OR'd together — ticking more than one
@@ -97,11 +111,11 @@ export default function App() {
       ? out.sort((a, b) => (b.match_pct ?? 0) - (a.match_pct ?? 0))
       : out.sort((a, b) => b.first_seen.localeCompare(a.first_seen));
     return out;
-  }, [jobs, filters, resume.loaded]);
+  }, [jobs, filters, resume.loaded, onlyNew, visitBaseline]);
 
   useEffect(() => {
     setVisibleCount(PAGE_SIZE);
-  }, [filters, resume.loaded]);
+  }, [filters, resume.loaded, onlyNew, visitBaseline]);
 
   const bulkCounts = useMemo(
     () => ({
@@ -233,6 +247,12 @@ export default function App() {
             </div>
           </div>
 
+          <div className="flex flex-wrap items-center gap-3 mb-4 text-sm">
+            <label><input type="checkbox" checked={onlyNew} onChange={e => setOnlyNew(e.target.checked)} /> New since last visit ({newCount})</label>
+            <button disabled={loading || !!loadError} className="underline disabled:opacity-50" onClick={() => { const now = Date.now(); setVisitBaseline(now); try { localStorage.setItem("job-intel-last-visit", String(now)); } catch { /* Optional storage. */ } }}>Mark current jobs reviewed</button>
+            <button className="underline" onClick={() => void refresh()}>Refresh jobs</button>
+            {visitBaseline === 0 && <span className="text-gray-500">First visit: all saved jobs count as new.</span>}
+          </div>
           {loading && <p className="text-sm text-gray-500">Loading jobs…</p>}
           {loadError && (
             <div className="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">

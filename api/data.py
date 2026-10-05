@@ -23,6 +23,7 @@ from pathlib import Path
 import pandas as pd
 
 import config
+from core.eligibility import eligibility_evidence
 from core.experience import extract_experience_sentences, extract_min_experience
 from core.location import is_remote, parse_city, parse_country
 from core.matcher import (
@@ -198,6 +199,7 @@ def job_list_payload(df):
             "category": r.category or "",
             "skills": [s for s in (r.skills or "").split(",") if s],
             "experience_years": int(r.experience_years),
+            "first_seen_ms": int(r.first_seen.value // 1000000),
             "first_seen": r.first_seen.strftime("%Y-%m-%d"),
             "last_seen": r.last_seen.strftime("%Y-%m-%d"),
             "is_remote": bool(r.is_remote),
@@ -230,6 +232,7 @@ def job_detail_payload(job_id):
         "title": row["title"],
         "description": description,
         "experience_lines": extract_experience_sentences(description),
+        "eligibility": eligibility_evidence(description, _resume["skills"]),
         "skill_match": {
             "matched": sorted(matched),
             "missing": sorted(missing),

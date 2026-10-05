@@ -15,6 +15,7 @@ export interface Job {
   /** -1 means "unknown" (nothing found in the description), NOT zero years.
    *  0 is a real, meaningful value: explicitly fresher-friendly. */
   experience_years: number;
+  first_seen_ms: number;
   first_seen: string;
   /** Last observed in a collector result; does not prove the job is still open. */
   last_seen: string;
@@ -33,6 +34,16 @@ export interface JobDetail {
   title: string;
   description: string;
   experience_lines: string[];
+  eligibility: {
+    minimum_years: number | null;
+    education_evidence: string[];
+    graduation_evidence: string[];
+    mandatory_skill_evidence: string[];
+    mandatory_skills: string[];
+    missing_mandatory_skills: string[];
+    needs_review: boolean;
+    note: string;
+  };
   skill_match: {
     matched: string[];
     missing: string[];
