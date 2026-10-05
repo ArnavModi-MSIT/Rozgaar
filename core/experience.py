@@ -117,7 +117,7 @@ def _extract_min_experience_legacy(text):
     return None
 
 
-_SECTION_RE = re.compile(r"\b(basic qualifications|required qualifications|minimum qualifications|preferred qualifications|preferred skills|responsibilities|benefits)\s*:?[ \t]*", re.I)
+_SECTION_RE = re.compile(r"\b(basic qualifications|required qualifications|minimum qualifications|preferred qualifications|preferred skills|experience(?=\s*:)|responsibilities|benefits)\s*:?[ \t]*", re.I)
 
 def _long_requirement_years(text):
 
@@ -133,6 +133,10 @@ def _long_requirement_years(text):
 
         tail=re.split(r"[;.!?]|\n\s*[-•]|\b\d+\s*\+?\s*(?:years?|yrs?)\b",tail,maxsplit=1)[0]
 
+        prefix=re.split(r"[;.!?\n]",text[:match.start()])[-1][-40:]
+        clause=prefix+text[match.start():match.end()]+re.sub(r"\([^)]*\)", "", tail)
+        if _PREFERRED_SIGNAL_RE.search(clause) and not _REQUIRED_SIGNAL_RE.search(clause):
+            continue
         if re.search(r"\bexperience\b",tail,re.I):
 
             values.append(int(match.group(1)))
@@ -159,13 +163,14 @@ def extract_min_experience(text):
 
         name=heading.group(1).lower()
 
-        if name.startswith(('basic','required','minimum')):
+        if name.startswith(('basic','required','minimum','experience')):
 
             years=_long_requirement_years(section)
 
             legacy=_extract_min_experience_legacy(section)
 
-            if legacy is not None:years.append(legacy)
+            if legacy is not None and (years or not _PREFERRED_SIGNAL_RE.search(section) or _REQUIRED_SIGNAL_RE.search(section)):
+                years.append(legacy)
 
             required.extend(years)
 

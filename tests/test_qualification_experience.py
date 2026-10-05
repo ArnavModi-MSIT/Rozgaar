@@ -19,3 +19,9 @@ class QualificationExperienceTests(unittest.TestCase):
         job=_parse_job({"description":"Company background "*600,"basic_qualifications":BASIC,"preferred_qualifications":PREFERRED})
         self.assertIn(BASIC,job["description"])
         self.assertEqual(extract_min_experience(job["description"]),4)
+
+    def test_bosch_experience_section_with_separate_preference(self):
+        text="Educational qualifications: certification will be preferred.\nExperience:\n5+ years of rich experience with Data provisioning within Supply Chain. (prior experience collaborating with global teams is highly preferred).\nBusiness & Professional Skills"
+        self.assertEqual(extract_min_experience(text),5)
+    def test_experience_section_explicit_preference_is_unknown(self):
+        self.assertIsNone(extract_min_experience("Experience: 5+ years of data engineering experience preferred."))
