@@ -116,7 +116,28 @@ def fetch_greenhouse(slug):
     ]
 
 
+def _portcast_india_locations(job):
+    """Select supported Indian locations, including Lever's additional locations."""
+    categories = job.get("categories") or {}
+    locations = [categories.get("location") or ""] + (categories.get("allLocations") or [])
+    india_cities = {"delhi", "new delhi", "bangalore", "bengaluru", "chennai", "hyderabad", "kolkata", "mumbai"}
+    selected = []
+    for location in locations:
+        if not isinstance(location, str):
+            continue
+        location = location.strip()
+        if location.lower() in india_cities:
+            location += ", India"
+        elif not re.search(r"\bIndia\b", location, re.I):
+            continue
+        if location not in selected:
+            selected.append(location)
+    return selected
+
+
 def _lever_location(slug, job):
+    if slug == "portcast":
+        return "; ".join(_portcast_india_locations(job))
     location = (job.get("categories") or {}).get("location", "")
     # Only normalize confirmed city labels on these India company boards.
     india_labels = {"bengaluru", "hyderabad", "bangalore, karnataka", "chennai, tamil nadu", "delhi ncr", "hyderabad, telangana", "jaipur, rajasthan", "kochi, kerala", "mumbai, maharashtra", "surat, gujarat"}
@@ -140,6 +161,8 @@ def fetch_lever(slug):
         raise RuntimeError(f"lever board {slug}: expected postings list")
     jobs = []
     for j in data:
+        if slug == "portcast" and not _portcast_india_locations(j):
+            continue
         # The requested Netomi searches explicitly cover these two locations.
         # Generic Remote has no India eligibility evidence and is excluded.
         if slug == "netomi" and (j.get("categories") or {}).get("location") not in {"Remote - India", "Gurugram"}:
