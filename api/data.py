@@ -46,7 +46,7 @@ _JOBS_TTL_SECONDS = 30
 _embedding_cache = None  # job_id -> (content_hash, tensor), lazily loaded
 
 # Current resume, if one has been uploaded this run.
-_resume = {"key": None, "text": "", "skills": set(), "scores": {}}
+_resume = {"key": None, "text": "", "skills": set(), "scores": {}, "explanations": {}}
 
 
 def connect():
@@ -139,16 +139,19 @@ def rescore():
     when no resume is loaded."""
     if not _resume["text"].strip():
         _resume["scores"] = {}
+        _resume["explanations"] = {}
         return 0
     df = get_jobs_df()
     if df.empty:
         _resume["scores"] = {}
+        _resume["explanations"] = {}
         return 0
     embeddings = _ensure_embeddings(df)
     scored = rank_by_resume(
         df, _resume["text"], job_embeddings=embeddings, resume_skills=_resume["skills"]
     )
     _resume["scores"] = dict(zip(scored["id"], scored["match_pct"]))
+    _resume["explanations"] = dict(zip(scored["id"], scored["match_explanation"]))
     return len(_resume["scores"])
 
 
@@ -164,6 +167,7 @@ def clear_resume():
     _resume["text"] = ""
     _resume["skills"] = set()
     _resume["scores"] = {}
+    _resume["explanations"] = {}
 
 
 def resume_state():
@@ -212,6 +216,7 @@ def job_list_payload(df):
             # would guarantee the two drift apart.
             "is_senior": bool(config.EXCLUDE_SENIOR.search(r.title or "")),
             "match_pct": scores.get(r.id),
+            "match_explanation": _resume["explanations"].get(r.id),
         })
     return rows
 
@@ -231,6 +236,7 @@ def job_detail_payload(job_id):
         "id": row["id"],
         "title": row["title"],
         "description": description,
+        "match_explanation": _resume["explanations"].get(job_id),
         "experience_lines": extract_experience_sentences(description),
         "eligibility": eligibility_evidence(description, _resume["skills"]),
         "skill_match": {

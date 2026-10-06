@@ -51,25 +51,7 @@ def get_model():
             os.environ["HF_HUB_OFFLINE"] = "1"
             os.environ["TRANSFORMERS_OFFLINE"] = "1"
         _model = SentenceTransformer(model_source)
-        # Default max_seq_length is 256 tokens (~1000-1500 chars) — well
-        # below the char-level caps used elsewhere (resume: 5000 chars,
-        # job text: 2500 chars in core/matcher.py). Everything past the
-        # token limit gets silently dropped by the tokenizer regardless of
-        # what text we pass in, meaning a resume's later sections
-        # (Projects, usually the most specific tech-stack signal) could be
-        # getting cut before the model ever sees them.
-        #
-        # 512 is this model's actual architectural ceiling (its position
-        # embeddings, like most BERT-family models, top out at 512 tokens)
-        # — not an arbitrary further bump, this is as far as this single
-        # fix can go without hitting a hard wall. Even at 512 tokens
-        # (~2000-2500 chars), a long multi-section resume (Education +
-        # Experience + Skills + Projects + Certifications) can still
-        # exceed that and lose later content — a real, only partially
-        # solved limitation. The full fix (embedding each resume section
-        # separately and comparing against the relevant part of each job
-        # posting, rather than one blob vs. one blob) is a genuinely
-        # different, bigger matching architecture, not a config tweak —
-        # flagged as a possible future direction, not attempted here.
+        # Architectural ceiling. The matcher uses 192-token chunks to cover
+        # complete selected sections; other callers still use this limit.
         _model.max_seq_length = 512
     return _model

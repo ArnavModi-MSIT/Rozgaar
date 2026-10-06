@@ -100,7 +100,23 @@ export default function JobCard({
             </p>
           )}
 
-          <div className="flex items-center gap-3 mt-2.5">
+          <div className="flex flex-wrap items-start gap-3 mt-2.5">
+            {resumeLoaded && job.match_explanation && (
+              <details className="text-xs text-gray-700">
+                <summary className="cursor-pointer underline">Why this ranking?</summary>
+                <div className="mt-2 space-y-2 max-w-xl">
+                  <p>{job.match_explanation.note}</p>
+                  <p>Requirements relevance: {job.match_explanation.requirements_relevance.toFixed(0)} · Weighted skills: {job.match_explanation.weighted_skill_pct?.toFixed(0) ?? "unknown"}
+                    {job.match_explanation.project_responsibility_relevance !== null && <> · Project/work relevance: {job.match_explanation.project_responsibility_relevance.toFixed(0)}</>}</p>
+                  <p>Matched required skills: {job.match_explanation.matched_required.join(", ") || "none identified"}</p>
+                  <p>Required skill gaps: {job.match_explanation.missing_required.join(", ") || "none identified"}</p>
+                  <p>Matched preferred skills: {job.match_explanation.matched_preferred.join(", ") || "none identified"}</p>
+                  {job.match_explanation.relevance_gate_applied && <p>Score capped because neither target role nor sufficient skill overlap was identified.</p>}
+                  <h3 className="font-semibold">Eligibility checks — separate from relevance</h3>
+                  {job.match_explanation.eligibility_checks.map(check => <p key={check.label}><strong>{check.label}: {check.status}</strong><br />{check.evidence}</p>)}
+                </div>
+              </details>
+            )}
             <button
               onClick={toggleDetail}
               className="text-xs text-gray-600 hover:text-gray-900 underline"

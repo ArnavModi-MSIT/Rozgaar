@@ -2,6 +2,19 @@
 // explicit rather than generated — if the API changes, this file is the
 // single place the frontend needs to follow it.
 
+export interface MatchExplanation {
+  requirements_relevance: number;
+  project_responsibility_relevance: number | null;
+  weighted_skill_pct: number | null;
+  matched_required: string[];
+  missing_required: string[];
+  matched_preferred: string[];
+  matched_skills: string[];
+  relevance_gate_applied: boolean;
+  note: string;
+  eligibility_checks: { label: string; status: string; evidence: string }[];
+}
+
 export interface Job {
   id: string;
   title: string;
@@ -27,9 +40,11 @@ export interface Job {
   is_senior: boolean;
   /** null until a resume is uploaded. */
   match_pct: number | null;
+  match_explanation: MatchExplanation | null;
 }
 
 export interface JobDetail {
+  match_explanation: MatchExplanation | null;
   id: string;
   title: string;
   description: string;

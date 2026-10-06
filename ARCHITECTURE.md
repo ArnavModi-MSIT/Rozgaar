@@ -138,19 +138,15 @@ The API applies the same India-or-unknown country rule when loading previously s
 5. `api/data.py:set_resume()` calls `rescore()`. It loads or incrementally computes job embeddings and calls `rank_by_resume()`.
 6. Scores are held in memory as `{job_id: match_pct}` and included in later `/api/jobs` responses.
 
-`core/embeddings.py` lazily loads one `all-MiniLM-L6-v2` model for classification and matching within each Python process. It prefers the project-local `models/all-MiniLM-L6-v2`; outside strict offline mode it can still download the model on first use if that directory is absent. Job embeddings represent title plus description (capped at 2,500 characters). The resume input is capped at 5,000 characters, and the model sequence limit is set to 512 tokens. Later text can still be truncated by the tokenizer. Each cached job embedding is keyed by job ID plus a content hash, so unchanged jobs do not need to be re-embedded; the cache is saved with PyTorch under `db/`.
+`core/embeddings.py` lazily loads one `all-MiniLM-L6-v2` model for classification and matching within each Python process. It prefers the project-local `models/all-MiniLM-L6-v2`; outside strict offline mode it can still download the model on first use if that directory is absent. Job embeddings represent two parsed sections with token-bounded chunk pooling, described below. The model sequence limit is 512 tokens, while matching chunks use 192 content tokens. Each cached job embedding is keyed by job ID plus a versioned content hash, so unchanged jobs do not need to be re-embedded; the cache is saved with PyTorch under `db/`.
 
-The current match formula is:
+The matcher now separates required qualifications from responsibilities and preferred qualifications. It tokenizes every selected section into chunks of at most 192 tokens, embeds all chunks locally, and mean-pools each section. Resume skills plus projects/work are compared with job requirements; projects/work are separately compared with responsibilities. If headings are absent, it falls back to available text and explains that limitation. No leading-character truncation is applied; source descriptions may themselves still be incomplete. A long section is averaged, so this is section relevance rather than proof that each requirement is satisfied.
 
-```text
-semantic = cosine(job_embedding, resume_embedding)
-semantic_pct = 100 * (clip(semantic, 0.15, 0.65) - 0.15) / 0.50
-skill_pct = 100 * (recognized job skills also in resume) / (recognized job skills)
-skill_weight = 0.40 * min(1, number_of_recognized_job_skills / 3)
-score = (1 - skill_weight) * semantic_pct + skill_weight * skill_pct
-```
+Semantic relevance uses the existing fixed cosine range 0.15–0.65. With recognizable projects/work, requirements contribute 55% and responsibilities 45% of the semantic component; otherwise only requirements relevance is used. Recognized required skills have weight 3, unclassified skills 2, preferred skills 1. The weighted skill component contributes up to 40%, scaled down when fewer than three skills are known. The existing target-title-or-40%-skill relevance gate still caps unrelated roles at 10. These weights are provisional heuristics, not measured probabilities.
 
-If a job has no recognized skills, it uses semantic score alone. If neither its title matches `config.TARGET_ROLE_RE` nor its skill overlap reaches 40%, the score is capped at 10. The values are configured in `core/matcher.py`; they are heuristics, not calibrated probabilities of eligibility or hiring. The job category classifier uses embeddings too, but it is a separate step and its category label is not the match percentage.
+The cache content hash includes `sections-v2`, invalidating previous single-vector embeddings automatically. Cached job tensors now have two section vectors. API resume state stores scores and `match_explanation` maps; list and detail responses include explanations, component scores, required skill gaps and separate eligibility checks. Clearing a resume clears explanations too. React shows a “Why this ranking?” expander. No database schema changes are needed.
+
+Eligibility remains evidence-based and separate from sorting: India location is checked against the existing country parser; professional experience is compared only when the resume explicitly states years of work/professional/industry experience. Project dates do not count as employment. Education and ambiguous graduation/student requirements are shown for review with unknown status. A single explicit graduation year in the required section can be compared with a single explicit resume graduation year; dates or year ranges alone are not compared. The parser does not infer degree equivalence or approve overall eligibility. Missing recognized required skills are evidence gaps, not proof of inability. Unknown is never approval.
 
 The React sidebar calls `PUT /api/resume/skills` to save corrections to the current resume and rescore. The API also exposes custom-skill endpoints, but the React UI does not yet manage the global custom-skill vocabulary. Existing job skill lists require `--reprocess-skills` after that vocabulary changes.
 
@@ -328,3 +324,7 @@ Portcast is registered in `config.LEVER`. Its Lever records can have a foreign p
 ### Foreign country recognition
 
 The shared location parser recognizes Morocco and additional explicit foreign-country labels observed in the BCG Phenom feed (including Egypt, Indonesia, Kenya, Azerbaijan, Hungary, South Africa, Colombia, Chile, Belgium, Malaysia, Czechia, Thailand, Norway, Vietnam, Peru, Greece, Türkiye and Republic of Korea). This corrects BCG requisition 56429, Delivery AI Data Engineering Intern in Casablanca, Morocco, which previously passed as Unknown. The same parser gates collection and existing API rows, so an API restart hides affected saved foreign jobs without deleting history or requiring recollection. India-containing multi-location postings and genuinely unknown locations remain visible under the existing policy. The parser remains heuristic, not an exhaustive geographic resolver.
+
+### Ranking evaluation
+
+`scripts/evaluate_matcher.py` accepts a local JSON file containing resume_text and jobs graded 0 (poor), 1 (partial), or 2 (good relevance). It reports precision@10 and NDCG@10 without writing resumes, SQLite, or the embedding cache. Use 30–50 representative jobs, keep a separate holdout set, and compare metrics across matcher versions before tuning weights. Current automated checks cover controlled examples and real-model execution, not measured quality on a user-labeled job sample. No cross-encoder reranker is introduced in this version.
