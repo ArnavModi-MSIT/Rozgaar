@@ -24,6 +24,13 @@ COUNTRIES = [
     "south korea", "serbia", "sweden", "italy", "switzerland",
     "denmark", "costa rica", "new zealand", "saudi arabia",
     "israel", "finland", "portugal", "austria",
+    # Explicit country labels observed in the BCG/Phenom feed. Without
+    # these, known foreign postings were treated as Unknown and retained.
+    "morocco", "egypt", "indonesia", "kenya", "azerbaijan", "hungary",
+    "south africa", "colombia", "chile", "belgium", "malaysia", "czechia",
+    "czech republic", "thailand", "norway", "vietnam", "peru", "greece",
+    "türkiye", "turkiye", "turkey", "republic of korea",
+    "romania", "hong kong", "taiwan",
 ]
 
 _COUNTRY_DISPLAY = {
@@ -31,6 +38,8 @@ _COUNTRY_DISPLAY = {
     "uk": "United Kingdom",
     "uae": "United Arab Emirates",
     "ind": "India",
+    "türkiye": "Türkiye", "turkiye": "Türkiye", "turkey": "Türkiye",
+    "republic of korea": "South Korea", "czech republic": "Czechia",
 }
 
 # US state abbreviations — needed because many US postings (particularly
