@@ -120,6 +120,8 @@ def _lever_location(slug, job):
     location = (job.get("categories") or {}).get("location", "")
     # Only normalize confirmed city labels on these India company boards.
     india_labels = {"bengaluru", "hyderabad", "bangalore, karnataka", "chennai, tamil nadu", "delhi ncr", "hyderabad, telangana", "jaipur, rajasthan", "kochi, kerala", "mumbai, maharashtra", "surat, gujarat"}
+    if slug == "netomi" and location == "Gurugram":
+        return "Gurugram, India"
     if slug in {"cred", "meesho"} and location.strip().lower() in india_labels:
         location += ", India"
     return location
@@ -138,6 +140,10 @@ def fetch_lever(slug):
         raise RuntimeError(f"lever board {slug}: expected postings list")
     jobs = []
     for j in data:
+        # The requested Netomi searches explicitly cover these two locations.
+        # Generic Remote has no India eligibility evidence and is excluded.
+        if slug == "netomi" and (j.get("categories") or {}).get("location") not in {"Remote - India", "Gurugram"}:
+            continue
         parts = [j.get("description", "") or j.get("descriptionPlain", "")]
         for lst in j.get("lists") or []:
             heading = lst.get("text", "")

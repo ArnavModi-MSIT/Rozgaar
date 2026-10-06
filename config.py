@@ -70,7 +70,7 @@ GREENHOUSE = [
                 # correctly separates them), 5 NCR (Gurgaon — Sales Engineer,
                 # AI Security Specialist, Account Executive Data Security)
 ]
-LEVER = ["meesho", "cred", "paytm", "fampay", "zeta"]
+LEVER = ["meesho", "cred", "paytm", "fampay", "zeta", "netomi"]
 ASHBY = [
     "confluent",
     "navi", "sarvam",
@@ -729,3 +729,5 @@ QUALCOMM_STUDENTS = {
     "location": "india", "sort_by": "distance", "filter_include_remote": "0",
     "filter_include_relocation": "0", "filter_seniority": "Intern",
 }
+
+DISPLAY_NAMES["netomi"] = "Netomi"
