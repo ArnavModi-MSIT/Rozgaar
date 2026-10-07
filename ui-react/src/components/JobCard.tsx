@@ -79,6 +79,7 @@ export default function JobCard({
 
           <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-1.5 text-xs text-gray-500">
             {expLabel && <span>{expLabel}</span>}
+            {job.preferred_experience_years >= 0 && <span>{job.preferred_experience_years}+ year(s) preferred</span>}
             {job.is_remote && (
               <span className="rounded bg-sky-50 text-sky-700 px-1.5 py-0.5">Remote</span>
             )}

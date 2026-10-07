@@ -117,7 +117,7 @@ def _extract_min_experience_legacy(text):
     return None
 
 
-_SECTION_RE = re.compile(r"\b(basic qualifications|required qualifications|minimum qualifications|preferred qualifications|preferred skills|experience(?=\s*:)|responsibilities|benefits)\s*:?[ \t]*", re.I)
+_SECTION_RE = re.compile(r"\b(basic qualifications|required qualifications|minimum qualifications|required skills|preferred qualifications|preferred skills|experience(?=\s*:)|(?:key )?responsibilities|benefits)\s*:?[ \t]*", re.I)
 
 def _long_requirement_years(text):
 
@@ -184,6 +184,29 @@ def extract_min_experience(text):
 
 
 _SENTENCE_SPLIT_RE = re.compile(r"(?<=[.!?])\s+|\n+")
+
+
+def extract_preferred_experience(text):
+    """Preferred years remain separate from mandatory minimum experience."""
+    if not text:
+        return None
+    headings = list(_SECTION_RE.finditer(text))
+    candidates = []
+    for index, heading in enumerate(headings):
+        if heading.group(1).lower().startswith("preferred"):
+            end = headings[index + 1].start() if index + 1 < len(headings) else len(text)
+            candidates.append(text[heading.end():end])
+    # Handle explicit preferences without a preferred-section heading too.
+    for line in _SENTENCE_SPLIT_RE.split(text):
+        if _PREFERRED_SIGNAL_RE.search(line) and not _REQUIRED_SIGNAL_RE.search(line):
+            candidates.append(line)
+    years = []
+    for candidate in candidates:
+        # The containing section or clause already established preference.
+        # Removing those words lets the existing year/experience association
+        # check run without promoting this preference to a required minimum.
+        years.extend(_long_requirement_years(_PREFERRED_SIGNAL_RE.sub(" ", candidate)))
+    return min(years) if years else None
 
 
 def extract_experience_sentences(text):

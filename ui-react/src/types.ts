@@ -28,6 +28,8 @@ export interface Job {
   /** -1 means "unknown" (nothing found in the description), NOT zero years.
    *  0 is a real, meaningful value: explicitly fresher-friendly. */
   experience_years: number;
+  /** Separate soft preference; -1 means unknown. */
+  preferred_experience_years: number;
   first_seen_ms: number;
   first_seen: string;
   /** Last observed in a collector result; does not prove the job is still open. */

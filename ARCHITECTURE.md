@@ -165,7 +165,7 @@ The React sidebar calls `PUT /api/resume/skills` to save corrections to the curr
 
 The API reads non-dismissed jobs from SQLite into a Pandas DataFrame, computes derived location flags and the `is_senior` flag, then serializes list rows. `ui-react/src/types.ts` manually mirrors those JSON fields. Update both sides when the API contract changes.
 
-The React app fetches the full list once per refresh and filters in browser memory. Its default filter hides jobs with a known requirement of **2 or more years**; unknown experience (`-1`) stays visible. Location text is a substring search; Remote/NCR/India checkboxes combine with OR. With a resume loaded it hides scores below 20 and sorts by score; otherwise it sorts by `first_seen`. It displays 40 rows at first and reveals more in batches. Opening a job link dismisses it only when the optional auto-remove toggle is enabled; the toggle defaults to off. Dismissal is stored in SQLite. The React UI does not currently distinguish “applied” from “not interested.”
+The React app fetches the full list once per refresh and filters in browser memory. Its default filter hides jobs with **2 or more years required or preferred**; jobs with both values unknown (`-1`) stay visible. Location text is a substring search; Remote/NCR/India checkboxes combine with OR. With a resume loaded it hides scores below 20 and sorts by score; otherwise it sorts by `first_seen`. It displays 40 rows at first and reveals more in batches. Opening a job link dismisses it only when the optional auto-remove toggle is enabled; the toggle defaults to off. Dismissal is stored in SQLite. The React UI does not currently distinguish “applied” from “not interested.”
 
 In development, Vite on port 5173 proxies `/api` to FastAPI on `127.0.0.1:8000`. After `npm run build`, `api/main.py` serves the `ui-react/dist` index and assets from the API origin. The built directory is generated and ignored by Git.
 
@@ -328,3 +328,7 @@ The shared location parser recognizes Morocco and additional explicit foreign-co
 ### Ranking evaluation
 
 `scripts/evaluate_matcher.py` accepts a local JSON file containing resume_text and jobs graded 0 (poor), 1 (partial), or 2 (good relevance). It reports precision@10 and NDCG@10 without writing resumes, SQLite, or the embedding cache. Use 30–50 representative jobs, keep a separate holdout set, and compare metrics across matcher versions before tuning weights. Current automated checks cover controlled examples and real-model execution, not measured quality on a user-labeled job sample. No cross-encoder reranker is introduced in this version.
+
+### Required and preferred experience visibility
+
+The default experience filter hides postings when either the required minimum or the preferred experience lower bound is 2+ years. Preferred years are parsed separately by `extract_preferred_experience`, exposed as `preferred_experience_years` (-1 for unknown), and displayed as preferred rather than mandatory. The same rule applies to the experience bulk-removal count and action. Switching the filter off reveals these saved jobs; filtering does not delete SQLite rows. API loading recomputes both fields from saved descriptions, so restart the backend and refresh after updating; collection is unnecessary.

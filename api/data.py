@@ -24,7 +24,7 @@ import pandas as pd
 
 import config
 from core.eligibility import eligibility_evidence
-from core.experience import extract_experience_sentences, extract_min_experience
+from core.experience import extract_experience_sentences, extract_min_experience, extract_preferred_experience
 from core.location import is_remote, parse_city, parse_country
 from core.matcher import (
     embed_jobs_incremental, load_embedding_cache, rank_by_resume,
@@ -96,6 +96,7 @@ def _load_jobs_df():
     # Recompute from descriptions so existing rows follow the current policy
     # without changing SQLite or requiring another network collection.
     df["experience_years"] = df["description"].apply(extract_min_experience).astype("Int64").fillna(-1).astype(int)
+    df["preferred_experience_years"] = df["description"].apply(extract_preferred_experience).astype("Int64").fillna(-1).astype(int)
     return df
 
 
@@ -203,6 +204,7 @@ def job_list_payload(df):
             "category": r.category or "",
             "skills": [s for s in (r.skills or "").split(",") if s],
             "experience_years": int(r.experience_years),
+            "preferred_experience_years": int(getattr(r, "preferred_experience_years", -1)),
             "first_seen_ms": int(r.first_seen.value // 1000000),
             "first_seen": r.first_seen.strftime("%Y-%m-%d"),
             "last_seen": r.last_seen.strftime("%Y-%m-%d"),

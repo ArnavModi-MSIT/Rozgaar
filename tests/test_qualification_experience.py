@@ -1,10 +1,23 @@
 import unittest
-from core.experience import extract_min_experience
+from core.experience import extract_min_experience, extract_preferred_experience
 from fetchers.amazon import _parse_job
 
 BASIC="4+ years of compliance program management, legal, governance, audit, risk/loss prevention, or equivalent experience"
 PREFERRED="3+ years of program requirements definition and data and metrics leveraging to drive improvements experience"
 class QualificationExperienceTests(unittest.TestCase):
+    def test_paytm_preferred_years_are_separate(self):
+        text = "Preferred Qualifications\nBachelors degree. MBA is preferred.\n5–10 years of experience in Growth, Marketing, or Business roles within lending.\nRequired Skills\nSQL"
+        self.assertIsNone(extract_min_experience(text))
+        self.assertEqual(extract_preferred_experience(text), 5)
+        self.assertGreater(max(extract_min_experience(text) or -1, extract_preferred_experience(text) or -1), 1)
+
+    def test_required_preferred_and_inline_preference(self):
+        text = "Basic Qualifications:\n1 year of SQL experience\nPreferred Qualifications:\n3 years of Python experience\nResponsibilities:\nMaintain pipelines"
+        self.assertEqual(extract_min_experience(text), 1)
+        self.assertEqual(extract_preferred_experience(text), 3)
+        self.assertEqual(extract_preferred_experience("5+ years of data engineering experience preferred."), 5)
+        self.assertIsNone(extract_preferred_experience("Preferred Qualifications: Certification valid for 5 years. We have 10 years in business."))
+
     def test_amazon_long_basic_clause(self):
         self.assertEqual(extract_min_experience("Basic Qualifications:\n"+BASIC+"\nPreferred Qualifications:\n"+PREFERRED),4)
     def test_flattened_headings(self):

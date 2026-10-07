@@ -98,8 +98,7 @@ export default function App() {
 
       if (
         filters.hideHighExperience &&
-        j.experience_years >= 0 &&
-        j.experience_years > EXPERIENCE_THRESHOLD
+        Math.max(j.experience_years, j.preferred_experience_years ?? -1) > EXPERIENCE_THRESHOLD
       ) {
         // Unknown (-1) is deliberately kept — "couldn't determine" is not
         // evidence a job needs too much experience.
@@ -127,7 +126,7 @@ export default function App() {
         (j) => j.match_pct !== null && j.match_pct < MIN_MATCH,
       ).length,
       highExperience: jobs.filter(
-        (j) => j.experience_years >= 0 && j.experience_years > EXPERIENCE_THRESHOLD,
+        (j) => Math.max(j.experience_years, j.preferred_experience_years ?? -1) > EXPERIENCE_THRESHOLD,
       ).length,
     }),
     [jobs],
@@ -148,7 +147,7 @@ export default function App() {
     async (which: "match" | "experience") => {
       const targets = jobs.filter((j) => {
         if (which === "match") return j.match_pct !== null && j.match_pct < MIN_MATCH;
-        return j.experience_years >= 0 && j.experience_years > EXPERIENCE_THRESHOLD;
+        return Math.max(j.experience_years, j.preferred_experience_years ?? -1) > EXPERIENCE_THRESHOLD;
       });
       const ids = new Set(targets.map((j) => j.id));
       if (ids.size === 0) return;
