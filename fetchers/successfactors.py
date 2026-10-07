@@ -122,7 +122,7 @@ def fetch_job_description(host, href):
     el = soup.select_one('[data-careersite-propertyid="description"]')
     if el is None:
         return ""
-    text = strip_html(el.decode_contents(), max_chars=None)[:6000]
+    text = strip_html(el.decode_contents(), max_chars=None)
     if text.strip().lower() in _PLACEHOLDER_DESCRIPTIONS:
         return ""
     return text

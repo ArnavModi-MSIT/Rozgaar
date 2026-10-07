@@ -5,6 +5,11 @@ from fetchers.amazon import _parse_job
 BASIC="4+ years of compliance program management, legal, governance, audit, risk/loss prevention, or equivalent experience"
 PREFERRED="3+ years of program requirements definition and data and metrics leveraging to drive improvements experience"
 class QualificationExperienceTests(unittest.TestCase):
+    def test_deloitte_preceding_certification_preference_does_not_hide_years(self):
+        text = "Key Responsibilities\nSupport analytics.\nKey skills required:\nCertifications CFE, CAMS or FICO are a plus.\n4-7 years of experience in FRM space within a Risk OEM.\nExposure to Python is preferred."
+        self.assertEqual(extract_min_experience(text),4)
+        self.assertIsNone(extract_preferred_experience(text))
+
     def test_paytm_preferred_years_are_separate(self):
         text = "Preferred Qualifications\nBachelors degree. MBA is preferred.\n5–10 years of experience in Growth, Marketing, or Business roles within lending.\nRequired Skills\nSQL"
         self.assertIsNone(extract_min_experience(text))

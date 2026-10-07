@@ -492,6 +492,20 @@ def update_descriptions(conn, id_description_pairs):
     conn.commit()
 
 
+def refresh_collected_description(conn, jid, job):
+    """Refresh nonempty source content while retaining dismissal and timestamps."""
+    description = job.get("description")
+    if not description:
+        return False
+    cur = conn.execute(
+        """UPDATE jobs SET description = ?, category = NULL, skills = NULL,
+               experience_years = NULL
+           WHERE id = ? AND COALESCE(description, '') != ?""",
+        (description, jid, description),
+    )
+    return cur.rowcount > 0
+
+
 def refresh_qualcomm_student(conn, jid, job):
     """Enrich a saved Qualcomm internship without resetting user state."""
     if not job.get("description"):

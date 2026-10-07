@@ -57,6 +57,13 @@ def strip_html(text, max_chars=MAX_DESCRIPTION_CHARS):
     from adjacent tags collapsing into whitespace."""
     if not text:
         return ""
+    # Greenhouse sometimes delivers HTML encoded inside its content string.
+    # Decode before stripping tags, including a second encoding layer.
+    for _ in range(2):
+        decoded = html.unescape(text)
+        if decoded == text:
+            break
+        text = decoded
     text = _BLOCK_BREAK_RE.sub("\n", text)
     text = html.unescape(_TAG_RE.sub(" ", text))
     text = re.sub(r"[ \t]+", " ", text)      # runs of spaces/tabs -> one space
@@ -96,9 +103,7 @@ def _greenhouse_location(slug, job):
 def fetch_greenhouse(slug):
     # content=true pulls the full HTML job description so INCLUDE can catch
     # postings that only mention "internship"/"campus hire" in the body.
-    # max_chars=None then [:6000] — same pattern as other fetchers with
-    # long single-field descriptions (Postman/PhonePe/Razorpay postings run
-    # 7-13k raw chars; the old 3000-char default could truncate mid-post).
+    # Keep full normalized text: qualifications often follow long intros.
     data = _get(f"https://boards-api.greenhouse.io/v1/boards/{slug}/jobs?content=true")
     if not isinstance(data, dict) or not isinstance(data.get("jobs"), list):
         raise RuntimeError(f"greenhouse board {slug}: missing jobs list")
@@ -109,7 +114,7 @@ def fetch_greenhouse(slug):
             "title": j["title"],
             "location": _greenhouse_location(slug, j),
             "url": j["absolute_url"],
-            "description": strip_html(j.get("content", ""), max_chars=None)[:6000],
+            "description": strip_html(j.get("content", ""), max_chars=None),
         }
         for j in data.get("jobs", [])
         if slug not in INDIA_SCOPED_BOARDS or parse_country(_greenhouse_location(slug, j)) == "India"

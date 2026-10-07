@@ -23,6 +23,28 @@ class RegistryTests(unittest.TestCase):
 
 
 class GreenhouseTests(unittest.TestCase):
+    def test_escaped_html_and_late_experience_are_retained(self):
+        import html
+        from core.experience import extract_min_experience
+        body = "<p>" + "Company background "*700 + "</p><h3>About you:</h3><li>3–5 years of experience in data analysis.</li>"
+        response = {"jobs":[{"id":1,"title":"AI Data Analyst","location":{"name":"India"},"absolute_url":"https://example.com","content":html.escape(body)}]}
+        with patch.object(standard,"_get",return_value=response):
+            job=standard.fetch_greenhouse("example")[0]
+        self.assertGreater(len(job["description"]),6000)
+        self.assertNotIn("<li",job["description"])
+        self.assertEqual(extract_min_experience(job["description"]),3)
+
+    def test_saved_description_refresh_preserves_user_state(self):
+        import sqlite3
+        from core.storage import refresh_collected_description
+        conn=sqlite3.connect(":memory:")
+        conn.execute("CREATE TABLE jobs(id TEXT, description TEXT, category TEXT, skills TEXT, experience_years INTEGER, dismissed INTEGER, first_seen INTEGER)")
+        conn.execute("INSERT INTO jobs VALUES('a','old','data','sql',NULL,1,123)")
+        self.assertTrue(refresh_collected_description(conn,'a',{'description':'3 years of experience'}))
+        self.assertFalse(refresh_collected_description(conn,'a',{'description':''}))
+        self.assertEqual(conn.execute("SELECT dismissed,first_seen,skills,description FROM jobs").fetchone(),(1,123,None,'3 years of experience'))
+        conn.close()
+
     def test_normalizes_html_and_identity(self):
         with patch.object(standard, "_get", return_value=fixture("greenhouse.json")):
             jobs = standard.fetch_greenhouse("example")

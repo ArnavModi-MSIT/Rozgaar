@@ -151,7 +151,14 @@ def extract_min_experience(text):
 
     headings=list(_SECTION_RE.finditer(text))
 
-    if not headings:return _extract_min_experience_legacy(text)
+    if not headings:
+        value = _extract_min_experience_legacy(text)
+        # Nearby preference words from a different bullet must not erase
+        # an otherwise explicit years-of-experience clause.
+        if value is None:
+            years = _long_requirement_years(text)
+            return min(years) if years else None
+        return value
 
     required=[]
 
@@ -180,7 +187,12 @@ def extract_min_experience(text):
 
     if required:return min(required)
 
-    return _extract_min_experience_legacy('\n'.join(remaining))
+    remaining_text = '\n'.join(remaining)
+    value = _extract_min_experience_legacy(remaining_text)
+    if value is None:
+        years = _long_requirement_years(remaining_text)
+        return min(years) if years else None
+    return value
 
 
 _SENTENCE_SPLIT_RE = re.compile(r"(?<=[.!?])\s+|\n+")
