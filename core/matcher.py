@@ -78,7 +78,12 @@ def _encode_section_pairs(pairs):
     for pair in pairs:
         pair_groups = []
         for text in pair:
-            tokens = model.tokenizer.encode(text, add_special_tokens=False)
+            # This pass measures the full section before splitting it. It is
+            # never sent to the model directly, so the tokenizer's 512-token
+            # warning does not apply here. Keep all tokens for chunking.
+            tokens = model.tokenizer.encode(
+                text, add_special_tokens=False, truncation=False, verbose=False
+            )
             pieces = [model.tokenizer.decode(tokens[i:i+192], skip_special_tokens=True)
                       for i in range(0, len(tokens), 192)] or [""]
             pair_groups.append((len(chunks), len(chunks) + len(pieces)))

@@ -8,6 +8,8 @@ from core.matcher import embed_jobs_incremental, rank_by_resume
 
 class Tokenizer:
     def encode(self, text, **kwargs):
+        assert kwargs.get("truncation") is False
+        assert kwargs.get("verbose") is False
         return text.split()
     def decode(self, tokens, **kwargs):
         return " ".join(tokens)
