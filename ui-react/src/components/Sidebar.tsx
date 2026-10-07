@@ -104,13 +104,14 @@ export default function Sidebar({
               </div>
               <form onSubmit={(e) => { e.preventDefault(); addSkill(); }} className="flex gap-1 mt-2">
                 <input
+                  disabled={resumeBusy}
                   value={newSkill}
                   onChange={(e) => setNewSkill(e.target.value)}
                   placeholder="Add skill"
                   aria-label="Add resume skill"
                   className="min-w-0 w-full rounded border border-green-200 px-2 py-1 text-xs"
                 />
-                <button type="submit" className="text-xs underline">Add</button>
+                <button type="submit" disabled={resumeBusy} className="text-xs underline disabled:opacity-40">Add</button>
               </form>
               <button
                 type="button"
@@ -123,7 +124,8 @@ export default function Sidebar({
             </div>
             <button
               onClick={onClearResume}
-              className="mt-2 text-xs text-gray-600 underline hover:text-gray-900"
+              disabled={resumeBusy}
+              className="mt-2 text-xs text-gray-600 underline hover:text-gray-900 disabled:opacity-40"
             >
               Remove resume
             </button>

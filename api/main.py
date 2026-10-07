@@ -27,9 +27,9 @@ import hashlib
 import logging
 from pathlib import Path
 
-from fastapi import FastAPI, HTTPException, UploadFile, File
+from fastapi import FastAPI, HTTPException, UploadFile, File, Request
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
@@ -37,6 +37,7 @@ import os
 
 from api import data
 from core.resume_text import extract_text
+from core.runtime import runtime_identity
 from core.storage import (
     add_custom_skill, get_custom_skills, get_resume_skill_override,
     mark_dismissed, mark_dismissed_bulk, remove_custom_skill,
@@ -46,6 +47,26 @@ from core.storage import (
 log = logging.getLogger("jobbot.api")
 
 app = FastAPI(title="Job Intel API")
+_RUNTIME = runtime_identity(Path(__file__).resolve().parents[1])
+_LOCAL_ORIGINS = {
+    f"http://{host}:{port}"
+    for host in ("localhost", "127.0.0.1")
+    for port in (8000, 5173, 4173)
+}
+
+
+@app.middleware("http")
+async def protect_local_mutations(request: Request, call_next):
+    origin = request.headers.get("origin")
+    if request.method not in {"GET", "HEAD", "OPTIONS"} and origin and origin not in _LOCAL_ORIGINS:
+        return JSONResponse({"detail": "Changes are only allowed from the local Job Intel UI."}, status_code=403)
+    return await call_next(request)
+
+
+@app.get("/api/runtime")
+def get_runtime():
+    """Launcher diagnostic: identity captured when this backend was imported."""
+    return _RUNTIME
 
 # The Vite dev server runs on its own origin during development. Once the
 # React app is built, main.py serves it from THIS origin (see the static
@@ -174,6 +195,7 @@ async def upload_resume(file: UploadFile = File(...)):
 
     scored = data.set_resume(resume_key, text, effective)
     return {
+        "loaded": True,
         "resume_key": resume_key,
         "word_count": len(text.split()),
         "skills": sorted(effective),

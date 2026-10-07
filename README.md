@@ -1,4 +1,12 @@
-# Job Intel Platform
+# Job Intel
+
+## Local folder layout
+
+On this Windows workspace, the outer folder contains only the two CMD launchers, `app/`, and `.venv/`. Application files and documentation are inside `app/`. Use **Open Job Intel.cmd** for saved jobs only, or **Start Job Intel.cmd** for the site plus collection. The launchers also support a normal flat Git clone.
+
+For terminal commands in the organized workspace, first run `cd app`, then activate `..\.venv\Scripts\Activate.ps1`. Without activation: `..\.venv\Scripts\python.exe run.py` or `..\.venv\Scripts\python.exe stats.py`. Keep `.venv` at its original location; Windows entrypoints may contain absolute paths. `..\.venv\Scripts\python.exe start.py --check` checks paths without starting services. If a launcher reports an older backend, close that backend's console with Ctrl+C, then launch again.
+
+## Project overview
 
 A local job discovery prototype for students and early career applicants in India. It collects public job listings from supported career sites, stores them in SQLite, and ranks them against an uploaded resume.
 
@@ -258,3 +266,7 @@ The default experience filter hides postings when either the required minimum or
 Greenhouse and SuccessFactors preserve complete normalized descriptions. Escaped HTML is decoded before stripping tags, preventing markup from consuming the old text budget. Existing rows collected by `standard` or `successfactors` refresh changed nonempty descriptions during later runs, reset derived enrichment for reprocessing, and retain dismissal and first-seen state. Empty fetch results never replace a saved description. Existing truncated rows need a successful source refresh to recover missing text.
 
 Experience parsing checks a year/experience clause when the legacy nearby-word scan finds no minimum, so a preceding certification preference such as “a plus” cannot erase the next bullet's numeric work requirement. Preferred sections remain excluded from mandatory minimums and are exposed separately.
+
+## Repo review update (2026-10-07)
+
+Experience checks now retain decimal years and the strongest independent requirement, while keeping preferred years separate. Refreshed collection results update existing descriptions and scores refresh automatically when saved content changes. Collection runs cannot overlap on the same database. For the verification scope and remaining limitations, see [REPO_REVIEW.md](REPO_REVIEW.md). The first resume upload after this update may rebuild versioned embedding cache entries.

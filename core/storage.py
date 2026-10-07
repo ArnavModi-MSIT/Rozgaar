@@ -160,7 +160,7 @@ def load_dedup_keys(conn):
 
 
 def save_job(conn, jid, job, source):
-    # No per-row commit — run.py batches one commit at the end so a large
+    # No per-row commit — run.py commits once per source so a large
     # run doesn't pay an fsync per insert.
     # `score` column kept in the schema for compatibility with existing
     # rows/db files but is no longer computed — resume match % is computed
@@ -409,7 +409,7 @@ def record_stats(conn, run_id, platform, fetched, matched, saved, runtime_second
 
 def cleanup_old(conn, days=365):
     """Delete rows older than `days`. Not run automatically — call via
-    `python run.py --cleanup` once jobs.db has grown large enough to matter."""
+    Runs after normal collection; `python run.py --cleanup` also runs it explicitly."""
     cutoff = int(time.time()) - days * 86400
     cur = conn.execute("DELETE FROM jobs WHERE first_seen < ?", (cutoff,))
     conn.commit()
@@ -486,8 +486,10 @@ def get_workday_jobs_missing_description(conn, company):
 def update_descriptions(conn, id_description_pairs):
     """id_description_pairs: list of (job_id, description) tuples."""
     conn.executemany(
-        "UPDATE jobs SET description = ? WHERE id = ?",
-        [(desc, jid) for jid, desc in id_description_pairs],
+        """UPDATE jobs SET description = ?, category = NULL, skills = NULL,
+             experience_years = NULL
+           WHERE id = ? AND COALESCE(description, '') != ?""",
+        [(desc, jid, desc) for jid, desc in id_description_pairs if desc],
     )
     conn.commit()
 

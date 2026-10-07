@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { api } from "../api";
 import type { Job, JobDetail } from "../types";
 
@@ -36,16 +36,24 @@ export default function JobCard({
       ? Math.round((100 * matched.length) / job.skills.length)
       : null;
 
-  async function toggleDetail() {
-    const next = !expanded;
-    setExpanded(next);
-    if (next && !detail) {
-      try {
-        setDetail(await api.jobDetail(job.id));
-      } catch (e) {
-        setDetailError(e instanceof Error ? e.message : "couldn't load details");
-      }
-    }
+  // Detail contains resume-dependent eligibility evidence. Refresh it when
+  // the list or resume changes, and ignore responses from an older request.
+  useEffect(() => {
+    if (!expanded) return;
+    let cancelled = false;
+    setDetail(null);
+    setDetailError(null);
+    void api.jobDetail(job.id).then(
+      (result) => { if (!cancelled) setDetail(result); },
+      (error: unknown) => {
+        if (!cancelled) setDetailError(error instanceof Error ? error.message : "couldn't load details");
+      },
+    );
+    return () => { cancelled = true; };
+  }, [expanded, job, resumeSkills, resumeLoaded]);
+
+  function toggleDetail() {
+    setExpanded((current) => !current);
   }
 
   // Opening a link does not imply an application. Only the optional

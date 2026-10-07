@@ -35,3 +35,6 @@ public-release/
 # OS noise
 .DS_Store
 Thumbs.db
+
+# Local collector process lock
+db/.collection.lock

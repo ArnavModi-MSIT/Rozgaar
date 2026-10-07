@@ -2,8 +2,10 @@
 from sentence_transformers import util
 
 import os
+from pathlib import Path
 
 import torch
+import pandas as pd
 
 import config
 from core.embeddings import get_model
@@ -51,6 +53,8 @@ def compute_job_pool_key(jobs_df):
         return hashlib.sha256(b"").hexdigest()
     parts = (
         jobs_df["id"].astype(str) + "|" + jobs_df["title"].fillna("") + "|" + jobs_df["description"].fillna("")
+        + "|" + jobs_df.get("skills", pd.Series("", index=jobs_df.index)).fillna("")
+        + "|" + jobs_df.get("location", pd.Series("", index=jobs_df.index)).fillna("")
     ).tolist()
     combined = "\n".join(sorted(parts))
     return hashlib.sha256(combined.encode()).hexdigest()
@@ -58,7 +62,7 @@ def compute_job_pool_key(jobs_df):
 
 def _job_content_hash(job_id, title, description):
     import hashlib
-    return hashlib.sha256(f"sections-v2|{job_id}|{title or ''}|{description or ''}".encode()).hexdigest()
+    return hashlib.sha256(f"sections-v3|{job_id}|{title or ''}|{description or ''}".encode()).hexdigest()
 
 
 def embed_jobs(jobs_df):
@@ -155,7 +159,7 @@ def embed_jobs_incremental(jobs_df, cache=None):
     return embeddings_tensor, cache, len(to_embed_idx)
 
 
-DEFAULT_EMBEDDINGS_CACHE_PATH = "db/job_embeddings_cache.pt"
+DEFAULT_EMBEDDINGS_CACHE_PATH = str(Path(__file__).resolve().parents[1] / "db" / "job_embeddings_cache.pt")
 
 
 def save_embedding_cache(cache, path=DEFAULT_EMBEDDINGS_CACHE_PATH):

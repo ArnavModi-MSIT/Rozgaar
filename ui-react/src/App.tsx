@@ -7,8 +7,8 @@ import type { Filters, Job, ResumeState } from "./types";
 
 // Once a resume is loaded, hide jobs scoring below this threshold.
 const MIN_MATCH = 20;
-// Keep 0/1-year and unknown requirements; hide stated minimums of 2+ years.
-const EXPERIENCE_THRESHOLD = 1;
+// Keep requirements below 2 years and unknowns; hide stated minimums of 2+ years.
+const EXPERIENCE_THRESHOLD = 2;
 const PAGE_SIZE = 40;
 
 const DEFAULT_FILTERS: Filters = {
@@ -98,7 +98,7 @@ export default function App() {
 
       if (
         filters.hideHighExperience &&
-        Math.max(j.experience_years, j.preferred_experience_years ?? -1) > EXPERIENCE_THRESHOLD
+        Math.max(j.experience_years, j.preferred_experience_years ?? -1) >= EXPERIENCE_THRESHOLD
       ) {
         // Unknown (-1) is deliberately kept — "couldn't determine" is not
         // evidence a job needs too much experience.
@@ -126,7 +126,7 @@ export default function App() {
         (j) => j.match_pct !== null && j.match_pct < MIN_MATCH,
       ).length,
       highExperience: jobs.filter(
-        (j) => Math.max(j.experience_years, j.preferred_experience_years ?? -1) > EXPERIENCE_THRESHOLD,
+        (j) => Math.max(j.experience_years, j.preferred_experience_years ?? -1) >= EXPERIENCE_THRESHOLD,
       ).length,
     }),
     [jobs],
@@ -147,7 +147,7 @@ export default function App() {
     async (which: "match" | "experience") => {
       const targets = jobs.filter((j) => {
         if (which === "match") return j.match_pct !== null && j.match_pct < MIN_MATCH;
-        return Math.max(j.experience_years, j.preferred_experience_years ?? -1) > EXPERIENCE_THRESHOLD;
+        return Math.max(j.experience_years, j.preferred_experience_years ?? -1) >= EXPERIENCE_THRESHOLD;
       });
       const ids = new Set(targets.map((j) => j.id));
       if (ids.size === 0) return;
@@ -178,9 +178,18 @@ export default function App() {
   );
 
   const clearResume = useCallback(async () => {
-    await api.clearResume();
-    await refresh();
-  }, [refresh]);
+    if (resumeBusy) return;
+    setResumeBusy(true);
+    setResumeError(null);
+    try {
+      await api.clearResume();
+      await refresh();
+    } catch (e) {
+      setResumeError(e instanceof Error ? e.message : "couldn't remove resume");
+    } finally {
+      setResumeBusy(false);
+    }
+  }, [refresh, resumeBusy]);
 
   const updateResumeSkills = useCallback(async (skills: string[]) => {
     setResumeBusy(true);

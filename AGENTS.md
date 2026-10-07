@@ -20,3 +20,7 @@ Read [ARCHITECTURE.md](ARCHITECTURE.md) before changing behavior. It describes t
 - Verify Python changes with focused checks and `python -m compileall -q api core fetchers run.py`; verify React changes with `npm ci` and `npm run build` in `ui-react/`. A local parser or syntax check does not prove a live career site still works.
 - Run `python -m unittest discover -s tests -v` for offline collector and source-health regressions. When adding a fetcher, distinguish a complete empty result from an interrupted fetch; the `fetchers.result.CollectionResult` status is available for partial results.
 - Update [ARCHITECTURE.md](ARCHITECTURE.md) and [README.md](README.md) when data flow, commands, API contracts, or user-visible behavior changes.
+
+## Local workspace layout
+
+The outer folder now contains only the two CMD launchers, `.venv/`, and `app/`. This file and application source live in `app/`; run manual commands from here. Use `..\.venv\Scripts\python.exe` locally. The source-only GitHub checkout is `public-release/` inside this directory; preserve the original repository history and mirror authorized source changes to that checkout. Do not move the existing virtual environment or publish the database. The CMD launchers work with both organized and flat layouts.

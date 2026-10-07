@@ -28,6 +28,11 @@ rather than misreported as a hard minimum — a soft preference isn't a
 real gate, and reporting it as one risks hiding a job you'd actually
 qualify for, which is the opposite failure mode but still wrong.
 
+For independent required clauses, the strongest minimum applies: five years
+overall plus one year using SQL still requires five years. Each numeric range
+contributes its lower endpoint; direct `or N years` alternatives use the lower
+bar inside that alternative group. Decimal years are preserved.
+
 Known unsolved limitation (flagged, not fixed): multi-track postings like
 "Freshers with 0 years welcome for the associate track; senior track
 requires 5 years" describe TWO different roles with two different bars,
@@ -46,8 +51,44 @@ _LOCAL_WINDOW = 40  # tighter window around each NUMBER match itself, used
 # to classify that specific number as required/preferred/unspecified
 
 _YEAR_NUM_RE = re.compile(
-    r"(\d+)\s*\+?\s*(?:-|to|–|—)?\s*(\d*)\s*(?:years?|yrs?)", re.I
+    r"(?<![\d.])(\d+(?:\.\d+)?)\s*\+?\s*"
+    r"(?:(?:-|to|–|—)\s*(\d+(?:\.\d+)?))?\s*(?:years?|yrs?)\b", re.I
 )
+
+
+def _year_value(raw):
+    value = float(raw)
+    return int(value) if value.is_integer() else value
+
+
+def _strongest_requirement(values, text):
+    """Independent requirements all apply; explicit alternatives use the lower bar.
+
+    A range contributes only its lower endpoint. A smaller SQL requirement must
+    not erase a separate overall experience requirement. Degree/role alternatives
+    remain a heuristic: recognize a direct `... years ... or N years ...` clause,
+    while avoiding an unrelated `Python or SQL` from changing the aggregation.
+    """
+    if not values:
+        return None
+    allowed = set(values)
+    matches = [match for match in _YEAR_NUM_RE.finditer(text)
+               if _year_value(match.group(1)) in allowed]
+    groups = []
+    previous = None
+    for match in matches:
+        value = _year_value(match.group(1))
+        between = text[previous.end():match.start()] if previous else ""
+        alternative = bool(previous and re.search(
+            r"\bor\s+(?:(?:at least|minimum|a minimum of)\s+)?$", between, re.I))
+        if alternative:
+            groups[-1].append(value)
+        else:
+            groups.append([value])
+        previous = match
+    found = {_year_value(match.group(1)) for match in matches}
+    groups.extend([[value] for value in allowed - found])
+    return max(min(group) for group in groups)
 
 _REQUIRED_SIGNAL_RE = re.compile(
     r"\b(required|requires?|must\s+have|must\s+possess|mandatory|"
@@ -83,9 +124,8 @@ def _extract_min_experience_legacy(text):
         window = text[start:end]
 
         for num_m in _YEAR_NUM_RE.finditer(window):
-            years_found = [int(g) for g in num_m.groups() if g]
-            if not years_found:
-                continue
+            # A 2-5-year range is a two-year minimum, not two independent bars.
+            years_found = [_year_value(num_m.group(1))]
 
             # Classify THIS specific number mention using a tighter
             # window around the number itself (not the outer "experience"
@@ -104,9 +144,9 @@ def _extract_min_experience_legacy(text):
             bucket.extend(years_found)
 
     if required:
-        return min(required)
+        return _strongest_requirement(required, text)
     if unspecified:
-        return min(unspecified)
+        return _strongest_requirement(unspecified, text)
     # Only preferred-tagged numbers found, nothing required/unspecified —
     # see module docstring for why this falls through to "unknown" rather
     # than reporting a soft preference as a hard minimum.
@@ -131,7 +171,7 @@ def _long_requirement_years(text):
 
         # A wrapped line is allowed; a separate numbered requirement is not.
 
-        tail=re.split(r"[;.!?]|\n\s*[-•]|\b\d+\s*\+?\s*(?:years?|yrs?)\b",tail,maxsplit=1)[0]
+        tail=re.split(r"[;.!?]|\n\s*[-•]|\b\d+(?:\.\d+)?\s*\+?\s*(?:years?|yrs?)\b",tail,maxsplit=1)[0]
 
         prefix=re.split(r"[;.!?\n]",text[:match.start()])[-1][-40:]
         clause=prefix+text[match.start():match.end()]+re.sub(r"\([^)]*\)", "", tail)
@@ -139,7 +179,7 @@ def _long_requirement_years(text):
             continue
         if re.search(r"\bexperience\b",tail,re.I):
 
-            values.append(int(match.group(1)))
+            values.append(_year_value(match.group(1)))
 
     return values
 
@@ -157,7 +197,7 @@ def extract_min_experience(text):
         # an otherwise explicit years-of-experience clause.
         if value is None:
             years = _long_requirement_years(text)
-            return min(years) if years else None
+            return _strongest_requirement(years, text)
         return value
 
     required=[]
@@ -185,13 +225,13 @@ def extract_min_experience(text):
 
             remaining.append(section)
 
-    if required:return min(required)
+    if required:return _strongest_requirement(required, text)
 
     remaining_text = '\n'.join(remaining)
     value = _extract_min_experience_legacy(remaining_text)
     if value is None:
         years = _long_requirement_years(remaining_text)
-        return min(years) if years else None
+        return _strongest_requirement(years, remaining_text)
     return value
 
 
@@ -218,7 +258,7 @@ def extract_preferred_experience(text):
         # Removing those words lets the existing year/experience association
         # check run without promoting this preference to a required minimum.
         years.extend(_long_requirement_years(_PREFERRED_SIGNAL_RE.sub(" ", candidate)))
-    return min(years) if years else None
+    return _strongest_requirement(years, "\n".join(candidates))
 
 
 def extract_experience_sentences(text):

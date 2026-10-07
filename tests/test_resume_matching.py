@@ -60,7 +60,8 @@ class ResumeMatchingTests(unittest.TestCase):
     def test_api_explanations_and_clear_without_database_writes(self):
         from api import data
         df = pd.DataFrame([dict(id="a", title="Data Engineer", company="test", location="India", url="https://example.com", source="test", category="", skills="sql", experience_years=0, first_seen=pd.Timestamp("2026-10-06"), last_seen=pd.Timestamp("2026-10-06"), is_remote=False,is_ncr=False,is_india=True,description="SQL required")])
-        state = dict(key="test",text="SQL",skills={"sql"},scores={"a":75.0},explanations={"a":{"missing_required":[]}})
+        from core.matcher import compute_job_pool_key
+        state = dict(key="test",text="SQL",skills={"sql"},scores={"a":75.0},explanations={"a":{"missing_required":[]}}, pool_key=compute_job_pool_key(df))
         with patch.object(data, "_resume", state), patch.object(data,"get_jobs_df",return_value=df):
             self.assertEqual(data.job_list_payload(df)[0]["match_explanation"],state["explanations"]["a"])
             self.assertEqual(data.job_detail_payload("a")["match_explanation"],state["explanations"]["a"])

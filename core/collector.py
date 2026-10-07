@@ -49,7 +49,7 @@ PLATFORMS = [
     ("swiggy", lambda deadline: swiggy.collect(deadline=deadline)),
     ("tower_research", lambda deadline: tower_research.collect(deadline=deadline)),
     ("deloitte", lambda deadline: deloitte.collect(deadline=deadline)),
-    ("standard", lambda deadline: standard.collect(config.GREENHOUSE, config.LEVER, config.ASHBY)),
+    ("standard", lambda deadline: standard.collect(config.GREENHOUSE, config.LEVER, config.ASHBY, deadline)),
     ("oracle", lambda deadline: oracle.collect(config.ORACLE, deadline=deadline)),
     ("icims", lambda deadline: icims.collect(config.ICIMS, deadline=deadline)),
     ("smartrecruiters", lambda deadline: smartrecruiters.collect(config.SMARTRECRUITERS, deadline=deadline)),

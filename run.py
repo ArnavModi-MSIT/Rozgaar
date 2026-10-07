@@ -46,6 +46,8 @@ from concurrent.futures import ThreadPoolExecutor
 
 import config
 from core.classify import classify_jobs
+from core.run_lock import collection_lock
+from pathlib import Path
 from core.collector import PLATFORMS
 from core.dedup import dedup_key
 from core.experience import extract_min_experience
@@ -65,7 +67,7 @@ from fetchers.workday import fetch_job_detail
 
 log = logging.getLogger("jobbot")
 
-DB_PATH = "db/jobs.db"
+DB_PATH = str(Path(__file__).resolve().parent / "db" / "jobs.db")
 # Fresh clones won't have db/ at all — git never tracks empty directories,
 # and .gitignore excludes the .db files themselves (personal data, not
 # shared). Without this, sqlite3.connect() fails outright on anyone's
@@ -162,6 +164,11 @@ def process_backlog(conn):
 
 
 def run():
+    with collection_lock(Path(DB_PATH).with_name(".collection.lock")):
+        return _run()
+
+
+def _run():
     if os.environ.get("JOB_INTEL_OFFLINE") == "1":
         raise RuntimeError("JOB_INTEL_OFFLINE=1 disables collection; use --process-only for saved jobs")
     conn = sqlite3.connect(DB_PATH)
@@ -216,6 +223,7 @@ def run():
                     record_stats(conn, run_id, platform_name, 0, 0, 0,
                                  round(time.monotonic() - platform_start, 2),
                                  status="failed", error=str(e)[:300])
+                    conn.commit()
                     continue
                 if getattr(jobs, "status", "ok") != "skipped":
                     platforms_run.append(platform_name)
@@ -233,7 +241,7 @@ def run():
                         non_india += 1
                         continue
                     if jid in existing_ids:
-                        if platform_name in {"standard", "successfactors"}:
+                        if platform_name in {"standard", "successfactors", "deloitte"}:
                             refresh_collected_description(conn, jid, job)
                         if platform_name != "atlassian":
                             mark_observed(conn, jid, int(time.time()))
@@ -259,7 +267,9 @@ def run():
                              round(time.monotonic() - platform_start, 2),
                              status=getattr(jobs, "status", "ok"),
                              error=getattr(jobs, "error", "")[:300] or None)
-        conn.commit()  # batched commit for the fetch/save phase
+                # Release SQLite's write lock before waiting for the next
+                # network future. The UI can dismiss jobs during collection.
+                conn.commit()
 
         # --- Classification / skills / experience --------------------------------
         # One combined scan (get_unprocessed) instead of three separate
@@ -379,6 +389,7 @@ if __name__ == "__main__":
                 updates.append((jid, desc))
         if updates:
             update_descriptions(conn, updates)
+            process_backlog(conn)
         conn.close()
         log.info("refetch: updated %d/%d oracle job description(s)", len(updates), len(rows))
     elif "--refetch-workday" in sys.argv:
@@ -412,6 +423,7 @@ if __name__ == "__main__":
                 updates.append((jid, desc))
         if updates:
             update_descriptions(conn, updates)
+            process_backlog(conn)
         conn.close()
         log.info("refetch: updated %d/%d workday job description(s)", len(updates), len(rows))
     else:

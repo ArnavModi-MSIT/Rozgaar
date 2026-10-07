@@ -38,8 +38,11 @@ def job_parts(title, description):
     parts = sections(description)
     required = parts["required"]
     responsibilities = parts["responsibilities"] or parts["general"]
-    return [f"{title}\n{required or responsibilities}",
-            f"{title}\n{responsibilities or required}"]
+    # A preferred-only or otherwise recognized-section-only posting still has
+    # useful text. Falling back to it is preferable to embedding just the title.
+    fallback = "\n".join(filter(None, parts.values()))
+    return [f"{title}\n{required or responsibilities or fallback}",
+            f"{title}\n{responsibilities or required or fallback}"]
 
 def resume_parts(text):
     parts = sections(text)
@@ -85,8 +88,16 @@ def eligibility_checks(description, location, resume_text, missing_required):
         # Restrict year comparison to explicitly stated graduation years, not
         # education start dates, application deadlines or internship seasons.
         year_pattern = r"(?:graduat(?:ing|ion)(?:\s+(?:year|date))?|class of|batch)(?:\s*[:\-]?\s*(?:in|of|expected)?\s*)(20[2-4]\d)\b"
-        candidate_years = set(re.findall(year_pattern, resume_text, re.I))
-        required_years = set(re.findall(year_pattern, parts["required"], re.I))
+        def graduation_years(text):
+            years = set()
+            for line in re.split(r"\n+|(?<=[.!?])\s+", text):
+                if re.search(year_pattern, line, re.I):
+                    # A graduation range or alternative is ambiguous; do not
+                    # compare only its first year and report a false mismatch.
+                    years.update(re.findall(r"\b20[2-4]\d\b", line))
+            return years
+        candidate_years = graduation_years(resume_text)
+        required_years = graduation_years(parts["required"])
         if label == "Graduation / student status" and len(candidate_years) == 1 and len(required_years) == 1:
             status = "meets stated requirement" if candidate_years == required_years else "mismatch"
             lines.append("Resume stated graduation year: " + next(iter(candidate_years)))

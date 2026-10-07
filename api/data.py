@@ -15,6 +15,7 @@ this backend shouldn't be exposed to one without moving this into a real
 per-session store.
 """
 
+from functools import wraps
 import sqlite3
 import threading
 import time
@@ -28,30 +29,47 @@ from core.experience import extract_experience_sentences, extract_min_experience
 from core.location import is_remote, parse_city, parse_country
 from core.matcher import (
     embed_jobs_incremental, load_embedding_cache, rank_by_resume,
-    save_embedding_cache,
+    save_embedding_cache, compute_job_pool_key,
 )
 from core.skills import build_patterns, extract_skills, skill_overlap
 from core.storage import get_custom_skills, init_db
 
-DB_PATH = "db/jobs.db"
+DB_PATH = str(Path(__file__).resolve().parents[1] / "db" / "jobs.db")
 
 # Guards the mutable module state below. FastAPI serves requests from a
 # thread pool, so two requests really can touch this concurrently — e.g.
 # a dismiss landing while a resume upload is mid-score.
-_lock = threading.Lock()
+_lock = threading.RLock()
 
 _jobs_cache = {"df": None, "loaded_at": 0.0}
 _JOBS_TTL_SECONDS = 30
 
 _embedding_cache = None  # job_id -> (content_hash, tensor), lazily loaded
+_initialized_db_paths = set()
 
 # Current resume, if one has been uploaded this run.
-_resume = {"key": None, "text": "", "skills": set(), "scores": {}, "explanations": {}}
+_resume = {"key": None, "text": "", "skills": set(), "scores": {}, "explanations": {}, "pool_key": None}
 
 
+def synchronized(fn):
+    @wraps(fn)
+    def wrapped(*args, **kwargs):
+        with _lock:
+            return fn(*args, **kwargs)
+    return wrapped
+
+
+@synchronized
 def connect():
     Path(DB_PATH).parent.mkdir(parents=True, exist_ok=True)
-    conn = sqlite3.connect(DB_PATH)
+    conn = sqlite3.connect(DB_PATH, timeout=30)
+    try:
+        if str(DB_PATH) not in _initialized_db_paths:
+            init_db(conn)
+            _initialized_db_paths.add(str(DB_PATH))
+    except Exception:
+        conn.close()
+        raise
     return conn
 
 
@@ -59,7 +77,6 @@ def _load_jobs_df():
     """Read non-dismissed jobs and add fields needed by the React UI."""
     conn = connect()
     try:
-        init_db(conn)  # cheap no-op once migrated; makes a fresh clone work
         df = pd.read_sql_query(
             """SELECT * FROM jobs
                WHERE dismissed = 0
@@ -95,8 +112,8 @@ def _load_jobs_df():
     df["description"] = df["description"].fillna("")
     # Recompute from descriptions so existing rows follow the current policy
     # without changing SQLite or requiring another network collection.
-    df["experience_years"] = df["description"].apply(extract_min_experience).astype("Int64").fillna(-1).astype(int)
-    df["preferred_experience_years"] = df["description"].apply(extract_preferred_experience).astype("Int64").fillna(-1).astype(int)
+    df["experience_years"] = pd.to_numeric(df["description"].apply(extract_min_experience), errors="coerce").fillna(-1)
+    df["preferred_experience_years"] = pd.to_numeric(df["description"].apply(extract_preferred_experience), errors="coerce").fillna(-1)
     return df
 
 
@@ -134,7 +151,8 @@ def _ensure_embeddings(df):
     return embeddings
 
 
-def rescore():
+@synchronized
+def rescore(df=None):
     """Recomputes match_pct for the current job pool against the loaded
     resume, storing an {id: pct} map. No-op (and clears any stale scores)
     when no resume is loaded."""
@@ -142,7 +160,7 @@ def rescore():
         _resume["scores"] = {}
         _resume["explanations"] = {}
         return 0
-    df = get_jobs_df()
+    df = get_jobs_df() if df is None else df
     if df.empty:
         _resume["scores"] = {}
         _resume["explanations"] = {}
@@ -153,26 +171,37 @@ def rescore():
     )
     _resume["scores"] = dict(zip(scored["id"], scored["match_pct"]))
     _resume["explanations"] = dict(zip(scored["id"], scored["match_explanation"]))
+    _resume["pool_key"] = compute_job_pool_key(df)
     return len(_resume["scores"])
 
 
+@synchronized
 def set_resume(key, text, skills):
+    previous = dict(_resume)
     _resume["key"] = key
     _resume["text"] = text
     _resume["skills"] = set(skills)
-    return rescore()
+    try:
+        return rescore()
+    except Exception:
+        _resume.clear()
+        _resume.update(previous)
+        raise
 
 
+@synchronized
 def clear_resume():
     _resume["key"] = None
     _resume["text"] = ""
+    _resume["pool_key"] = None
     _resume["skills"] = set()
     _resume["scores"] = {}
     _resume["explanations"] = {}
 
 
+@synchronized
 def resume_state():
-    return _resume
+    return {**_resume, "skills": set(_resume["skills"]), "scores": dict(_resume["scores"]), "explanations": dict(_resume["explanations"])}
 
 
 def custom_skill_patterns():
@@ -184,12 +213,15 @@ def custom_skill_patterns():
         conn.close()
 
 
+@synchronized
 def job_list_payload(df):
     """Compact per-job rows for the list view. Deliberately EXCLUDES the
     description: descriptions run up to 6,000 chars and a full pool is
     several thousand jobs, which would make this response tens of
     megabytes. The detail endpoint serves description/experience-lines on
     demand instead."""
+    if _resume["text"].strip() and _resume.get("pool_key") != compute_job_pool_key(df):
+        rescore(df)
     scores = _resume["scores"]
     rows = []
     for r in df.itertuples(index=False):
@@ -203,8 +235,8 @@ def job_list_payload(df):
             "source": r.source,
             "category": r.category or "",
             "skills": [s for s in (r.skills or "").split(",") if s],
-            "experience_years": int(r.experience_years),
-            "preferred_experience_years": int(getattr(r, "preferred_experience_years", -1)),
+            "experience_years": float(r.experience_years),
+            "preferred_experience_years": float(getattr(r, "preferred_experience_years", -1)),
             "first_seen_ms": int(r.first_seen.value // 1000000),
             "first_seen": r.first_seen.strftime("%Y-%m-%d"),
             "last_seen": r.last_seen.strftime("%Y-%m-%d"),
@@ -223,10 +255,15 @@ def job_list_payload(df):
     return rows
 
 
+@synchronized
 def job_detail_payload(job_id):
     """Full detail for one job, including the description and the
     experience-relevant lines the UI shows on expand."""
     df = get_jobs_df()
+    if df.empty:
+        return None
+    if _resume["text"].strip() and _resume.get("pool_key") != compute_job_pool_key(df):
+        rescore(df)
     match = df[df["id"] == job_id]
     if match.empty:
         return None

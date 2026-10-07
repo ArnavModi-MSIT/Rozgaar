@@ -11,7 +11,7 @@ Job Intel is a **local, single-user** application. It has two separate execution
 
 There is no background scheduler, hosted service, login system, application submission bot, or cloud database. Run commands from the repository root because the Python code uses relative `db/` paths. Collection is the network step; parsing, matching, and the UI run locally. To enforce offline mode, download the model with `python scripts/download_model.py` once, then set `JOB_INTEL_OFFLINE=1`. Normal collection refuses to run in that mode; `--process-only` remains available.
 
-On Windows, `Start Job Intel.cmd` invokes `start.py` from the repository root. After the one-time Python setup, the launcher builds the React bundle if missing or stale, starts the localhost FastAPI server if it is not already responding, opens the browser, and starts one collection process. It skips collection when `JOB_INTEL_OFFLINE=1`. Each double-click launches another collection, so it is not a scheduler or process supervisor.
+On Windows, `Start Job Intel.cmd` invokes `start.py` from the repository root. After the one-time Python setup, the launcher builds the React bundle if missing or stale, starts the localhost FastAPI server if it is not already responding, opens the browser, and starts one collection process. It skips collection when `JOB_INTEL_OFFLINE=1`. A database-specific file lock prevents overlapping collections. The launcher verifies both checkout path and a source fingerprint of the running backend; an outdated or different checkout produces an explicit restart instruction. It is not a scheduler or process supervisor.
 
 ```mermaid
 flowchart LR
@@ -136,7 +136,7 @@ The API applies the same India-or-unknown country rule when loading previously s
 3. The parser uses PyMuPDF for PDF text, `python-docx` for paragraphs and table cells, and UTF-8 decoding for TXT. Empty extracted text is rejected. There is no OCR for scanned PDFs.
 4. The API extracts recognized resume skills. If `resume_skill_overrides` has a saved set for the file hash, that corrected set takes precedence.
 5. `api/data.py:set_resume()` calls `rescore()`. It loads or incrementally computes job embeddings and calls `rank_by_resume()`.
-6. Scores are held in memory as `{job_id: match_pct}` and included in later `/api/jobs` responses.
+6. Scores are held in memory as `{job_id: match_pct}` and included in later `/api/jobs` responses. Changed job content, skills, locations, or visible IDs trigger rescoring when list/detail payloads are requested. Resume state and scoring use one reentrant lock, and failed replacement restores the preceding resume state.
 
 `core/embeddings.py` lazily loads one `all-MiniLM-L6-v2` model for classification and matching within each Python process. It prefers the project-local `models/all-MiniLM-L6-v2`; outside strict offline mode it can still download the model on first use if that directory is absent. Job embeddings represent two parsed sections with token-bounded chunk pooling, described below. The model sequence limit is 512 tokens, while matching chunks use 192 content tokens. Each cached job embedding is keyed by job ID plus a versioned content hash, so unchanged jobs do not need to be re-embedded; the cache is saved with PyTorch under `db/`.
 
@@ -144,7 +144,7 @@ The matcher now separates required qualifications from responsibilities and pref
 
 Semantic relevance uses the existing fixed cosine range 0.15–0.65. With recognizable projects/work, requirements contribute 55% and responsibilities 45% of the semantic component; otherwise only requirements relevance is used. Recognized required skills have weight 3, unclassified skills 2, preferred skills 1. The weighted skill component contributes up to 40%, scaled down when fewer than three skills are known. The existing target-title-or-40%-skill relevance gate still caps unrelated roles at 10. These weights are provisional heuristics, not measured probabilities.
 
-The cache content hash includes `sections-v2`, invalidating previous single-vector embeddings automatically. Cached job tensors now have two section vectors. API resume state stores scores and `match_explanation` maps; list and detail responses include explanations, component scores, required skill gaps and separate eligibility checks. Clearing a resume clears explanations too. React shows a “Why this ranking?” expander. No database schema changes are needed.
+The cache content hash includes `sections-v3`, invalidating previous single-vector embeddings automatically. Cached job tensors now have two section vectors. API resume state stores scores and `match_explanation` maps; list and detail responses include explanations, component scores, required skill gaps and separate eligibility checks. Clearing a resume clears explanations too. React shows a “Why this ranking?” expander. No database schema changes are needed.
 
 Eligibility remains evidence-based and separate from sorting: India location is checked against the existing country parser; professional experience is compared only when the resume explicitly states years of work/professional/industry experience. Project dates do not count as employment. Education and ambiguous graduation/student requirements are shown for review with unknown status. A single explicit graduation year in the required section can be compared with a single explicit resume graduation year; dates or year ranges alone are not compared. The parser does not infer degree equivalence or approve overall eligibility. Missing recognized required skills are evidence gaps, not proof of inability. Unknown is never approval.
 
@@ -191,7 +191,7 @@ The offline fixture tests in `tests/` cover Greenhouse, source-health classifica
 - A stored posting is not guaranteed to be open today; `last_seen` records an observation, but there is no confirmed-closed workflow. Old rows migrated from earlier versions start with `last_seen = first_seen`.
 - Save-time filtering only rejects confidently non-India locations. Unknown locations are kept and treated as potentially India-relevant in the UI.
 - Resume scoring and category assignment have no labeled evaluation in this repo. Match percentages are ranking heuristics.
-- The API has no authentication, per-user state, upload-size limit, or multi-user isolation. Bind it to localhost.
+- The API has no authentication, per-user state, or multi-user isolation. Resume uploads are limited to 5 MB and browser mutations reject unexpected origins. Bind it to localhost.
 - Browser application automation and automatic submission are not implemented.
 
 Use [improvement.md](improvement.md) for proposed changes, not as evidence that those features already work.
@@ -338,3 +338,15 @@ The default experience filter hides postings when either the required minimum or
 Greenhouse and SuccessFactors preserve complete normalized descriptions. Escaped HTML is decoded before stripping tags, preventing markup from consuming the old text budget. Existing rows collected by `standard` or `successfactors` refresh changed nonempty descriptions during later runs, reset derived enrichment for reprocessing, and retain dismissal and first-seen state. Empty fetch results never replace a saved description. Existing truncated rows need a successful source refresh to recover missing text.
 
 Experience parsing checks a year/experience clause when the legacy nearby-word scan finds no minimum, so a preceding certification preference such as “a plus” cannot erase the next bullet's numeric work requirement. Preferred sections remain excluded from mandatory minimums and are exposed separately.
+
+## Organized local folder and review fixes (2026-10-07)
+
+The local outer folder contains `Start Job Intel.cmd`, `Open Job Intel.cmd`, `app/`, and the existing `.venv/`. All source, documentation, tests, SQLite state and the source-only Git checkout are inside `app/`. `.venv` stays outside to preserve Windows activation and installed command entrypoints. The original Git metadata is preserved inside `app/.git`; `app/public-release` remains the separate GitHub checkout. Source exports/clones can keep the original flat layout: the CMD launchers detect both layouts, and start.py accepts a project-local or parent virtual environment.
+
+Run manual commands from `app/` after activating `..\.venv\Scripts\Activate.ps1`, or use `..\.venv\Scripts\python.exe run.py`. Database and embedding cache paths for API, collection and stats are now anchored to the source directory rather than the shell's working directory. `start.py --check` verifies launcher paths without starting an API, browser or scraper. `/api/runtime` returns the root and source identity captured at API import; it is a launcher diagnostic, not UI profile data.
+
+Collection commits each platform result before waiting for the next future, avoiding long SQLite write locks. Standard boards check the shared deadline before starting each queued board; already-running HTTP calls retain their own timeout/retry budget. Full Lever/Ashby descriptions now join Greenhouse/SuccessFactors without the old 6,000-character cap. Changed Deloitte descriptions refresh too. Source-specific refetch commands reset derived fields and process the backlog after obtaining nonempty descriptions. Empty fetches never replace saved text.
+
+Experience parsing takes the strongest independent numeric requirement, retaining the lower bound of a range or explicitly stated alternatives. Decimal years are preserved as numbers end to end; the browser compares against `>= 2`, so 1.5 years remains visible. This remains a heuristic, and mixed eligibility tracks need review. Preferred-only descriptions remain available to semantic section comparison; version 3 invalidates prior title-only embeddings. Graduation ranges/alternatives remain unknown.
+
+Expanded job details reload when the job list or resume changes, discard obsolete request responses, and clear retry errors. Resume removal and skill controls respect busy/error state. The lockfile updates source-map-js to a patched release. `REPO_REVIEW.md` records verification and remaining limits.

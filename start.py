@@ -10,21 +10,34 @@ import time
 from urllib.error import URLError
 from urllib.request import urlopen
 import webbrowser
+from core.runtime import runtime_identity
 
 
 ROOT = Path(__file__).resolve().parent
 PYTHON = ROOT / ".venv" / "Scripts" / "python.exe"
+if not PYTHON.exists():
+    PYTHON = ROOT.parent / ".venv" / "Scripts" / "python.exe"
 UI = ROOT / "ui-react"
 DIST = UI / "dist" / "index.html"
 URL = "http://127.0.0.1:8000"
 
 
 def api_ready():
+    return api_status() == "ready"
+
+
+def api_status():
     try:
         with urlopen(f"{URL}/openapi.json", timeout=2) as response:
-            return json.load(response).get("info", {}).get("title") == "Job Intel API"
+            if json.load(response).get("info", {}).get("title") != "Job Intel API":
+                return "other"
     except (OSError, ValueError, URLError):
-        return False
+        return "down"
+    try:
+        with urlopen(f"{URL}/api/runtime", timeout=2) as response:
+            return "ready" if json.load(response) == runtime_identity(ROOT) else "stale"
+    except (OSError, ValueError, URLError):
+        return "stale"
 
 
 def ui_needs_build():
@@ -40,12 +53,18 @@ def ui_needs_build():
 def main(argv=None):
     parser = argparse.ArgumentParser(description="Open Job Intel locally, optionally collecting jobs.")
     parser.add_argument("--no-scrape", action="store_true", help="Open the site using saved jobs without running run.py")
+    parser.add_argument("--check", action="store_true", help="Validate launcher paths without starting services or collection")
     args = parser.parse_args(argv)
     if os.name != "nt":
         raise RuntimeError("This launcher is for Windows. See README.md for manual commands.")
     os.chdir(ROOT)
     if not PYTHON.exists():
         raise RuntimeError("Missing .venv. Run the one-time Python setup in README.md first.")
+    if args.check:
+        if not (ROOT / "run.py").exists() or not (UI / "package.json").exists():
+            raise RuntimeError("Application files are missing.")
+        print(f"Launcher paths OK. Application: {ROOT}; Python: {PYTHON}", flush=True)
+        return
 
     if ui_needs_build():
         if not (UI / "node_modules").exists():
@@ -55,6 +74,11 @@ def main(argv=None):
         subprocess.run("npm.cmd run build", cwd=UI, check=True, shell=True)
 
     if not api_ready():
+        status = api_status()
+        if status == "stale":
+            raise RuntimeError("An older Job Intel backend or another checkout is running on port 8000. Close its API console (Ctrl+C), then launch again to load current code.")
+        if status == "other":
+            raise RuntimeError("Another application is using port 8000. Stop that application or use the manual setup with a different port.")
         print("Starting API...", flush=True)
         subprocess.Popen(
             [str(PYTHON), "-m", "uvicorn", "api.main:app", "--host", "127.0.0.1", "--port", "8000"],

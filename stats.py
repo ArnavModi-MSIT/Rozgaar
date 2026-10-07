@@ -17,7 +17,7 @@ from pathlib import Path
 import config
 from core.source_health import summarize
 
-DB_PATH = "db/jobs.db"
+DB_PATH = str(Path(__file__).resolve().parent / "db" / "jobs.db")
 
 if not Path(DB_PATH).exists():
     raise SystemExit("No jobs database yet — run python run.py first.")

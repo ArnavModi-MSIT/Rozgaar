@@ -7,6 +7,7 @@ All return a list of dicts with the same shape:
 import html
 import logging
 import re
+import time
 from concurrent.futures import ThreadPoolExecutor
 
 import requests
@@ -28,9 +29,8 @@ log = logging.getLogger("jobbot")
 # ImportError at startup — restoring it for backward compatibility.
 TIMEOUT = DEFAULT_TIMEOUT
 
-MAX_DESCRIPTION_CHARS = 3000  # some Greenhouse descriptions run 20-50KB;
-# INCLUDE only needs to see the opening of the post to catch "internship"-
-# type mentions, so truncate before it ever hits the regex.
+MAX_DESCRIPTION_CHARS = 3000  # Legacy default for callers of strip_html().
+# The three board adapters below explicitly retain full descriptions.
 
 SESSION = requests.Session()
 SESSION.headers["User-Agent"] = "jobbot/1.0"
@@ -43,7 +43,7 @@ _BLOCK_BREAK_RE = re.compile(r"</(p|div|li|br|h[1-6])\s*/?>", re.I)
 
 
 def strip_html(text, max_chars=MAX_DESCRIPTION_CHARS):
-    """Rough HTML-to-text for description fields so INCLUDE can scan them.
+    """Normalize source descriptions to text while keeping paragraph breaks.
     Converts block-level closing tags to newlines first so list items and
     paragraphs don't get smashed together with no separation, then strips
     remaining tags and truncates to max_chars (pass None to skip
@@ -51,10 +51,8 @@ def strip_html(text, max_chars=MAX_DESCRIPTION_CHARS):
     fetchers/oracle.py does, where the 3000-char single-posting default
     would cut content off before the pieces are even joined).
 
-    Doesn't affect TF-IDF matching quality (bag-of-words tokenization is
-    whitespace-insensitive either way) — this is purely so the UI's
-    Description panel doesn't show runs of blank lines or doubled spaces
-    from adjacent tags collapsing into whitespace."""
+    Paragraph breaks preserve section headings for qualification parsing
+    and resume matching. Passing None retains the full description."""
     if not text:
         return ""
     # Greenhouse sometimes delivers HTML encoded inside its content string.
@@ -101,8 +99,7 @@ def _greenhouse_location(slug, job):
 
 
 def fetch_greenhouse(slug):
-    # content=true pulls the full HTML job description so INCLUDE can catch
-    # postings that only mention "internship"/"campus hire" in the body.
+    # content=true pulls full HTML for matching and qualification parsing.
     # Keep full normalized text: qualifications often follow long intros.
     data = _get(f"https://boards-api.greenhouse.io/v1/boards/{slug}/jobs?content=true")
     if not isinstance(data, dict) or not isinstance(data.get("jobs"), list):
@@ -188,7 +185,7 @@ def fetch_lever(slug):
             "title": j["text"],
             "location": _lever_location(slug, j),
             "url": j["hostedUrl"],
-            "description": strip_html(combined, max_chars=None)[:6000],
+            "description": strip_html(combined, max_chars=None),
         })
     return jobs
 
@@ -215,14 +212,14 @@ def fetch_ashby(slug):
             "url": j["jobUrl"],
             "description": strip_html(
                 j.get("descriptionPlain", "") or j.get("description", ""), max_chars=None
-            )[:6000],
+            ),
         }
         for j in data.get("jobs", [])
         if slug != "confluent" or parse_country(_ashby_location(j)) == "India"
     ]
 
 
-def collect(greenhouse_slugs, lever_slugs, ashby_slugs):
+def collect(greenhouse_slugs, lever_slugs, ashby_slugs, deadline=None):
     # One company's slow/failing API shouldn't hold up the other 10+ —
     # fetch every company concurrently and merge results. Capped so this
     # doesn't spin up dozens of threads if the company lists grow large.
@@ -236,8 +233,12 @@ def collect(greenhouse_slugs, lever_slugs, ashby_slugs):
     jobs = []
     failures = 0
     failed_boards = []
+    def fetch_before_deadline(fn):
+        if deadline is not None and time.monotonic() >= deadline:
+            raise RuntimeError("shared collection deadline reached before board fetch")
+        return fn()
     with ThreadPoolExecutor(max_workers=min(16, len(tasks))) as pool:
-        futures = [(name, pool.submit(fn)) for name, fn in tasks]
+        futures = [(name, pool.submit(fetch_before_deadline, fn)) for name, fn in tasks]
         for name, f in futures:
             try:
                 jobs += f.result()
