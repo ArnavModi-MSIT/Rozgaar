@@ -1,11 +1,18 @@
 """Regressions found while reviewing filtering and matcher section behavior."""
 import unittest
 
-from core.experience import extract_min_experience, extract_preferred_experience
+from core.experience import extract_min_experience, extract_preferred_experience, experience_requirements
 from core.match_sections import eligibility_checks, job_parts
 
 
 class BackendReviewTests(unittest.TestCase):
+    def test_explicit_title_years_without_description(self):
+        self.assertEqual(experience_requirements("", "Data Analytics Manager | 8 -12 Years"), (8,None))
+        self.assertEqual(experience_requirements("", "Data Engineer | 2.5+ years"), (2.5,None))
+        self.assertEqual(experience_requirements("", "Data Engineer | 3-5 years preferred"), (None,3))
+        self.assertEqual(experience_requirements("", "Senior Data Engineer"), (None,None))
+        self.assertEqual(experience_requirements("", "Intern - 1 year programme"), (None,None))
+        self.assertEqual(experience_requirements("", "Engineer - 2-3 years contract"), (None,None))
     def test_overall_years_not_erased_by_smaller_skill_requirement(self):
         overall = "5+ years of professional software development experience."
         sql = "1+ years of experience with SQL."

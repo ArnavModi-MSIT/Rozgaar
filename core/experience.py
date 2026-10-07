@@ -261,6 +261,35 @@ def extract_preferred_experience(text):
     return _strongest_requirement(years, "\n".join(candidates))
 
 
+def extract_title_experience(title):
+    """Use explicit experience ranges/+ years in a title, never seniority words."""
+    title = title or ""
+    values = []
+    for match in _YEAR_NUM_RE.finditer(title):
+        if not (match.group(2) or "+" in match.group() or re.search(r"\bexperience\b", title, re.I)):
+            continue
+        tail = title[match.end():match.end()+35]
+        if re.match(r"\s*(?:contract|duration|degree|course|programme|program)\b", tail, re.I):
+            continue
+        value = _year_value(match.group(1))
+        if 0 <= value <= 50:
+            values.append(value)
+    return _strongest_requirement(values, title)
+
+
+def experience_requirements(description, title=""):
+    """Combine description requirements with numeric title evidence separately."""
+    required = extract_min_experience(description)
+    preferred = extract_preferred_experience(description)
+    title_years = extract_title_experience(title)
+    if title_years is not None:
+        if _PREFERRED_SIGNAL_RE.search(title or ""):
+            preferred = max(preferred, title_years) if preferred is not None else title_years
+        else:
+            required = max(required, title_years) if required is not None else title_years
+    return required, preferred
+
+
 def extract_experience_sentences(text):
     """Returns only the sentences/lines from `text` that mention a number
     (years, dates, counts, etc.) or the word "experience" — a lightweight

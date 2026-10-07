@@ -270,3 +270,7 @@ Experience parsing checks a year/experience clause when the legacy nearby-word s
 ## Repo review update (2026-10-07)
 
 Experience checks now retain decimal years and the strongest independent requirement, while keeping preferred years separate. Refreshed collection results update existing descriptions and scores refresh automatically when saved content changes. Collection runs cannot overlap on the same database. For the verification scope and remaining limitations, see [REPO_REVIEW.md](REPO_REVIEW.md). The first resume upload after this update may rebuild versioned embedding cache entries.
+
+### Runtime matcher check — 2026-10-07
+
+The experience visibility check also considers explicit numeric experience ranges or `N+ years` in job titles, while preserving description-based required/preferred distinctions. Seniority words alone remain insufficient. This covers saved rows whose source description is empty but whose title explicitly says, for example, 8–12 years. The API exposes `description_available`; cards warn when the description is unavailable, and score explanations disclose title-only semantic comparison. Detail eligibility and ranking explanations use the same numeric experience evidence.

@@ -226,8 +226,8 @@ def rank_by_resume(jobs_df, resume_text, job_embeddings=None, resume_skills=None
             "matched_preferred": sorted(preferred & resume_skills),
             "matched_skills": sorted(all_skills & resume_skills),
             "relevance_gate_applied": not relevant,
-            "note": "Heuristic relevance score, not eligibility or hiring probability. " + ("Projects/work sections compared with responsibilities." if has_evidence else "No separate projects/work sections identified; using resume text as fallback."),
-            "eligibility_checks": eligibility_checks(desc, getattr(row,"location",""), resume_text, required-resume_skills),
+            "note": "Heuristic relevance score, not eligibility or hiring probability. " + ("Projects/work sections compared with responsibilities." if has_evidence else "No separate projects/work sections identified; using resume text as fallback.") + (" Description unavailable; semantic comparison uses the title only." if not desc.strip() else ""),
+            "eligibility_checks": eligibility_checks(desc, getattr(row,"location",""), resume_text, required-resume_skills, row.title),
         })
     jobs_df["match_pct"] = scores
     jobs_df["match_explanation"] = explanations

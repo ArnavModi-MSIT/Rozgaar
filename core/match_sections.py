@@ -1,7 +1,7 @@
 """Deterministic section parsing and explainable skill weighting, all local."""
 import re
 from core.skills import build_patterns, extract_skills
-from core.experience import extract_min_experience
+from core.experience import extract_min_experience, experience_requirements
 
 HEADINGS = {
     "required": r"(?:basic|minimum|required) qualifications|requirements|essential skills|what you bring|what you need",
@@ -67,10 +67,10 @@ def weighted_skills(description, stored_skills, resume_skills):
     pct = 100 * sum(weight for skill, weight in weights.items() if skill in resume_skills) / denominator if denominator else None
     return pct, required, preferred, all_skills
 
-def eligibility_checks(description, location, resume_text, missing_required):
+def eligibility_checks(description, location, resume_text, missing_required, title=""):
     """Do not infer employment years from project dates or assume student eligibility."""
     from core.location import parse_country
-    years = extract_min_experience(description)
+    years, _ = experience_requirements(description, title)
     explicit = re.search(r"\b(\d+)\s*\+?\s*years?\s+(?:of\s+)?(?:professional|work|industry)\s+experience\b", resume_text, re.I)
     candidate = int(explicit.group(1)) if explicit else None
     experience_status = "unknown" if years is None or candidate is None else "mismatch" if candidate < years else "meets stated requirement"

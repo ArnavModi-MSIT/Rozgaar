@@ -25,7 +25,7 @@ import pandas as pd
 
 import config
 from core.eligibility import eligibility_evidence
-from core.experience import extract_experience_sentences, extract_min_experience, extract_preferred_experience
+from core.experience import extract_experience_sentences, extract_min_experience, extract_preferred_experience, experience_requirements
 from core.location import is_remote, parse_city, parse_country
 from core.matcher import (
     embed_jobs_incremental, load_embedding_cache, rank_by_resume,
@@ -112,8 +112,9 @@ def _load_jobs_df():
     df["description"] = df["description"].fillna("")
     # Recompute from descriptions so existing rows follow the current policy
     # without changing SQLite or requiring another network collection.
-    df["experience_years"] = pd.to_numeric(df["description"].apply(extract_min_experience), errors="coerce").fillna(-1)
-    df["preferred_experience_years"] = pd.to_numeric(df["description"].apply(extract_preferred_experience), errors="coerce").fillna(-1)
+    requirements = [experience_requirements(desc, title) for desc, title in zip(df["description"], df["title"])]
+    df["experience_years"] = [required if required is not None else -1 for required, _ in requirements]
+    df["preferred_experience_years"] = [preferred if preferred is not None else -1 for _, preferred in requirements]
     return df
 
 
@@ -237,6 +238,7 @@ def job_list_payload(df):
             "skills": [s for s in (r.skills or "").split(",") if s],
             "experience_years": float(r.experience_years),
             "preferred_experience_years": float(getattr(r, "preferred_experience_years", -1)),
+            "description_available": bool(r.description.strip()),
             "first_seen_ms": int(r.first_seen.value // 1000000),
             "first_seen": r.first_seen.strftime("%Y-%m-%d"),
             "last_seen": r.last_seen.strftime("%Y-%m-%d"),
@@ -276,8 +278,8 @@ def job_detail_payload(job_id):
         "title": row["title"],
         "description": description,
         "match_explanation": _resume["explanations"].get(job_id),
-        "experience_lines": extract_experience_sentences(description),
-        "eligibility": eligibility_evidence(description, _resume["skills"]),
+        "experience_lines": extract_experience_sentences(row["title"] + "\n" + description),
+        "eligibility": eligibility_evidence(description, _resume["skills"], row["title"]),
         "skill_match": {
             "matched": sorted(matched),
             "missing": sorted(missing),

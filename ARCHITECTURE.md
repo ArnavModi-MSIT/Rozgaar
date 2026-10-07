@@ -350,3 +350,7 @@ Collection commits each platform result before waiting for the next future, avoi
 Experience parsing takes the strongest independent numeric requirement, retaining the lower bound of a range or explicitly stated alternatives. Decimal years are preserved as numbers end to end; the browser compares against `>= 2`, so 1.5 years remains visible. This remains a heuristic, and mixed eligibility tracks need review. Preferred-only descriptions remain available to semantic section comparison; version 3 invalidates prior title-only embeddings. Graduation ranges/alternatives remain unknown.
 
 Expanded job details reload when the job list or resume changes, discard obsolete request responses, and clear retry errors. Resume removal and skill controls respect busy/error state. The lockfile updates source-map-js to a patched release. `REPO_REVIEW.md` records verification and remaining limits.
+
+### Runtime matcher check — 2026-10-07
+
+The experience visibility check also considers explicit numeric experience ranges or `N+ years` in job titles, while preserving description-based required/preferred distinctions. Seniority words alone remain insufficient. This covers saved rows whose source description is empty but whose title explicitly says, for example, 8–12 years. The API exposes `description_available`; cards warn when the description is unavailable, and score explanations disclose title-only semantic comparison. Detail eligibility and ranking explanations use the same numeric experience evidence.

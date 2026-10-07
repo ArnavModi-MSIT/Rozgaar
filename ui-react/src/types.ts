@@ -30,6 +30,7 @@ export interface Job {
   experience_years: number;
   /** Separate soft preference; -1 means unknown. */
   preferred_experience_years: number;
+  description_available: boolean;
   first_seen_ms: number;
   first_seen: string;
   /** Last observed in a collector result; does not prove the job is still open. */
