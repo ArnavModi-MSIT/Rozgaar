@@ -408,3 +408,14 @@ returned 87 global postings on October 8, 2026: 13 had explicit `country=IN`
 qualification lists and additional text are retained; usual role and experience
 filters apply afterward. The supplied `lever-via` referral parameter is not
 needed to read postings.
+
+PwC India (`fetchers/pwc.py`) reads the exact experienced-jobs page's embedded
+`jsondata` list, selecting explicit `iso=IND` records. Each listing links to
+Workday; the collector verifies the requisition ID and India country on full
+detail responses. Missing descriptions report partial collection. Existing text
+refreshes without clearing dismissals. The live page exposed 635 India jobs
+(636 global embedded records) on October 8, 2026, rather than the user-observed
+1,660; the broader Workday board's 3,863 global total is not India coverage.
+
+Live PwC validation completed: 635 unique India postings, 635 full descriptions,
+collection status `ok`. This validation did not modify the saved job database.
