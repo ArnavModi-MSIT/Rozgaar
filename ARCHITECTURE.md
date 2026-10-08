@@ -1,7 +1,7 @@
 # Architecture and code guide
 
-The [October 8 company expansion](docs/COMPANY_BATCH_20.md) adds fourteen active
-companies and records six pending investigations. `career_html.py` handles
+The [October 8 company expansion](docs/COMPANY_BATCH_20.md) adds fifteen active
+companies and records five pending investigations. `career_html.py` handles
 Nutanix HTML, MathWorks RSS, MAQ Atom, SAP public Next.js data, Micron PCSX,
 and Lowe's India Phenom search. `tredence.py` handles public RippleHire listings
 and full details. Existing Greenhouse and India-scoped Workday adapters handle
@@ -18,6 +18,13 @@ text from the detail page's embedded JSON, checking the job ID before accepting
 it. JSON-LD is a fallback because some pages omit that block or only include an
 introduction. Recollection replaces old Lowe's text and resets derived fields
 for processing, retaining user dismissals and first-seen dates.
+
+Myntra's Flutter portal uses a public Spire workspace selector and paginated
+requisition search. `fetchers/myntra.py` verifies workspace ownership, total unique
+IDs, explicit India country fields and description availability. Search results
+already carry full detail text. The source's required experience months are
+converted to years alongside the full description, and skill metadata distinguishes
+mandatory and preferred skills. Saved text is refreshed without clearing dismissals.
 
 This document describes the code in this repository as it currently works. Read it with [README.md](README.md) for setup and [improvement.md](improvement.md) for proposed work. Planned items in the improvement roadmap are not part of the current system.
 

@@ -3,7 +3,7 @@
 Checked 8 October 2026. Off-campus eligibility and ₹8 LPA+ compensation are
 **not guaranteed** by employer name. Counts precede role/experience filters.
 
-## Connected: 14 companies
+## Connected: 15 companies
 
 | Company | Official feed | India jobs | Full descriptions | Status |
 | --- | --- | ---: | ---: | --- |
@@ -21,14 +21,14 @@ Checked 8 October 2026. Off-campus eligibility and ₹8 LPA+ compensation are
 | MAQ Software | [Careers](https://maqsoftware.com/careers/) | 3 | 3 | Linked JobScore Atom feed |
 | Siemens Healthineers | [Careers](https://www.siemens-healthineers.com/careers) | 13 | 13 | Linked Workday India search |
 | Tredence Analytics | [Careers](https://www.tredence.com/careers/greatest-of-ai) | 20 | 20 | Linked RippleHire; all 58 global rows checked |
+| Myntra | [Official jobs](https://jobs.myntra.com/home) | 45 | 45 | Complete public Spire search: 20 + 20 + 5 rows |
 
-## Pending: 6 companies
+## Pending: 5 companies
 
 These are research records, **not active collectors**.
 
 | Company | Official page | Remaining issue |
 | --- | --- | --- |
-| Myntra | [Careers](https://careers.myntra.com/) → [Jobs](https://jobs.myntra.com/home) | Flutter/Spire listing and detail API not verified |
 | MakeMyTrip | [Careers](https://careers.makemytrip.com/) | Repeated timeouts; working current openings link needed |
 | UBS | [Search](https://www.ubs.com/global/en/careers/search-jobs.html) | BrassRing portal found; India listing/detail API unverified |
 | Zupee | [Official site](https://www.zupee.com/) | `/careers/` returned 404; current openings link needed |
@@ -36,6 +36,16 @@ These are research records, **not active collectors**.
 | NSE | [Jobs](https://www.nseindia.com/static/careers-at-nse/jobs) | Direct requests timed out; collector unverified |
 
 ## Code and operation
+
+`fetchers/myntra.py` resolves the public career workspace for `jobs.myntra.com`
+through Spire's `/ies/v1/p/workspaceId` endpoint and pages the public
+`/requisition/_search` response with the returned WorkspaceId header. No account
+or login token is required. Each response must belong to that workspace. Full
+descriptions are included in listings and were compared with the public detail
+endpoint. Explicit country fields select India; metadata experience months are
+converted to years and appended under Required Qualifications, preserving any
+stronger requirement in the description. Mandatory/preferred skill flags remain
+separate. Existing saved descriptions are refreshed on subsequent collection.
 
 Lowe's details prefer the page's embedded `phApp.ddo.jobDetail.data.job.description`
 JSON, checked against the requested job ID. Several JSON-LD blocks were empty
