@@ -1,5 +1,8 @@
 # Job Intel
 
+The [additional 20-company audit](docs/COMPANY_BATCH_20.md) records fourteen
+newly connected employers, live coverage counts, and six pending sources.
+
 ## Local folder layout
 
 On this Windows workspace, the outer folder contains only the two CMD launchers, `app/`, and `.venv/`. Application files and documentation are inside `app/`. Use **Open Job Intel.cmd** for saved jobs only, or **Start Job Intel.cmd** for the site plus collection. The launchers also support a normal flat Git clone.

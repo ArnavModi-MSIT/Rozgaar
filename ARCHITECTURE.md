@@ -1,5 +1,13 @@
 # Architecture and code guide
 
+The [October 8 company expansion](docs/COMPANY_BATCH_20.md) adds fourteen active
+companies and records six pending investigations. `career_html.py` handles
+Nutanix HTML, MathWorks RSS, MAQ Atom, SAP public Next.js data, Micron PCSX,
+and Lowe's India Phenom search. `tredence.py` handles public RippleHire listings
+and full details. Existing Greenhouse and India-scoped Workday adapters handle
+the other companies. Partial results remain distinguishable from complete
+collections; employer names do not establish salary or fresher eligibility.
+
 This document describes the code in this repository as it currently works. Read it with [README.md](README.md) for setup and [improvement.md](improvement.md) for proposed work. Planned items in the improvement roadmap are not part of the current system.
 
 ## System boundary

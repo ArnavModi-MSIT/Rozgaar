@@ -62,7 +62,7 @@ def fetch(cfg,deadline=None):
     def description(job):
         if deadline is not None and time.monotonic()>=deadline:return ""
         with requests.Session() as session:data=get_json(session,root+job["_path"],headers=headers)
-        return strip_html(((data or {}).get("jobPostingInfo") or {}).get("jobDescription", ""),max_chars=None)[:10000]
+        return strip_html(((data or {}).get("jobPostingInfo") or {}).get("jobDescription", ""),max_chars=None)
     with ThreadPoolExecutor(max_workers=4) as pool:
         for job,desc in zip(jobs,pool.map(description,jobs)):
             job["description"]=desc

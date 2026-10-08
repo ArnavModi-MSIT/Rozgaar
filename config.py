@@ -31,6 +31,8 @@ SALESFORCE_RELEVANT = re.compile(
 # hard way: it doesn't resolve in DNS.) A plain slug string always uses the
 # one real API host; no region tuple needed.
 GREENHOUSE = [
+    "commvault", "sigmoid",
+    "fanaticsinc", "fanaticscommerce", "fanaticsfbg", "fanaticscollectibles",
     "roku", "gleanwork", "okta", "purestorage", "gitlab", "squarepointcapital", "quberesearchandtechnologies",
     "alphagrepsecurities", "nksecuritiesresearch", "worldquant", "imc", "optiverus", "mongodb", "datadog",
     "arcesiumllc",
@@ -692,6 +694,10 @@ RELEVANCE_FILTERS = {}
 
 # First-party Workday boards with live India facet discovery and full descriptions.
 WORKDAY_INDIA = [
+    {"company":"amadeus", "tenant":"amadeus", "wd_server":"wd502", "site":"jobs"},
+    {"company":"cadence", "tenant":"cadence", "wd_server":"wd1", "site":"External_Careers"},
+    {"company":"analogdevices", "tenant":"analogdevices", "wd_server":"wd1", "site":"External"},
+    {"company":"siemenshealthineers", "tenant":"onehealthineers", "wd_server":"wd3", "site":"SHSJB"},
     {"company":"kla", "tenant":"kla", "wd_server":"wd1", "site":"Search"},
     {"company":"broadcom", "tenant":"broadcom", "wd_server":"wd1", "site":"External_Career"},
     {"company":"crowdstrike", "tenant":"crowdstrike", "wd_server":"wd5", "site":"crowdstrikecareers"},
@@ -706,6 +712,16 @@ DISPLAY_NAMES["zepto"] = "Zepto"
 DISPLAY_NAMES["unitedhealthgroup"] = "UnitedHealth Group / Optum"
 
 DISPLAY_NAMES["kla"] = "KLA"
+DISPLAY_NAMES["tredence"] = "Tredence Analytics"
+DISPLAY_NAMES.update({
+    "sap": "SAP Labs India", "lowes": "Lowe's India",
+    "nutanix": "Nutanix", "mathworks": "MathWorks", "maqsoftware": "MAQ Software",
+    "micron": "Micron Technology", "commvault": "Commvault", "sigmoid": "Sigmoid Analytics",
+    "cadence": "Cadence Design Systems", "analogdevices": "Analog Devices", "amadeus": "Amadeus Labs",
+    "siemenshealthineers": "Siemens Healthineers", "fanaticsinc": "Fanatics Corporate",
+    "fanaticscommerce": "Fanatics Commerce", "fanaticsfbg": "Fanatics Betting & Gaming",
+    "fanaticscollectibles": "Fanatics Collectibles",
+})
 
 
 # Separate university board and student discovery outside Walmart's narrow

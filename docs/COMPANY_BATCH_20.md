@@ -1,0 +1,52 @@
+# Additional 20-company audit
+
+Checked 8 October 2026. Off-campus eligibility and ₹8 LPA+ compensation are
+**not guaranteed** by employer name. Counts precede role/experience filters.
+
+## Connected: 14 companies
+
+| Company | Official feed | India jobs | Full descriptions | Status |
+| --- | --- | ---: | ---: | --- |
+| SAP Labs India | [SAP India](https://jobs.sap.com/en/jobs/?country=India) | 4 | 4 | Complete search |
+| Nutanix | [Jobs](https://careers.nutanix.com/en/jobs/) | 1 collected | 1 | Partial: next page repeats first 20 of 270 global rows |
+| MathWorks | [Official RSS](https://www.mathworks.com/company/jobs/opportunities/rss.xml) | 31 | 31 | Complete returned feed; HTML search incomplete |
+| Commvault | [Greenhouse](https://job-boards.greenhouse.io/commvault) | 15 | 15 | Complete board, India selected |
+| Cadence Design Systems | [Workday](https://cadence.wd1.myworkdayjobs.com/External_Careers) | 196 | 196 | Complete India facet pagination |
+| Analog Devices | [Workday](https://analogdevices.wd1.myworkdayjobs.com/External) | 105 | 105 | Complete India facet pagination |
+| Amadeus Labs | [Workday](https://amadeus.wd502.myworkdayjobs.com/jobs) | 7 | 7 | Complete India search; old wd3 host incorrect |
+| Micron Technology | [Careers](https://careers.micron.com/careers?location=India) | 309 | 309 | Complete PCSX search and JSON-LD details |
+| Lowe's India | [India careers](https://talent.lowes.com/in/en) | 46 | 36 | Partial: ten details lacked readable JobPosting text |
+| Fanatics | [Official directory](https://www.fanaticsinc.com/join-our-team) | 10 | 10 | Four linked Greenhouse boards; India jobs in Commerce |
+| Sigmoid Analytics | [Official openings](https://www.sigmoid.com/careers/current-openings/) | 30 | 30 | Linked Greenhouse board, India selected |
+| MAQ Software | [Careers](https://maqsoftware.com/careers/) | 3 | 3 | Linked JobScore Atom feed |
+| Siemens Healthineers | [Careers](https://www.siemens-healthineers.com/careers) | 13 | 13 | Linked Workday India search |
+| Tredence Analytics | [Careers](https://www.tredence.com/careers/greatest-of-ai) | 20 | 20 | Linked RippleHire; all 58 global rows checked |
+
+## Pending: 6 companies
+
+These are research records, **not active collectors**.
+
+| Company | Official page | Remaining issue |
+| --- | --- | --- |
+| Myntra | [Careers](https://careers.myntra.com/) → [Jobs](https://jobs.myntra.com/home) | Flutter/Spire listing and detail API not verified |
+| MakeMyTrip | [Careers](https://careers.makemytrip.com/) | Repeated timeouts; working current openings link needed |
+| UBS | [Search](https://www.ubs.com/global/en/careers/search-jobs.html) | BrassRing portal found; India listing/detail API unverified |
+| Zupee | [Official site](https://www.zupee.com/) | `/careers/` returned 404; current openings link needed |
+| Mercer Mettl | [Careers](https://mettl.com/careers/) | Directs applicants to LinkedIn/email; no independent feed found |
+| NSE | [Jobs](https://www.nseindia.com/static/careers-at-nse/jobs) | Direct requests timed out; collector unverified |
+
+## Code and operation
+
+`fetchers/career_html.py` implements Nutanix HTML, MathWorks RSS, MAQ Atom,
+SAP public Next.js listing data, Micron PCSX, and Lowe's India Phenom search.
+Structured detail text is used rather than description teasers. `tredence.py`
+uses public RippleHire parameters (`search=*:*`, zero-based pages, public site
+selector from the official URL), verifies global pagination, and selects known
+Indian offices. Generic remote/unknown locations are not inferred to be India.
+Config registers four Workday boards and six Greenhouse boards. Fanatics' four
+businesses represent one requested company. Workday now retains requirements
+after character 10,000. Interrupted listings and missing details report partial.
+
+Next `Start Job Intel.cmd` / `python run.py` includes these collectors. Live
+validation did not modify saved jobs, resumes, or dismissals. The original
+75-company manifest retains its original scope; this is a separate batch.
