@@ -694,6 +694,7 @@ RELEVANCE_FILTERS = {}
 
 # First-party Workday boards with live India facet discovery and full descriptions.
 WORKDAY_INDIA = [
+    {"company":"lseg", "tenant":"lseg", "wd_server":"wd3", "site":"Graduate_Careers"},
     {"company":"amadeus", "tenant":"amadeus", "wd_server":"wd502", "site":"jobs"},
     {"company":"cadence", "tenant":"cadence", "wd_server":"wd1", "site":"External_Careers"},
     {"company":"analogdevices", "tenant":"analogdevices", "wd_server":"wd1", "site":"External"},
@@ -756,3 +757,5 @@ DISPLAY_NAMES["portcast"] = "Portcast"
 DISPLAY_NAMES["ion"] = "ION Group"
 
 DISPLAY_NAMES["pwc"] = "PwC India"
+
+DISPLAY_NAMES["lseg"] = "LSEG"

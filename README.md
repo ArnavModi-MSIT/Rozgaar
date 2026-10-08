@@ -309,3 +309,10 @@ refreshes without clearing dismissals. The live page exposed 635 India jobs
 
 Live PwC validation completed: 635 unique India postings, 635 full descriptions,
 collection status `ok`. This validation did not modify the saved job database.
+
+LSEG Graduate Careers is configured in `WORKDAY_INDIA` (tenant `lseg`,
+server `wd3`, site `Graduate_Careers`). The shared adapter discovers the
+India country facet and fetches full Workday descriptions. October 8, 2026
+verification returned one India posting with full description: Business Graduate
+Associate (Data & Analytics), Bengaluru. Future postings remain monitored
+through the same board; normal role and experience filters apply.
