@@ -426,3 +426,10 @@ India country facet and fetches full Workday descriptions. October 8, 2026
 verification returned one India posting with full description: Business Graduate
 Associate (Data & Analytics), Bengaluru. Future postings remain monitored
 through the same board; normal role and experience filters apply.
+
+LSEG main Careers is also configured in `WORKDAY_INDIA` (tenant `lseg`,
+server `wd3`, site `Careers`) alongside Graduate Careers. October 8, 2026
+verification returned 214 India postings and 214 complete descriptions, status
+`ok`. The shared adapter discovers the India facet, follows all listing pages
+and retrieves full details. Shared requisition IDs use the same `lseg` company
+key, avoiding duplicate saved jobs. Normal role and experience filters apply.
