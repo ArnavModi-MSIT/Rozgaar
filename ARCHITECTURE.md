@@ -13,6 +13,12 @@ these parameters across pages. Standard browser headers are necessary for this
 site to honor the query. The collector checks country scope and total unique
 postings before enriching every result with its JobPosting description.
 
+Lowe's India follows Phenom's reported listing count and reads full description
+text from the detail page's embedded JSON, checking the job ID before accepting
+it. JSON-LD is a fallback because some pages omit that block or only include an
+introduction. Recollection replaces old Lowe's text and resets derived fields
+for processing, retaining user dismissals and first-seen dates.
+
 This document describes the code in this repository as it currently works. Read it with [README.md](README.md) for setup and [improvement.md](improvement.md) for proposed work. Planned items in the improvement roadmap are not part of the current system.
 
 ## System boundary

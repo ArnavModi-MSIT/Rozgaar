@@ -46,6 +46,29 @@ def job_description(html):
     return ''
 
 
+def lowes_description(html, source_id):
+    """Phenom embeds full detail data even when JobPosting JSON-LD is empty.
+
+    Parse the JSON assignment as data, never execute the site's JavaScript.
+    Prefer this field to JSON-LD, which can contain only introductory text.
+    """
+    for node in BeautifulSoup(html, 'html.parser').find_all('script'):
+        script = node.get_text()
+        match = re.search(r'phApp\.ddo\s*=\s*', script)
+        if not match: continue
+        try:
+            data = json.JSONDecoder().raw_decode(script[match.end():])[0]
+        except (ValueError, TypeError): continue
+        detail = data.get('jobDetail') or {}
+        row = (detail.get('data') or {}).get('job') or {}
+        if row:
+            if detail.get('status') != 200 or str(row.get('jobId')) != str(source_id):
+                return ''
+            text = strip_html(row.get('description') or '', max_chars=None)
+            if text: return text
+    return job_description(html)
+
+
 def parse_listing(html, company, base):
     soup = BeautifulSoup(html, 'html.parser')
     jobs = []
@@ -233,7 +256,8 @@ def _enrich_verified(jobs, total, errors, deadline):
     def enrich(job):
         if deadline is not None and time.monotonic() >= deadline: return ''
         with requests.Session() as session: html = get_text(session, job['url'])
-        return job_description(html) if html else ''
+        if not html: return ''
+        return lowes_description(html, job['source_id']) if job['company'] == 'lowes' else job_description(html)
     with ThreadPoolExecutor(max_workers=4) as pool:
         for job, desc in zip(jobs, pool.map(enrich,jobs)):
             job['description'] = desc

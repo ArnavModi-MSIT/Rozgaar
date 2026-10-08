@@ -15,7 +15,7 @@ Checked 8 October 2026. Off-campus eligibility and ₹8 LPA+ compensation are
 | Analog Devices | [Workday](https://analogdevices.wd1.myworkdayjobs.com/External) | 105 | 105 | Complete India facet pagination |
 | Amadeus Labs | [Workday](https://amadeus.wd502.myworkdayjobs.com/jobs) | 7 | 7 | Complete India search; old wd3 host incorrect |
 | Micron Technology | [Careers](https://careers.micron.com/careers?location=India) | 309 | 309 | Complete PCSX search and JSON-LD details |
-| Lowe's India | [India careers](https://talent.lowes.com/in/en) | 46 | 36 | Partial: ten details lacked readable JobPosting text |
+| Lowe's India | [India search](https://talent.lowes.com/in/en/search-results) | 46 | 46 | Complete India pagination and embedded job descriptions |
 | Fanatics | [Official directory](https://www.fanaticsinc.com/join-our-team) | 10 | 10 | Four linked Greenhouse boards; India jobs in Commerce |
 | Sigmoid Analytics | [Official openings](https://www.sigmoid.com/careers/current-openings/) | 30 | 30 | Linked Greenhouse board, India selected |
 | MAQ Software | [Careers](https://maqsoftware.com/careers/) | 3 | 3 | Linked JobScore Atom feed |
@@ -36,6 +36,13 @@ These are research records, **not active collectors**.
 | NSE | [Jobs](https://www.nseindia.com/static/careers-at-nse/jobs) | Direct requests timed out; collector unverified |
 
 ## Code and operation
+
+Lowe's details prefer the page's embedded `phApp.ddo.jobDetail.data.job.description`
+JSON, checked against the requested job ID. Several JSON-LD blocks were empty
+or introductory only. This JSON is parsed without executing JavaScript. Live
+validation confirmed 46 unique India postings and 46 descriptions. Subsequent
+collection refreshes existing Lowe's descriptions and derived experience/skills
+while preserving first-seen timestamps and dismissals.
 
 Nutanix requires standard browser request headers for its public server-rendered
 search. Python's default headers returned the global first page despite query

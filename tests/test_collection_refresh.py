@@ -118,6 +118,21 @@ class CollectionTransactionTests(unittest.TestCase):
         ], conn)
         self.assertEqual(captured, [(new_job["description"], None, None, None, 1)])
 
+    def test_existing_lowes_intro_is_replaced_without_resetting_dismissal(self):
+        conn = sqlite3.connect(':memory:')
+        init_db(conn)
+        job = dict(company='lowes',source_id='JR-1',title='Data Analyst',location='Bengaluru, India',url='https://talent.lowes.com/in/en/job/JR-1',description='Intro only')
+        save_job(conn,'lowes:JR-1',job,'lowes')
+        conn.execute("UPDATE jobs SET dismissed=1, experience_years=-1, skills='sql', category='Data Analyst'")
+        conn.commit()
+        new_job = dict(job,description='Required Qualifications\n5 years experience in analytics')
+        captured = []
+        def inspect(deadline):
+            captured.append(conn.execute('SELECT description, experience_years, skills, category, dismissed FROM jobs').fetchone())
+            return []
+        self.run_fixture([('lowes',lambda deadline:[new_job]),('inspect',inspect)],conn)
+        self.assertEqual(captured,[(new_job['description'],None,None,None,1)])
+
 
 if __name__ == "__main__":
     unittest.main()

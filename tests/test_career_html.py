@@ -6,6 +6,23 @@ from fetchers import tredence
 
 
 class CareerHTMLTests(unittest.TestCase):
+    def test_lowes_reads_full_embedded_description_instead_of_intro(self):
+        full = '<p>Company background</p>' * 1000 + '<h2>Required Qualifications</h2><p>5 years of experience</p>'
+        data = {'jobDetail':{'status':200,'data':{'job':{'jobId':'JR-1','description':full}}}}
+        html = '<script>phApp.ddo = '+json.dumps(data)+'; phApp.pageId = 1;</script><script type="application/ld+json">'+json.dumps({'@type':'JobPosting','description':'Brief introduction'})+'</script>'
+        desc = c.lowes_description(html,'JR-1')
+        self.assertIn('5 years of experience',desc)
+        self.assertGreater(len(desc),10000)
+
+    def test_lowes_rejects_description_for_different_job(self):
+        data = {'jobDetail':{'status':200,'data':{'job':{'jobId':'JR-other','description':'Wrong posting'}}}}
+        self.assertEqual(c.lowes_description('<script>phApp.ddo = '+json.dumps(data)+'</script>','JR-1'),'')
+
+    def test_lowes_empty_json_ld_uses_verified_page_data(self):
+        data = {'jobDetail':{'status':200,'data':{'job':{'jobId':'JR-1','description':'<p>SQL requirements</p>'}}}}
+        html = '<script type="application/ld+json"></script><script>phApp.ddo = '+json.dumps(data)+'</script>'
+        self.assertEqual(c.lowes_description(html,'JR-1'),'SQL requirements')
+
     def test_nested_structured_description_keeps_late_requirements(self):
         desc = '<p>Background</p>' * 1000 + '<h2>Requirements</h2><p>5+ years of experience</p>'
         html = '<script type="application/ld+json">' + json.dumps({'@graph':[{'@type':'JobPosting','description':desc}]}) + '</script>'
