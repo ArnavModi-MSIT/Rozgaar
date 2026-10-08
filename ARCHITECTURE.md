@@ -401,3 +401,10 @@ Live verification returned four India CA Intern postings with four full descript
 Both boards are collected independently; shared requisition IDs are deduplicated,
 and a failed board makes the combined collection partial. The original board
 reported 29 jobs in the prior check; the second board adds four distinct IDs.
+
+ION Group is configured on the shared Lever adapter (`ion`). Its public API
+returned 87 global postings on October 8, 2026: 13 had explicit `country=IN`
+(12 Noida and one India). Only those India records are collected. Full intro,
+qualification lists and additional text are retained; usual role and experience
+filters apply afterward. The supplied `lever-via` referral parameter is not
+needed to read postings.

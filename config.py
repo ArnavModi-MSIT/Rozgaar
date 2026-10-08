@@ -72,7 +72,7 @@ GREENHOUSE = [
                 # correctly separates them), 5 NCR (Gurgaon — Sales Engineer,
                 # AI Security Specialist, Account Executive Data Security)
 ]
-LEVER = ["meesho", "cred", "paytm", "fampay", "zeta", "netomi", "portcast"]
+LEVER = ["meesho", "cred", "paytm", "fampay", "zeta", "netomi", "portcast", "ion"]
 ASHBY = [
     "confluent",
     "navi", "sarvam",
@@ -752,3 +752,5 @@ QUALCOMM_STUDENTS = {
 DISPLAY_NAMES["netomi"] = "Netomi"
 
 DISPLAY_NAMES["portcast"] = "Portcast"
+
+DISPLAY_NAMES["ion"] = "ION Group"

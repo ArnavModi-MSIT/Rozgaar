@@ -139,6 +139,9 @@ def _portcast_india_locations(job):
 
 
 def _lever_location(slug, job):
+    if slug == "ion" and (job.get("country") or "").upper() == "IN":
+        location = (job.get("categories") or {}).get("location") or "India"
+        return location if re.search(r"\bindia\b",location,re.I) else location+", India"
     if slug == "portcast":
         return "; ".join(_portcast_india_locations(job))
     location = (job.get("categories") or {}).get("location", "")
@@ -164,6 +167,8 @@ def fetch_lever(slug):
         raise RuntimeError(f"lever board {slug}: expected postings list")
     jobs = []
     for j in data:
+        if slug == "ion" and (j.get("country") or "").upper() != "IN":
+            continue
         if slug == "portcast" and not _portcast_india_locations(j):
             continue
         # The requested Netomi searches explicitly cover these two locations.
