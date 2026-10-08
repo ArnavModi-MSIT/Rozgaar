@@ -20,6 +20,25 @@ class CareerHTMLTests(unittest.TestCase):
         self.assertEqual(len(jobs), 1)
         self.assertEqual(jobs.status, 'partial')
 
+    def test_nutanix_india_filter_survives_pagination(self):
+        def page(sid):
+            return f'''Displaying 1 to 1 of 2 matching jobs <div class="card-job" data-id="{sid}"><a class="js-view-job" href="/en/jobs/{sid}/test/">Engineer</a><p class="job-meta-location">Delhi, India</p></div>'''
+        with patch.object(c, 'get_text', side_effect=[page('1'),page('2'), 'detail', 'detail']) as get, patch.object(c,'job_description',return_value='Required Qualifications: SQL'), patch.object(c.time,'sleep'):
+            jobs = c.fetch('nutanix')
+        self.assertEqual(len(jobs),2)
+        self.assertEqual(jobs.status,'ok')
+        for index in (0,1):
+            url = get.call_args_list[index].args[1]
+            self.assertIn('country=India',url)
+            self.assertIn('pagesize=20',url)
+            self.assertIn(f'page={index+1}',url)
+
+    def test_nutanix_ignored_country_filter_is_failure(self):
+        html = '''Displaying 1 to 1 of 1 matching jobs <div class="card-job" data-id="1"><a class="js-view-job" href="/en/jobs/1/test/">Engineer</a><p class="job-meta-location">Tokyo, Japan</p></div>'''
+        with patch.object(c,'get_text',return_value=html):
+            with self.assertRaisesRegex(RuntimeError,'India filter'):
+                c.fetch('nutanix')
+
     def test_blocked_html_is_not_successful_zero(self):
         with patch.object(c, 'get_text', return_value=None):
             with self.assertRaises(RuntimeError): c.fetch('mathworks')

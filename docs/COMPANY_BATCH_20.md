@@ -8,7 +8,7 @@ Checked 8 October 2026. Off-campus eligibility and ₹8 LPA+ compensation are
 | Company | Official feed | India jobs | Full descriptions | Status |
 | --- | --- | ---: | ---: | --- |
 | SAP Labs India | [SAP India](https://jobs.sap.com/en/jobs/?country=India) | 4 | 4 | Complete search |
-| Nutanix | [Jobs](https://careers.nutanix.com/en/jobs/) | 1 collected | 1 | Partial: next page repeats first 20 of 270 global rows |
+| Nutanix | [India jobs](https://careers.nutanix.com/en/jobs/?search=&country=India&pagesize=20#results) | 35 | 35 | Complete India search: 20 + 15 rows, 35 unique IDs |
 | MathWorks | [Official RSS](https://www.mathworks.com/company/jobs/opportunities/rss.xml) | 31 | 31 | Complete returned feed; HTML search incomplete |
 | Commvault | [Greenhouse](https://job-boards.greenhouse.io/commvault) | 15 | 15 | Complete board, India selected |
 | Cadence Design Systems | [Workday](https://cadence.wd1.myworkdayjobs.com/External_Careers) | 196 | 196 | Complete India facet pagination |
@@ -36,6 +36,13 @@ These are research records, **not active collectors**.
 | NSE | [Jobs](https://www.nseindia.com/static/careers-at-nse/jobs) | Direct requests timed out; collector unverified |
 
 ## Code and operation
+
+Nutanix requires standard browser request headers for its public server-rendered
+search. Python's default headers returned the global first page despite query
+parameters. The collector keeps `country=India` and `pagesize=20` on every page,
+checks the reported total, rejects ignored country filters, and fetches full
+JSON-LD descriptions. Live verification returned 35/35 unique India postings
+with 35/35 descriptions.
 
 `fetchers/career_html.py` implements Nutanix HTML, MathWorks RSS, MAQ Atom,
 SAP public Next.js listing data, Micron PCSX, and Lowe's India Phenom search.

@@ -76,10 +76,18 @@ def fetch(company, deadline=None):
     path = '/en/jobs/' if company == 'nutanix' else '/company/jobs/opportunities/search?location%5B%5D=IN&display=max'
     jobs, seen, errors, total = [], set(), [], None
     with requests.Session() as session:
+        if company == 'nutanix':
+            # The public site returns unfiltered first-page HTML to Python's
+            # default UA. Standard browser headers honor country and page.
+            session.headers.update({
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
+                'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+                'Accept-Language': 'en-US,en;q=0.9',
+            })
         for page in range(1, 101):
             if deadline is not None and time.monotonic() >= deadline:
                 errors.append('listing deadline reached'); break
-            url = base + path + (f'?page={page}' if company == 'nutanix' else '')
+            url = base + path + (f'?search=&country=India&pagesize=20&page={page}' if company == 'nutanix' else '')
             html = get_text(session, url)
             if not html:
                 errors.append(f'listing page {page} unavailable'); break
@@ -87,6 +95,8 @@ def fetch(company, deadline=None):
             if total is None: total = reported
             if reported is None:
                 errors.append('listing total unavailable'); break
+            if company == 'nutanix' and any(parse_country(row['location']) != 'India' for row in rows):
+                errors.append('India filter was not honored by the listing'); break
             fresh = [row for row in rows if row['source_id'] not in seen]
             jobs.extend(fresh); seen.update(row['source_id'] for row in fresh)
             if len(jobs) >= total: break
@@ -100,6 +110,8 @@ def fetch(company, deadline=None):
     def enrich(job):
         if deadline is not None and time.monotonic() >= deadline: return ''
         with requests.Session() as session:
+            if company == 'nutanix':
+                session.headers.update({'User-Agent':'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36'})
             html = get_text(session, job['url'])
         return job_description(html) if html else ''
     with ThreadPoolExecutor(max_workers=4) as pool:

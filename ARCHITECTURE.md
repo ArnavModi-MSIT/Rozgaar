@@ -8,6 +8,11 @@ and full details. Existing Greenhouse and India-scoped Workday adapters handle
 the other companies. Partial results remain distinguishable from complete
 collections; employer names do not establish salary or fresher eligibility.
 
+Nutanix uses the public India search with `country=India&pagesize=20`, retaining
+these parameters across pages. Standard browser headers are necessary for this
+site to honor the query. The collector checks country scope and total unique
+postings before enriching every result with its JobPosting description.
+
 This document describes the code in this repository as it currently works. Read it with [README.md](README.md) for setup and [improvement.md](improvement.md) for proposed work. Planned items in the improvement roadmap are not part of the current system.
 
 ## System boundary
