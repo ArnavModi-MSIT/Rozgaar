@@ -1,7 +1,7 @@
 # Architecture and code guide
 
-The [October 8 company expansion](docs/COMPANY_BATCH_20.md) adds sixteen active
-companies and records four pending investigations. `career_html.py` handles
+The [October 8 company expansion](docs/COMPANY_BATCH_20.md) adds seventeen active
+companies and records three pending investigations. `career_html.py` handles
 Nutanix HTML, MathWorks RSS, MAQ Atom, SAP public Next.js data, Micron PCSX,
 and Lowe's India Phenom search. `tredence.py` handles public RippleHire listings
 and full details. Existing Greenhouse and India-scoped Workday adapters handle
@@ -387,3 +387,11 @@ Expanded job details reload when the job list or resume changes, discard obsolet
 ### Runtime matcher check — 2026-10-07
 
 The experience visibility check also considers explicit numeric experience ranges or `N+ years` in job titles, while preserving description-based required/preferred distinctions. Seniority words alone remain insufficient. This covers saved rows whose source description is empty but whose title explicitly says, for example, 8–12 years. The API exposes `description_available`; cards warn when the description is unavailable, and score explanations disclose title-only semantic comparison. Detail eligibility and ranking explanations use the same numeric experience evidence.
+
+
+UBS: `fetchers/ubs.py` creates an anonymous BrassRing session, searches India,
+checks the reported total and unique IDs, and retrieves each active job's full
+detail sections, including skills and experience. Country and job identity are
+verified; city comes from detail fields. Pagination and missing details report
+partial results. Session tokens are obtained at runtime and never saved.
+Existing saved descriptions refresh while retaining dismissals.

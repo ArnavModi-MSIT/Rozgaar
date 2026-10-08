@@ -3,7 +3,7 @@
 Checked 8 October 2026. Off-campus eligibility and ₹8 LPA+ compensation are
 **not guaranteed** by employer name. Counts precede role/experience filters.
 
-## Connected: 16 companies
+## Connected: 17 companies
 
 | Company | Official feed | India jobs | Full descriptions | Status |
 | --- | --- | ---: | ---: | --- |
@@ -24,13 +24,14 @@ Checked 8 October 2026. Off-campus eligibility and ₹8 LPA+ compensation are
 | Myntra | [Official jobs](https://jobs.myntra.com/home) | 45 | 45 | Complete public Spire search: 20 + 20 + 5 rows |
 | MakeMyTrip | [Official jobs](https://careers.makemytrip.com/prod/jobs) | 29 | 29 | Complete first-party listing and full detail responses |
 
-## Pending: 4 companies
+| UBS | [Official India search](https://jobs.ubs.com/TGnewUI/Search/home/HomeWithPreLoad?partnerid=25008&siteid=5012&PageType=searchResults&SearchType=linkquery&LinkID=15231#keyWordSearch=&locationSearch=India) | 29 | 29 | Anonymous BrassRing search and complete detail sections |
+
+## Pending: 3 companies
 
 These are research records, **not active collectors**.
 
 | Company | Official page | Remaining issue |
 | --- | --- | --- |
-| UBS | [Search](https://www.ubs.com/global/en/careers/search-jobs.html) | BrassRing portal found; India listing/detail API unverified |
 | Zupee | [Official site](https://www.zupee.com/) | `/careers/` returned 404; current openings link needed |
 | Mercer Mettl | [Careers](https://mettl.com/careers/) | Directs applicants to LinkedIn/email; no independent feed found |
 | NSE | [Jobs](https://www.nseindia.com/static/careers-at-nse/jobs) | Direct requests timed out; collector unverified |
@@ -84,3 +85,11 @@ after character 10,000. Interrupted listings and missing details report partial.
 Next `Start Job Intel.cmd` / `python run.py` includes these collectors. Live
 validation did not modify saved jobs, resumes, or dismissals. The original
 75-company manifest retains its original scope; this is a separate batch.
+
+
+UBS: `fetchers/ubs.py` creates an anonymous BrassRing session, searches India,
+checks the reported total and unique IDs, and retrieves each active job's full
+detail sections, including skills and experience. Country and job identity are
+verified; city comes from detail fields. Pagination and missing details report
+partial results. Session tokens are obtained at runtime and never saved.
+Existing saved descriptions refresh while retaining dismissals.

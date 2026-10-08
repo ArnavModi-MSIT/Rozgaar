@@ -241,7 +241,7 @@ def _run():
                         non_india += 1
                         continue
                     if jid in existing_ids:
-                        if platform_name in {"standard", "successfactors", "deloitte", "lowes", "myntra", "makemytrip"}:
+                        if platform_name in {"standard", "successfactors", "deloitte", "lowes", "myntra", "makemytrip", "ubs"}:
                             refresh_collected_description(conn, jid, job)
                         if platform_name != "atlassian":
                             mark_observed(conn, jid, int(time.time()))
