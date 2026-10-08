@@ -712,6 +712,7 @@ DISPLAY_NAMES["zepto"] = "Zepto"
 DISPLAY_NAMES["unitedhealthgroup"] = "UnitedHealth Group / Optum"
 
 DISPLAY_NAMES["kla"] = "KLA"
+DISPLAY_NAMES["makemytrip"] = "MakeMyTrip"
 DISPLAY_NAMES["myntra"] = "Myntra"
 DISPLAY_NAMES["tredence"] = "Tredence Analytics"
 DISPLAY_NAMES.update({

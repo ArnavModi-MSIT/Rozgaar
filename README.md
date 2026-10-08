@@ -1,7 +1,7 @@
 # Job Intel
 
-The [additional 20-company audit](docs/COMPANY_BATCH_20.md) records fifteen
-newly connected employers, live coverage counts, and five pending sources.
+The [additional 20-company audit](docs/COMPANY_BATCH_20.md) records sixteen
+newly connected employers, live coverage counts, and four pending sources.
 
 ## Local folder layout
 

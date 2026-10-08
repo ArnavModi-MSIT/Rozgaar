@@ -3,7 +3,7 @@
 Checked 8 October 2026. Off-campus eligibility and ₹8 LPA+ compensation are
 **not guaranteed** by employer name. Counts precede role/experience filters.
 
-## Connected: 15 companies
+## Connected: 16 companies
 
 | Company | Official feed | India jobs | Full descriptions | Status |
 | --- | --- | ---: | ---: | --- |
@@ -22,20 +22,30 @@ Checked 8 October 2026. Off-campus eligibility and ₹8 LPA+ compensation are
 | Siemens Healthineers | [Careers](https://www.siemens-healthineers.com/careers) | 13 | 13 | Linked Workday India search |
 | Tredence Analytics | [Careers](https://www.tredence.com/careers/greatest-of-ai) | 20 | 20 | Linked RippleHire; all 58 global rows checked |
 | Myntra | [Official jobs](https://jobs.myntra.com/home) | 45 | 45 | Complete public Spire search: 20 + 20 + 5 rows |
+| MakeMyTrip | [Official jobs](https://careers.makemytrip.com/prod/jobs) | 29 | 29 | Complete first-party listing and full detail responses |
 
-## Pending: 5 companies
+## Pending: 4 companies
 
 These are research records, **not active collectors**.
 
 | Company | Official page | Remaining issue |
 | --- | --- | --- |
-| MakeMyTrip | [Careers](https://careers.makemytrip.com/) | Repeated timeouts; working current openings link needed |
 | UBS | [Search](https://www.ubs.com/global/en/careers/search-jobs.html) | BrassRing portal found; India listing/detail API unverified |
 | Zupee | [Official site](https://www.zupee.com/) | `/careers/` returned 404; current openings link needed |
 | Mercer Mettl | [Careers](https://mettl.com/careers/) | Directs applicants to LinkedIn/email; no independent feed found |
 | NSE | [Jobs](https://www.nseindia.com/static/careers-at-nse/jobs) | Direct requests timed out; collector unverified |
 
 ## Code and operation
+
+`fetchers/makemytrip.py` reads `/api/jobs` from the first-party careers site.
+The complete `allJobs` array is returned in one response; Load More is a frontend
+display control. `/api/jobDetails?jobId=...` supplies full encoded HTML under the
+site's `job_decription` key. The official Darwinbox apply URL is checked against
+the requested ID, while job cards link to first-party `/prod/opportunity/` pages.
+Normal browser headers resolve the earlier Python request timeouts. Experience
+fields are converted according to the explicit Years/Months unit. Stronger JD
+requirements are preserved. Missing detail text yields partial status, and later
+collections refresh saved descriptions while preserving dismissals.
 
 `fetchers/myntra.py` resolves the public career workspace for `jobs.myntra.com`
 through Spire's `/ies/v1/p/workspaceId` endpoint and pages the public

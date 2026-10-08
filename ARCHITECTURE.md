@@ -1,7 +1,7 @@
 # Architecture and code guide
 
-The [October 8 company expansion](docs/COMPANY_BATCH_20.md) adds fifteen active
-companies and records five pending investigations. `career_html.py` handles
+The [October 8 company expansion](docs/COMPANY_BATCH_20.md) adds sixteen active
+companies and records four pending investigations. `career_html.py` handles
 Nutanix HTML, MathWorks RSS, MAQ Atom, SAP public Next.js data, Micron PCSX,
 and Lowe's India Phenom search. `tredence.py` handles public RippleHire listings
 and full details. Existing Greenhouse and India-scoped Workday adapters handle
@@ -25,6 +25,13 @@ IDs, explicit India country fields and description availability. Search results
 already carry full detail text. The source's required experience months are
 converted to years alongside the full description, and skill metadata distinguishes
 mandatory and preferred skills. Saved text is refreshed without clearing dismissals.
+
+MakeMyTrip uses its first-party `/api/jobs` array and `/api/jobDetails` endpoint.
+`fetchers/makemytrip.py` selects explicit India listings, reads complete encoded
+descriptions, verifies detail identity against the official apply URL, and adds
+experience metadata with its Years/Months unit. First-party opportunity links
+are stored; no applicant login or application submission is involved. Subsequent
+collections refresh description-derived fields while preserving user state.
 
 This document describes the code in this repository as it currently works. Read it with [README.md](README.md) for setup and [improvement.md](improvement.md) for proposed work. Planned items in the improvement roadmap are not part of the current system.
 
