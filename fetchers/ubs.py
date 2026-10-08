@@ -22,12 +22,13 @@ def parse_detail(data, sid):
         for q in fields if q.get('QuestionType') == 'textarea' and q.get('AnswerValue'))
 
 
-def collect(deadline=None):
+def collect_board(site_id, link_id, deadline=None):
+    search_url = ROOT+f"/TGnewUI/Search/home/HomeWithPreLoad?partnerid=25008&siteid={site_id}&PageType=searchResults&SearchType=linkquery&LinkID={link_id}"
     jobs, seen, errors = [], set(), []
     def expired(): return deadline is not None and time.monotonic() >= deadline
     if expired(): raise RuntimeError('UBS listing deadline reached')
     with requests.Session() as session:
-        html = get_text(session,SEARCH_URL)
+        html = get_text(session,search_url)
         try:
             soup = BeautifulSoup(html or '', 'html.parser')
             pre = json.loads(soup.find(id='preLoadJSON')['value'])
@@ -35,8 +36,8 @@ def collect(deadline=None):
             token = soup.find('input',attrs={'name':'__RequestVerificationToken'})['value']
             cookie = soup.find(id='CookieValue')['value']
         except (TypeError,KeyError,ValueError): raise RuntimeError('UBS anonymous search configuration unavailable')
-        session.headers.update({'RFT':token,'Content-Type':'application/json; charset=utf-8','X-Requested-With':'XMLHttpRequest','Referer':SEARCH_URL})
-        query = dict(PartnerId=25008,SiteId=5012,Keyword='',Location='India',KeywordCustomSolrFields=original['KeywordCustomSolrFields'],LocationCustomSolrFields=original['LocationCustomSolrFields'],FacetFilterFields=None,TurnOffHttps=False,Latitude=0,Longitude=0,PowerSearchOptions={'PowerSearchOption':[]},encryptedsessionvalue=cookie)
+        session.headers.update({'RFT':token,'Content-Type':'application/json; charset=utf-8','X-Requested-With':'XMLHttpRequest','Referer':search_url})
+        query = dict(PartnerId=25008,SiteId=site_id,Keyword='',Location='India',KeywordCustomSolrFields=original['KeywordCustomSolrFields'],LocationCustomSolrFields=original['LocationCustomSolrFields'],FacetFilterFields=None,TurnOffHttps=False,Latitude=0,Longitude=0,PowerSearchOptions={'PowerSearchOption':[]},encryptedsessionvalue=cookie)
         data = post_json(session,ROOT+'/TgNewUI/Search/Ajax/MatchedJobs',json=query)
         if not isinstance(data,dict) or not isinstance(data.get('JobsCount'),int): raise RuntimeError('UBS search unavailable')
         total = data['JobsCount']; page = 1
@@ -50,11 +51,11 @@ def collect(deadline=None):
                 if not sid or not vals.get('jobtitle') or sid in seen: errors.append('missing or duplicate job identity'); continue
                 seen.add(sid)
                 if vals.get('formtext23','').strip().lower() != 'india': errors.append('India search returned foreign location'); continue
-                jobs.append(dict(company='ubs',source_id=sid,title=vals['jobtitle'],location='India',url=ROOT+'/TGnewUI/Search/home/HomeWithPreLoad?partnerid=25008&siteid=5012&PageType=JobDetails&jobid='+sid,description='',_site=vals.get('siteid')))
+                jobs.append(dict(company='ubs',source_id=sid,title=vals['jobtitle'],location='India',url=ROOT+f'/TGnewUI/Search/home/HomeWithPreLoad?partnerid=25008&siteid={site_id}&PageType=JobDetails&jobid='+sid,description='',_site=vals.get('siteid')))
             if len(seen) >= total: break
             if len(seen) == before or expired(): errors.append('listing interrupted'); break
             page += 1
-            paging = dict(partnerId=25008,siteId=5012,keyword='',location='India',keywordCustomSolrFields=query['KeywordCustomSolrFields'],locationCustomSolrFields=query['LocationCustomSolrFields'],linkId='',Latitude=0,Longitude=0,facetfilterfields={'Facet':[]},powersearchoptions={'PowerSearchOption':[]},SortType='LastUpdated',pageNumber=page,encryptedSessionValue=cookie)
+            paging = dict(partnerId=25008,siteId=site_id,keyword='',location='India',keywordCustomSolrFields=query['KeywordCustomSolrFields'],locationCustomSolrFields=query['LocationCustomSolrFields'],linkId='',Latitude=0,Longitude=0,facetfilterfields={'Facet':[]},powersearchoptions={'PowerSearchOption':[]},SortType='LastUpdated',pageNumber=page,encryptedSessionValue=cookie)
             data = post_json(session,ROOT+'/TgNewUI/Search/Ajax/ProcessSortAndShowMoreJobs',json=paging)
             if not isinstance(data,dict) or data.get('JobsCount') != total: errors.append('pagination unavailable or total changed'); break
             if page > total+1: errors.append('pagination did not advance'); break
@@ -62,7 +63,7 @@ def collect(deadline=None):
         for job in jobs:
             site = job.pop('_site')
             if not expired():
-                detail = post_json(session,ROOT+'/TgNewUI/Search/Ajax/JobDetails',json=dict(partnerId=25008,siteId=5012,jobid=job['source_id'],configMode='',jobSiteId=site,turnOffHttps=False))
+                detail = post_json(session,ROOT+'/TgNewUI/Search/Ajax/JobDetails',json=dict(partnerId=25008,siteId=site_id,jobid=job['source_id'],configMode='',jobSiteId=site,turnOffHttps=False))
                 job['description'] = parse_detail(detail,job['source_id'])
                 if job['description']:
                     fields = detail['ServiceResponse']['Jobdetails']['JobDetailQuestions']
@@ -71,3 +72,21 @@ def collect(deadline=None):
             if not job['description']: errors.append('description unavailable: '+job['source_id'])
     if errors and not jobs: raise RuntimeError('; '.join(errors[:3]))
     return CollectionResult(jobs,status='partial' if errors else 'ok',error='; '.join(errors[:5]))
+
+
+BOARDS = ((5012,15231), (5131,15232))
+
+
+def collect(deadline=None):
+    jobs, seen, errors = [], set(), []
+    for site_id, link_id in BOARDS:
+        try:
+            result = collect_board(site_id,link_id,deadline)
+            if result.status != 'ok': errors.append(f'{site_id}: {result.error or result.status}')
+            for job in result:
+                if job['source_id'] not in seen:
+                    seen.add(job['source_id']); jobs.append(job)
+        except RuntimeError as exc:
+            errors.append(f'{site_id}: {exc}')
+    if errors and not jobs: raise RuntimeError('; '.join(errors))
+    return CollectionResult(jobs,status='partial' if errors else 'ok',error='; '.join(errors))

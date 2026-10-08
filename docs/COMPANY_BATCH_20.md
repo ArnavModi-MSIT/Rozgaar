@@ -93,3 +93,9 @@ detail sections, including skills and experience. Country and job identity are
 verified; city comes from detail fields. Pagination and missing details report
 partial results. Session tokens are obtained at runtime and never saved.
 Existing saved descriptions refresh while retaining dismissals.
+
+UBS also includes the supplied second board (`siteid=5131`, `LinkID=15232`).
+Live verification returned four India CA Intern postings with four full descriptions.
+Both boards are collected independently; shared requisition IDs are deduplicated,
+and a failed board makes the combined collection partial. The original board
+reported 29 jobs in the prior check; the second board adds four distinct IDs.

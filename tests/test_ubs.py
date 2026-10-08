@@ -22,4 +22,17 @@ class UBSTests(unittest.TestCase):
     def test_deadline(self):
         with self.assertRaises(RuntimeError): ubs.collect(0)
 
+    def test_board_merge_deduplicates(self):
+        from fetchers.result import CollectionResult
+        with patch.object(ubs,'collect_board',side_effect=[CollectionResult([{'source_id':'1'}]),CollectionResult([{'source_id':'1'},{'source_id':'2'}])]) as call:
+            result=ubs.collect()
+        self.assertEqual(len(result),2)
+        self.assertEqual(call.call_args_list[1].args[:2],(5131,15232))
+    def test_one_board_failure_is_partial(self):
+        from fetchers.result import CollectionResult
+        with patch.object(ubs,'collect_board',side_effect=[RuntimeError('unavailable'),CollectionResult([{'source_id':'2'}])]):
+            result=ubs.collect()
+        self.assertEqual(result.status,'partial')
+        self.assertEqual(len(result),1)
+
 if __name__=='__main__': unittest.main()
