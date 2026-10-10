@@ -433,3 +433,12 @@ verification returned 214 India postings and 214 complete descriptions, status
 `ok`. The shared adapter discovers the India facet, follows all listing pages
 and retrieves full details. Shared requisition IDs use the same `lseg` company
 key, avoiding duplicate saved jobs. Normal role and experience filters apply.
+
+Electronic Arts (`fetchers/ea.py`) uses the supplied Avature India search
+(`8171=[10590]`, `8171_format=5683`, `listFilterMode=1`, 20 records per page).
+The collector verifies total unique role IDs, retains India scope across offsets,
+and fetches complete detail fields without a character cap. Missing details or
+interrupted pagination report partial results. October 10, 2026 live validation
+returned 11 India roles and 11 descriptions, including six internship postings.
+Saved descriptions refresh while retaining dismissals; role and numeric
+experience filters apply after collection.

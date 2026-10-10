@@ -760,3 +760,5 @@ DISPLAY_NAMES["ion"] = "ION Group"
 DISPLAY_NAMES["pwc"] = "PwC India"
 
 DISPLAY_NAMES["lseg"] = "LSEG"
+
+DISPLAY_NAMES["ea"] = "Electronic Arts"
