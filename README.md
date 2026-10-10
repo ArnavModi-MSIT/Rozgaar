@@ -341,3 +341,10 @@ country label, and reads full detail text from `ArticleSection .richtext`,
 retaining paragraph boundaries. October 10, 2026 validation returned 14 jobs
 and 14 descriptions, status `ok`. Count mismatches and missing descriptions
 report partial results; saved text refreshes without clearing dismissals.
+
+GE Appliances is configured in `WORKDAY_INDIA` (tenant `haier`, server `wd3`,
+site `GE_Appliances`, company key `geappliances`). The shared adapter discovers
+the India country facet, follows listing pagination and retrieves full details.
+October 10, 2026 validation returned seven India jobs and seven full descriptions,
+status `ok`, including Co-op/Intern and Intern - Dimensional Management. Normal
+role and experience filters apply; multi-location cards retain their source label.
