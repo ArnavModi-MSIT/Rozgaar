@@ -442,3 +442,12 @@ interrupted pagination report partial results. October 10, 2026 live validation
 returned 11 India roles and 11 descriptions, including six internship postings.
 Saved descriptions refresh while retaining dismissals; role and numeric
 experience filters apply after collection.
+
+Swiss Re (`fetchers/swissre.py`) reads the supplied `country=IN` search with
+Bangalore, Hyderabad and Mumbai city selections. All 14 cards are present in
+server-rendered HTML; slider controls change visibility rather than fetch pages.
+The collector checks reported total and unique IDs, requires each card's `IN`
+country label, and reads full detail text from `ArticleSection .richtext`,
+retaining paragraph boundaries. October 10, 2026 validation returned 14 jobs
+and 14 descriptions, status `ok`. Count mismatches and missing descriptions
+report partial results; saved text refreshes without clearing dismissals.

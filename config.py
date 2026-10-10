@@ -762,3 +762,5 @@ DISPLAY_NAMES["pwc"] = "PwC India"
 DISPLAY_NAMES["lseg"] = "LSEG"
 
 DISPLAY_NAMES["ea"] = "Electronic Arts"
+
+DISPLAY_NAMES["swissre"] = "Swiss Re"
