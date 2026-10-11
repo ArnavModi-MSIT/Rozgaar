@@ -366,3 +366,13 @@ of legacy SmartRecruiters rows, including remote suffixes. Unknown country
 codes are excluded for this structured source; generic-source policy is unchanged.
 The local repair dismissed 26 active foreign Bosch jobs, retaining saved history
 and a local dismissal-state backup. The database and backup are not published.
+
+Experience parsing (October 11, 2026): numeric ranges permit a plus on the
+upper endpoint (`2-3+ years` still means a two-year lower bound). Clauses such
+as `years in a Data Analyst role` and `years as an ... position` establish
+experience without an explicit experience keyword. Association remains bounded
+to role/position language to exclude degree durations and company history;
+required and preferred years remain separate. The reported Portcast Data Analyst
+role now yields two required years. The local repair updated 534 saved
+experience values for affected wording and preserved all dismissals; previous
+values are backed up locally and are not published.

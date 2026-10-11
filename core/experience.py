@@ -52,7 +52,7 @@ _LOCAL_WINDOW = 40  # tighter window around each NUMBER match itself, used
 
 _YEAR_NUM_RE = re.compile(
     r"(?<![\d.])(\d+(?:\.\d+)?)\s*\+?\s*"
-    r"(?:(?:-|to|–|—)\s*(\d+(?:\.\d+)?))?\s*(?:years?|yrs?)\b", re.I
+    r"(?:(?:-|to|–|—)\s*(\d+(?:\.\d+)?)\s*\+?)?\s*(?:years?|yrs?)\b", re.I
 )
 
 
@@ -177,7 +177,8 @@ def _long_requirement_years(text):
         clause=prefix+text[match.start():match.end()]+re.sub(r"\([^)]*\)", "", tail)
         if _PREFERRED_SIGNAL_RE.search(clause) and not _REQUIRED_SIGNAL_RE.search(clause):
             continue
-        if re.search(r"\bexperience\b",tail,re.I):
+        if re.search(r"\bexperience\b",tail,re.I) or re.match(
+            r"\s+(?:in|as)\s+(?:an?\s+)?[^;\n.!?]{0,160}\b(?:role|position)\b",tail,re.I):
 
             values.append(_year_value(match.group(1)))
 
