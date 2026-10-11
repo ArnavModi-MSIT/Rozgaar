@@ -209,3 +209,13 @@ def is_remote(location):
     if not location:
         return False
     return bool(_REMOTE_RE.search(location))
+
+
+def is_smartrecruiters_india_location(location):
+    """Legacy SR rows end in an API country code or normalized India label.
+
+    This check is source-specific: IN elsewhere may denote Indiana. Unknown
+    locations are not evidence of India when this API provides country codes.
+    """
+    if not isinstance(location, str): return False
+    return bool(re.search(r"(?:^|,)\s*(?:India|in)\s*(?:\(Remote\))?\s*$",location,re.I))

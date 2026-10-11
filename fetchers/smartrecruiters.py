@@ -2,32 +2,9 @@
 Fetcher for SmartRecruiters — public, documented, no-auth Posting API.
 Docs: https://developers.smartrecruiters.com/docs/posting-api
 
-NOTE: not every SmartRecruiters customer has this public feed enabled (it's
-tier-dependent), so a 404/empty result for a real company can mean "this
-customer's plan doesn't expose it" rather than "wrong company id."
-
-The list endpoint has no description body — only the per-posting detail
-endpoint does. For a company with small total volume (Freshworks/servicenow,
-~590 postings combined), this fetcher detail-fetches every posting
-unconditionally — well below the scale where the extra HTTP calls cost
-meaningfully more time. For a company with real GLOBAL volume (Bosch:
-4,824 total postings), config.py's `detail_fetch_india_only` flag gates
-the detail-fetch pass to India-only postings.
-
-That gate deliberately does NOT reuse core.location.is_india_or_unknown()
-(what Oracle/Workday use) — tried that first, and on Bosch's real data it
-only excluded ~48% of postings, because is_india_or_unknown() treats any
-country it doesn't recognize by name as "Unknown" and passes it through
-(by design, for fetchers that only ever get free-text location strings
-to parse). Bosch posts across dozens of countries well beyond that
-short list (a live sample included Romania, which fell through to
-"Unknown" and would've been detail-fetched for nothing). SmartRecruiters'
-own API already returns a clean 2-letter ISO country code per posting
-(`location.country`, e.g. "in"/"de"/"ro") — exact structured data, not a
-free-text guess — so the gate filters on that directly instead, via each
-job's internal `_country_code` field (same pattern as fetchers/workday.py's
-`_ext_path`: carried through fetch_smartrecruiters() for collect() to use,
-stripped before any job dict is returned — never written to the db).
+All returned postings must have explicit location.country=IN. Global listing
+pagination is still read, but foreign/missing country records are excluded before
+enrichment and storage. Saved legacy records are also guarded in the API.
 """
 
 import logging
@@ -190,12 +167,11 @@ def _enrich_company_jobs(jobs, probe_size=10, failure_threshold=0.8):
 
 
 def collect(configs, deadline=None):
-    """configs: list of {"company_id": ..., "detail_fetch_india_only": bool
-    (optional, default False)} dicts — see config.py's SMARTRECRUITERS."""
+    """Collect configured company boards, returning explicit India postings only."""
     if not configs:
         return []
     jobs = []
-    jobs_by_company = {}  # company_id -> (jobs, detail_fetch_india_only)
+    jobs_by_company = {}  # company_id -> India-only jobs
     failures = 0
     with ThreadPoolExecutor(max_workers=min(8, len(configs))) as pool:
         futures = {pool.submit(fetch_smartrecruiters, cfg["company_id"], deadline): cfg for cfg in configs}
@@ -203,8 +179,9 @@ def collect(configs, deadline=None):
             cfg = futures[f]
             try:
                 company_jobs = f.result()
+                company_jobs = [j for j in company_jobs if j.get("_country_code") == "in"]
                 jobs += company_jobs
-                jobs_by_company[cfg["company_id"]] = (company_jobs, cfg.get("detail_fetch_india_only", False))
+                jobs_by_company[cfg["company_id"]] = company_jobs
             except Exception as e:
                 log.exception("a smartrecruiters company fetch failed: %s", e)
                 failures += 1
@@ -219,17 +196,8 @@ def collect(configs, deadline=None):
     # circuit breaker above can judge each company's endpoint health
     # independently — company count here is small, so the lost cross-
     # company concurrency is negligible.
-    for company_jobs, india_only in jobs_by_company.values():
-        if india_only:
-            # Empty country code (missing from the API response) counts as
-            # "keep it" not "exclude it" — same never-drop-on-unparseable
-            # rule every other fetcher's India-scoping already follows,
-            # just applied to a missing structured field instead of an
-            # unparseable free-text string.
-            to_enrich = [j for j in company_jobs if j["_country_code"] in ("", "in")]
-        else:
-            to_enrich = company_jobs
-        _enrich_company_jobs(to_enrich)
+    for company_jobs in jobs_by_company.values():
+        _enrich_company_jobs(company_jobs)
 
     # _country_code was only ever needed for the gate above — strip it so
     # every returned job dict matches the documented schema, same reasoning

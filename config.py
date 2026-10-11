@@ -471,27 +471,14 @@ ICIMS = [
 # NOTE: tier-dependent — some SmartRecruiters customers don't have this public
 # feed enabled, so an empty result can mean "disabled" not "wrong id."
 #
-# Config per company: {company_id, detail_fetch_india_only (optional)}.
-# detail_fetch_india_only gates the per-posting detail-fetch (see
-# fetchers/smartrecruiters.py) to India-located postings only, using each
-# posting's own raw ISO country code (NOT core.location.is_india_or_unknown()
-# — that was tried first and measured too loose here, see the fetcher's
-# module docstring for why) — added specifically for Bosch below, since
-# this fetcher's original design assumed small total volume (~590 postings
-# across Freshworks+servicenow) and detail-fetched every posting
-# unconditionally; Freshworks/servicenow don't set this flag, so their
-# behavior is byte-for-byte unchanged.
+# Config per company: {company_id}. The collector returns only explicit IN
+# country records for all configured boards. Foreign/unknown API country codes
+# are excluded before description fetching and storage.
 SMARTRECRUITERS = [
     {"company_id": "PHONEPELIMITED"},
     {"company_id": "Freshworks"},
     {"company_id": "servicenow"},
-    # Bosch — confirmed live via the real Posting API: real India postings
-    # (Bangalore/Pune/Nashik) among 4,824 TOTAL postings globally — ~8x
-    # this fetcher's previous combined volume. Unlike Freshworks/servicenow,
-    # detail-fetching every one of those 4,824 unconditionally would be a
-    # real time/rate cost for no benefit on the ~83% that aren't India-
-    # relevant anyway (measured), hence detail_fetch_india_only here.
-    {"company_id": "BoschGroup", "detail_fetch_india_only": True},
+    {"company_id": "BoschGroup"},
 ]
 
 # --- Workable ----------------------------------------------------------------

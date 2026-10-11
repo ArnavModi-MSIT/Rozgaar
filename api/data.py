@@ -26,7 +26,7 @@ import pandas as pd
 import config
 from core.eligibility import eligibility_evidence
 from core.experience import extract_experience_sentences, extract_min_experience, extract_preferred_experience, experience_requirements
-from core.location import is_remote, parse_city, parse_country
+from core.location import is_remote, parse_city, parse_country, is_smartrecruiters_india_location
 from core.matcher import (
     embed_jobs_incremental, load_embedding_cache, rank_by_resume,
     save_embedding_cache, compute_job_pool_key,
@@ -102,7 +102,8 @@ def _load_jobs_df():
     # Apply the same country gate to previously saved rows. A corrected
     # location parser should remove foreign postings from the UI immediately,
     # without deleting local history from SQLite.
-    df = df[df["country"].isin(["India", "Unknown"])].copy()
+    df = df[df["country"].isin(["India", "Unknown"]) &
+            (~df["source"].eq("smartrecruiters") | df["location"].apply(is_smartrecruiters_india_location))].copy()
     df["city"] = df["location"].apply(parse_city)
     df["is_remote"] = df["location"].apply(is_remote)
     df["is_ncr"] = df["location"].fillna("").apply(lambda loc: bool(config.LOCATION.search(loc)))

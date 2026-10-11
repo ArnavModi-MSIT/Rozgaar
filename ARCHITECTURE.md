@@ -466,3 +466,13 @@ adapter discovers exactly the supplied India facet: `locationHierarchy2` value
 51 unique India postings with 51 full descriptions, status `ok`. Full listing
 pagination and existing role/experience filters apply; source multi-location
 labels are retained under the verified India scope.
+
+SmartRecruiters India filtering (October 11, 2026): collection now retains only
+explicit `location.country=IN` records before enrichment and storage, across
+Bosch, PhonePe, Freshworks and ServiceNow. The previous Bosch option only
+limited description fetching, so foreign ISO-code locations entered storage as
+Unknown. A source-specific location check now guards save-time and API reads
+of legacy SmartRecruiters rows, including remote suffixes. Unknown country
+codes are excluded for this structured source; generic-source policy is unchanged.
+The local repair dismissed 26 active foreign Bosch jobs, retaining saved history
+and a local dismissal-state backup. The database and backup are not published.
