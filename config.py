@@ -694,6 +694,7 @@ RELEVANCE_FILTERS = {}
 
 # First-party Workday boards with live India facet discovery and full descriptions.
 WORKDAY_INDIA = [
+    {"company":"bms", "tenant":"bristolmyerssquibb", "wd_server":"wd5", "site":"BMS"},
     {"company":"geappliances", "tenant":"haier", "wd_server":"wd3", "site":"GE_Appliances"},
     {"company":"lseg", "tenant":"lseg", "wd_server":"wd3", "site":"Careers"},
     {"company":"lseg", "tenant":"lseg", "wd_server":"wd3", "site":"Graduate_Careers"},
@@ -767,3 +768,5 @@ DISPLAY_NAMES["ea"] = "Electronic Arts"
 DISPLAY_NAMES["swissre"] = "Swiss Re"
 
 DISPLAY_NAMES["geappliances"] = "GE Appliances"
+
+DISPLAY_NAMES["bms"] = "Bristol Myers Squibb"

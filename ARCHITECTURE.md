@@ -458,3 +458,11 @@ the India country facet, follows listing pagination and retrieves full details.
 October 10, 2026 validation returned seven India jobs and seven full descriptions,
 status `ok`, including Co-op/Intern and Intern - Dimensional Management. Normal
 role and experience filters apply; multi-location cards retain their source label.
+
+Bristol Myers Squibb is configured in `WORKDAY_INDIA` (tenant
+`bristolmyerssquibb`, server `wd5`, site `BMS`, company key `bms`). The shared
+adapter discovers exactly the supplied India facet: `locationHierarchy2` value
+`7b0045a3289810548a41236822339065`. October 11, 2026 verification returned
+51 unique India postings with 51 full descriptions, status `ok`. Full listing
+pagination and existing role/experience filters apply; source multi-location
+labels are retained under the verified India scope.
