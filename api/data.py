@@ -103,7 +103,8 @@ def _load_jobs_df():
     # location parser should remove foreign postings from the UI immediately,
     # without deleting local history from SQLite.
     df = df[df["country"].isin(["India", "Unknown"]) &
-            (~df["source"].eq("smartrecruiters") | df["location"].apply(is_smartrecruiters_india_location))].copy()
+            (~df["source"].eq("smartrecruiters") | df["location"].apply(is_smartrecruiters_india_location)) &
+            (~df["company"].eq("databricks") | df["country"].eq("India"))].copy()
     df["city"] = df["location"].apply(parse_city)
     df["is_remote"] = df["location"].apply(is_remote)
     df["is_ncr"] = df["location"].fillna("").apply(lambda loc: bool(config.LOCATION.search(loc)))

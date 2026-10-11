@@ -17,7 +17,7 @@ from fetchers.http_client import DEFAULT_TIMEOUT, get_json
 from fetchers.result import CollectionResult
 from core.location import parse_country
 
-INDIA_SCOPED_BOARDS = {"roku", "gleanwork", "okta", "purestorage", "gitlab", "squarepointcapital", "quberesearchandtechnologies","alphagrepsecurities", "nksecuritiesresearch", "worldquant", "imc", "optiverus", "mongodb", "datadog"}
+INDIA_SCOPED_BOARDS = {"databricks", "roku", "gleanwork", "okta", "purestorage", "gitlab", "squarepointcapital", "quberesearchandtechnologies","alphagrepsecurities", "nksecuritiesresearch", "worldquant", "imc", "optiverus", "mongodb", "datadog"}
 INDIA_SCOPED_BOARDS.update({"commvault", "sigmoid", "fanaticsinc", "fanaticscommerce", "fanaticsfbg", "fanaticscollectibles"})
 
 log = logging.getLogger("jobbot")

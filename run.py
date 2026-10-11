@@ -51,7 +51,7 @@ from pathlib import Path
 from core.collector import PLATFORMS
 from core.dedup import dedup_key
 from core.experience import extract_min_experience
-from core.location import is_india_or_unknown, is_smartrecruiters_india_location
+from core.location import is_india_or_unknown, is_smartrecruiters_india_location, parse_country
 from core.skills import build_patterns, extract_skills
 from core.storage import (
     cleanup_old, delete_by_source, get_custom_skills,
@@ -237,7 +237,9 @@ def _run():
                         mark_observed(conn, jid, int(time.time()))
                         if refresh_atlassian_job(conn, jid, job):
                             dedup_keys.add(dedup_key(job["company"], job["title"], job.get("location"), job.get("description")))
-                    if (platform_name == "smartrecruiters" and not is_smartrecruiters_india_location(job.get("location"))) or not is_india_or_unknown(job.get("location")):
+                    if ((platform_name == "smartrecruiters" and not is_smartrecruiters_india_location(job.get("location")))
+                            or (job.get("company") == "databricks" and parse_country(job.get("location")) != "India")
+                            or not is_india_or_unknown(job.get("location"))):
                         non_india += 1
                         continue
                     if jid in existing_ids:

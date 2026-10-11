@@ -376,3 +376,12 @@ required and preferred years remain separate. The reported Portcast Data Analyst
 role now yields two required years. The local repair updated 534 saved
 experience values for affected wording and preserved all dismissals; previous
 values are backed up locally and are not published.
+
+Databricks India filtering (October 11, 2026): its Greenhouse board now belongs
+to `INDIA_SCOPED_BOARDS`; only locations parsed as India enter collection.
+Save-time and API-read checks also reject unknown country labels for Databricks,
+including city-only Madrid, EMEA and USCA. Other sources retain their existing
+unknown-location policy. Live verification found 96 India postings out of 892
+global jobs and excluded the reported Madrid role `8878720002` (office: Remote
+- Spain). The local repair dismissed 24 undismissed foreign/unknown Databricks
+rows while retaining history and local dismissal-state backups.
