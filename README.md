@@ -196,7 +196,7 @@ The live check scanned 253 search matches and returned 249 recognized India jobs
 
 ## Description-based experience filtering (2026-10-04)
 
-The default UI filter hides jobs whose description states a minimum of 2+ years. It retains 0-year, 1-year and unknown requirements. Senior/lead/manager titles no longer hide jobs or offer bulk removal. Titles are not evidence that a job accepts freshers. Experience extraction uses descriptions only, and the API re-derives the value for existing rows without rewriting SQLite. Unknown does not mean fresher eligible; preferred-only requirements remain unknown. The regex parser can miss ambiguous requirements and alternate qualification tracks, so review the original description.
+The default UI filter hides jobs whose description states a minimum of 1+ years. It retains ranges starting at zero (such as 0-2 years) and unknown requirements. Senior/lead/manager titles no longer hide jobs or offer bulk removal. Titles are not evidence that a job accepts freshers. Experience extraction uses descriptions only, and the API re-derives the value for existing rows without rewriting SQLite. Unknown does not mean fresher eligible; preferred-only requirements remain unknown. The regex parser can miss ambiguous requirements and alternate qualification tracks, so review the original description.
 
 
 ## KLA India Workday (2026-10-04)
@@ -262,7 +262,7 @@ To evaluate ranking on your own labeled sample, run `python scripts/evaluate_mat
 
 ### Required and preferred experience visibility
 
-The default experience filter hides postings when either the required minimum or the preferred experience lower bound is 2+ years. Preferred years are parsed separately by `extract_preferred_experience`, exposed as `preferred_experience_years` (-1 for unknown), and displayed as preferred rather than mandatory. The same rule applies to the experience bulk-removal count and action. Switching the filter off reveals these saved jobs; filtering does not delete SQLite rows. API loading recomputes both fields from saved descriptions, so restart the backend and refresh after updating; collection is unnecessary.
+The default experience filter hides postings when either the required minimum or the preferred experience lower bound is 1+ years. Preferred years are parsed separately by `extract_preferred_experience`, exposed as `preferred_experience_years` (-1 for unknown), and displayed as preferred rather than mandatory. The same rule applies to the experience bulk-removal count and action. Switching the filter off reveals these saved jobs; filtering does not delete SQLite rows. API loading recomputes both fields from saved descriptions, so restart the backend and refresh after updating; collection is unnecessary.
 
 ### Complete descriptions and experience clauses
 
@@ -385,3 +385,9 @@ unknown-location policy. Live verification found 96 India postings out of 892
 global jobs and excluded the reported Madrid role `8878720002` (office: Remote
 - Spain). The local repair dismissed 24 undismissed foreign/unknown Databricks
 rows while retaining history and local dismissal-state backups.
+
+Experience threshold update (October 14, 2026): the default visibility filter
+and experience bulk-removal action now use a lower-bound threshold of one year.
+Ranges beginning at zero, including 0-2 years, remain visible; 1+ years,
+1-3 years and higher minima are hidden. Unknown requirements remain visible
+for review. Required/preferred parsing and prior dismissals are preserved.

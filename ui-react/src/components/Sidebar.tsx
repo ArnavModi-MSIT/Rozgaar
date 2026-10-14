@@ -198,7 +198,7 @@ export default function Sidebar({
 
         <div className="mt-3 pt-3 border-t border-gray-100">
           <Check
-            label="Hide 2+ years required or preferred"
+            label="Hide 1+ years required or preferred"
             hint="Based on the description; unknown requirements are kept"
             checked={filters.hideHighExperience}
             onChange={(v) => onFilterChange({ hideHighExperience: v })}
@@ -236,7 +236,7 @@ export default function Sidebar({
               onClick={() => onBulkDismiss("experience")}
               className="w-full text-left rounded-md border border-gray-200 px-2.5 py-1.5 text-xs hover:bg-gray-50"
             >
-              Remove {counts.highExperience} with 2+ years required or preferred
+              Remove {counts.highExperience} with 1+ years required or preferred
             </button>
           )}
         </div>

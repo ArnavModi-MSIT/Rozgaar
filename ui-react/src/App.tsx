@@ -7,8 +7,8 @@ import type { Filters, Job, ResumeState } from "./types";
 
 // Once a resume is loaded, hide jobs scoring below this threshold.
 const MIN_MATCH = 20;
-// Keep requirements below 2 years and unknowns; hide stated minimums of 2+ years.
-const EXPERIENCE_THRESHOLD = 2;
+// Keep ranges starting at zero and unknowns; hide lower bounds of 1+ years.
+const EXPERIENCE_THRESHOLD = 1;
 const PAGE_SIZE = 40;
 
 const DEFAULT_FILTERS: Filters = {
