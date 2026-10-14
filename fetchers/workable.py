@@ -15,6 +15,7 @@ from concurrent.futures import ThreadPoolExecutor
 import requests
 
 from .standard import strip_html
+from .result import CollectionResult
 
 log = logging.getLogger("jobbot")
 TIMEOUT = 15
@@ -44,11 +45,13 @@ def _get(url):
 
 def fetch_workable(slug):
     data = _get(f"https://apply.workable.com/api/v1/widget/accounts/{slug}?details=true")
-    if not data:
-        return []
+    if not isinstance(data,dict) or not isinstance(data.get("jobs"),list):
+        raise RuntimeError("Workable board unavailable: "+slug)
     jobs = []
     for j in data.get("jobs", []):
         loc = j.get("location") or {}
+        if slug == "amagi" and (loc.get("country_code", "").upper() != "IN" and loc.get("country", "").lower() != "india"):
+            continue
         location = loc.get("location_str", "") or ", ".join(
             p for p in [loc.get("city", ""), loc.get("region", ""), loc.get("country", "")] if p
         )
@@ -60,7 +63,7 @@ def fetch_workable(slug):
             "title": j.get("title", ""),
             "location": location,
             "url": j.get("url") or j.get("shortlink") or f"https://apply.workable.com/{slug}/j/{shortcode}/",
-            "description": strip_html(description, max_chars=None)[:6000],
+            "description": strip_html(description, max_chars=None),
         })
     return jobs
 
@@ -68,7 +71,7 @@ def fetch_workable(slug):
 def collect(slugs):
     if not slugs:
         return []
-    jobs = []
+    jobs,errors = [],[]
     with ThreadPoolExecutor(max_workers=min(8, len(slugs))) as pool:
         futures = [pool.submit(fetch_workable, slug) for slug in slugs]
         for f in futures:
@@ -76,4 +79,6 @@ def collect(slugs):
                 jobs += f.result()
             except Exception as e:
                 log.exception("a workable company fetch failed: %s", e)
-    return jobs
+                errors.append(str(e))
+    if errors and not jobs: raise RuntimeError("; ".join(errors))
+    return CollectionResult(jobs,status="partial" if errors else "ok",error="; ".join(errors))

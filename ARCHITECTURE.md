@@ -125,7 +125,7 @@ Each collector returns job dictionaries with the common fields below. The collec
 }
 ```
 
-The `standard` adapter handles Greenhouse, Lever, and Ashby. Its HTTP connection pool matches its 16 board-fetch workers. Postman was removed from Greenhouse after a 404. PhonePe is now collected through SmartRecruiters. Other adapters cover Oracle, Workday, SmartRecruiters, SuccessFactors, Phenom, iCIMS, Eightfold, Workable, Bank of America, Google Careers, Amazon, and several company-specific sites. Most use public JSON endpoints; some parse HTML. An adapter must normalize the same fields even if its source uses different names. `config.WORKABLE` is currently empty, so the registered Workable collector is reported as skipped rather than as a successful zero-job fetch.
+The `standard` adapter handles Greenhouse, Lever, and Ashby. Its HTTP connection pool matches its 16 board-fetch workers. Postman was removed from Greenhouse after a 404. PhonePe is now collected through SmartRecruiters. Other adapters cover Oracle, Workday, SmartRecruiters, SuccessFactors, Phenom, iCIMS, Eightfold, Workable, Bank of America, Google Careers, Amazon, and several company-specific sites. Most use public JSON endpoints; some parse HTML. An adapter must normalize the same fields even if its source uses different names. `config.WORKABLE` now includes Amagi; the collector distinguishes valid empty boards from failures.
 
 ### What `python run.py` does
 
@@ -501,3 +501,21 @@ and experience bulk-removal action now use a lower-bound threshold of one year.
 Ranges beginning at zero, including 0-2 years, remain visible; 1+ years,
 1-3 years and higher minima are hidden. Unknown requirements remain visible
 for review. Required/preferred parsing and prior dismissals are preserved.
+
+
+## October 14 employer expansion
+
+[The additional 20-company audit](docs/COMPANY_BATCH_20_OCT14.md) records active
+feeds, live counts and compensation evidence. Twenty new employers are connected;
+validation returned 665 India postings with full descriptions. Ciena is partial
+(5 of 6 records); Amagi and Typeface currently have no India listings. Counts
+include all seniority levels before filtering. Five companies lack independently
+verified fresher-specific 8 LPA+ pay evidence; the audit identifies them.
+
+NetApp uses a new first-party TalentBrew adapter. BrowserStack uses a global
+Workday listing followed by authoritative detail-country checks, avoiding the
+loss of Mumbai jobs when only an India Remote location facet is available. F5
+uses the requisition ID in its second bullet field. New Greenhouse/Lever/Workable
+boards enforce India scope; Workable failures remain distinct from valid empty
+results and full descriptions are retained. Saved descriptions refresh on
+recollection without clearing dismissals.

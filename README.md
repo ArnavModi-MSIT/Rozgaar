@@ -391,3 +391,21 @@ and experience bulk-removal action now use a lower-bound threshold of one year.
 Ranges beginning at zero, including 0-2 years, remain visible; 1+ years,
 1-3 years and higher minima are hidden. Unknown requirements remain visible
 for review. Required/preferred parsing and prior dismissals are preserved.
+
+
+## October 14 employer expansion
+
+[The additional 20-company audit](docs/COMPANY_BATCH_20_OCT14.md) records active
+feeds, live counts and compensation evidence. Twenty new employers are connected;
+validation returned 665 India postings with full descriptions. Ciena is partial
+(5 of 6 records); Amagi and Typeface currently have no India listings. Counts
+include all seniority levels before filtering. Five companies lack independently
+verified fresher-specific 8 LPA+ pay evidence; the audit identifies them.
+
+NetApp uses a new first-party TalentBrew adapter. BrowserStack uses a global
+Workday listing followed by authoritative detail-country checks, avoiding the
+loss of Mumbai jobs when only an India Remote location facet is available. F5
+uses the requisition ID in its second bullet field. New Greenhouse/Lever/Workable
+boards enforce India scope; Workable failures remain distinct from valid empty
+results and full descriptions are retained. Saved descriptions refresh on
+recollection without clearing dismissals.

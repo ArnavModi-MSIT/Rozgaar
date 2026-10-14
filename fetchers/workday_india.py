@@ -30,7 +30,8 @@ def fetch(cfg,deadline=None):
         def page(offset,facets): return post_json(session,root+"/jobs",json={"appliedFacets":facets,"limit":20,"offset":offset,"searchText":""},headers=headers)
         first=page(0,{})
         if not isinstance(first,dict) or not isinstance(first.get("jobPostings"),list): raise RuntimeError("Workday initial listing unavailable")
-        facets=_facets(first)
+        global_scope = cfg.get("verify_global_country", False)
+        facets={} if global_scope else _facets(first)
         for offset in range(0,10000,20):
             if deadline is not None and time.monotonic()>=deadline:
                 errors.append("listing deadline reached");break
@@ -41,12 +42,14 @@ def fetch(cfg,deadline=None):
             fresh=0
             for row in data["jobPostings"]:
                 path=row.get("externalPath") or ""
-                sid=str((row.get("bulletFields") or [path])[0])
+                bullets=row.get("bulletFields") or [path]
+                index=cfg.get("id_bullet_index",0)
+                sid=str(bullets[index] if index<len(bullets) else path)
                 if not path or not row.get("title"):errors.append("invalid listing");continue
                 if sid in seen:continue
                 seen.add(sid);fresh+=1
                 location=row.get("locationsText") or ""
-                if not re.search(r"\bIndia\b",location,re.I):location=location+", India" if location else "India"
+                if not global_scope and not re.search(r"\bIndia\b",location,re.I):location=location+", India" if location else "India"
                 jobs.append({"company":cfg["company"],"source_id":sid,"title":row["title"],"location":location,"url":f"{base}/en-US/{cfg['site']}{path}","description":"","_path":path})
             if total is not None and len(jobs)>=total:break
             if not fresh:errors.append("empty or repeated listing page");break
@@ -60,14 +63,24 @@ def fetch(cfg,deadline=None):
     if title_pattern is not None:
         jobs = [job for job in jobs if title_pattern.search(job["title"])]
     def description(job):
-        if deadline is not None and time.monotonic()>=deadline:return ""
+        if deadline is not None and time.monotonic()>=deadline:return {}
         with requests.Session() as session:data=get_json(session,root+job["_path"],headers=headers)
-        return strip_html(((data or {}).get("jobPostingInfo") or {}).get("jobDescription", ""),max_chars=None)
+        return (data or {}).get("jobPostingInfo") or {}
+    accepted=[]
     with ThreadPoolExecutor(max_workers=4) as pool:
-        for job,desc in zip(jobs,pool.map(description,jobs)):
-            job["description"]=desc
+        for job,info in zip(jobs,pool.map(description,jobs)):
             job.pop("_path",None)
+            if global_scope:
+                country=(info.get("country") or {}).get("descriptor")
+                if not country:
+                    errors.append("detail country unavailable: "+job["source_id"]);continue
+                if country.lower() != "india":continue
+                location=info.get("location") or job["location"]
+                job["location"]=location+", India" if not re.search(r"\bIndia\b",location,re.I) else location
+            desc=strip_html(info.get("jobDescription", ""),max_chars=None)
+            job["description"]=desc;accepted.append(job)
             if not desc:errors.append("description unavailable: "+job["source_id"])
+    jobs=accepted
     if errors and not jobs:raise RuntimeError("Workday India: "+"; ".join(errors[:5]))
     return CollectionResult(jobs,status="partial" if errors else "ok",error="; ".join(errors[:5]))
 

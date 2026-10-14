@@ -31,6 +31,7 @@ SALESFORCE_RELEVANT = re.compile(
 # hard way: it doesn't resolve in DNS.) A plain slug string always uses the
 # one real API host; no region tuple needed.
 GREENHOUSE = [
+    "appian", "couchbaseinc", "inmobi", "typeface",
     "commvault", "sigmoid",
     "fanaticsinc", "fanaticscommerce", "fanaticsfbg", "fanaticscollectibles",
     "roku", "gleanwork", "okta", "purestorage", "gitlab", "squarepointcapital", "quberesearchandtechnologies",
@@ -72,7 +73,7 @@ GREENHOUSE = [
                 # correctly separates them), 5 NCR (Gurgaon — Sales Engineer,
                 # AI Security Specialist, Account Executive Data Security)
 ]
-LEVER = ["meesho", "cred", "paytm", "fampay", "zeta", "netomi", "portcast", "ion"]
+LEVER = ["meesho", "cred", "paytm", "fampay", "zeta", "netomi", "portcast", "ion", "coupa"]
 ASHBY = [
     "confluent",
     "navi", "sarvam",
@@ -475,6 +476,7 @@ ICIMS = [
 # country records for all configured boards. Foreign/unknown API country codes
 # are excluded before description fetching and storage.
 SMARTRECRUITERS = [
+    {"company_id": "Netradyne"},
     {"company_id": "PHONEPELIMITED"},
     {"company_id": "Freshworks"},
     {"company_id": "servicenow"},
@@ -485,7 +487,7 @@ SMARTRECRUITERS = [
 # Public no-auth widget API (same one Workable's own embeddable widget uses).
 # GET https://apply.workable.com/api/v1/widget/accounts/{slug}?details=true
 # slug = the token at the end of https://apply.workable.com/<slug>/
-WORKABLE = []
+WORKABLE = ["amagi"]
 
 # --- ainterviews.com -----------------------------------------------------------
 # Config per company: {company, tenant}. tenant = the slug in the API path,
@@ -681,6 +683,19 @@ RELEVANCE_FILTERS = {}
 
 # First-party Workday boards with live India facet discovery and full descriptions.
 WORKDAY_INDIA = [
+    {'company': 'redhat', 'tenant': 'redhat', 'wd_server': 'wd5', 'site': 'Jobs'},
+    {'company': 'nxp', 'tenant': 'nxp', 'wd_server': 'wd3', 'site': 'careers'},
+    {'company': 'marvell', 'tenant': 'marvell', 'wd_server': 'wd1', 'site': 'MarvellCareers'},
+    {'company': 'microchip', 'tenant': 'microchiphr', 'wd_server': 'wd5', 'site': 'External'},
+    {'company': 'cloudera', 'tenant': 'cloudera', 'wd_server': 'wd5', 'site': 'External_Career'},
+    {'company': 'ciena', 'tenant': 'ciena', 'wd_server': 'wd5', 'site': 'Careers'},
+    {'company': 'proofpoint', 'tenant': 'proofpoint', 'wd_server': 'wd5', 'site': 'ProofpointCareers'},
+    {'company': 'workdaycompany', 'tenant': 'workday', 'wd_server': 'wd5', 'site': 'Workday'},
+    {'company': 'silabs', 'tenant': 'silabs', 'wd_server': 'wd1', 'site': 'SiliconlabsCareers'},
+    {'company': 'browserstack', 'tenant': 'browserstack', 'wd_server': 'wd3', 'site': 'External', 'verify_global_country': True},
+    {'company': 'f5', 'tenant': 'ffive', 'wd_server': 'wd5', 'site': 'f5jobs', 'id_bullet_index': 1},
+    {'company': 'guidewire', 'tenant': 'guidewire', 'wd_server': 'wd5', 'site': 'External'},
+
     {"company":"bms", "tenant":"bristolmyerssquibb", "wd_server":"wd5", "site":"BMS"},
     {"company":"geappliances", "tenant":"haier", "wd_server":"wd3", "site":"GE_Appliances"},
     {"company":"lseg", "tenant":"lseg", "wd_server":"wd3", "site":"Careers"},
@@ -757,3 +772,6 @@ DISPLAY_NAMES["swissre"] = "Swiss Re"
 DISPLAY_NAMES["geappliances"] = "GE Appliances"
 
 DISPLAY_NAMES["bms"] = "Bristol Myers Squibb"
+
+# October 14 additional student/graduate employer batch.
+DISPLAY_NAMES.update({'redhat': 'Red Hat', 'nxp': 'NXP Semiconductors', 'marvell': 'Marvell Technology', 'microchip': 'Microchip Technology', 'cloudera': 'Cloudera', 'ciena': 'Ciena', 'proofpoint': 'Proofpoint', 'workdaycompany': 'Workday', 'silabs': 'Silicon Labs', 'f5': 'F5', 'browserstack': 'BrowserStack', 'guidewire': 'Guidewire', 'appian': 'Appian', 'couchbaseinc': 'Couchbase', 'inmobi': 'InMobi', 'typeface': 'Typeface', 'coupa': 'Coupa', 'Netradyne': 'Netradyne', 'amagi': 'Amagi', 'netapp': 'NetApp'})

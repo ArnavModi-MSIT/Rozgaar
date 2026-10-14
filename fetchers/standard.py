@@ -18,7 +18,7 @@ from fetchers.result import CollectionResult
 from core.location import parse_country
 
 INDIA_SCOPED_BOARDS = {"databricks", "roku", "gleanwork", "okta", "purestorage", "gitlab", "squarepointcapital", "quberesearchandtechnologies","alphagrepsecurities", "nksecuritiesresearch", "worldquant", "imc", "optiverus", "mongodb", "datadog"}
-INDIA_SCOPED_BOARDS.update({"commvault", "sigmoid", "fanaticsinc", "fanaticscommerce", "fanaticsfbg", "fanaticscollectibles"})
+INDIA_SCOPED_BOARDS.update({"appian", "couchbaseinc", "inmobi", "typeface", "commvault", "sigmoid", "fanaticsinc", "fanaticscommerce", "fanaticsfbg", "fanaticscollectibles"})
 
 log = logging.getLogger("jobbot")
 
@@ -83,6 +83,8 @@ def _get(url):
 
 def _greenhouse_location(slug, job):
     location = (job.get("location") or {}).get("name", "")
+    if slug == "inmobi" and location.strip().lower() in {"bangalore", "bengaluru", "lucknow", "new delhi", "mumbai"}:
+        location = location.strip()+", India"
     # Rubrik department pages group city-only jobs under explicit India offices.
     if slug == "rubrik" and not re.search(r"\bindia\b", location, re.I):
         offices = job.get("offices") or []
@@ -167,7 +169,7 @@ def fetch_lever(slug):
         raise RuntimeError(f"lever board {slug}: expected postings list")
     jobs = []
     for j in data:
-        if slug == "ion" and (j.get("country") or "").upper() != "IN":
+        if slug in {"ion", "coupa"} and (j.get("country") or "").upper() != "IN":
             continue
         if slug == "portcast" and not _portcast_india_locations(j):
             continue
