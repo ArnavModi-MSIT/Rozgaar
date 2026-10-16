@@ -17,6 +17,8 @@ class Tokenizer:
 
 class Model:
     tokenizer = Tokenizer()
+    def get_sentence_embedding_dimension(self):
+        return 3
     def __init__(self):
         self.seen = []
     def encode(self, texts, **kwargs):

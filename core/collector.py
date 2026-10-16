@@ -95,8 +95,8 @@ PLATFORMS = [
 def collect_all():
     """Fetch every platform concurrently and return (jobs, failed_platforms).
     Used by debug_titles.py, which wants the full picture regardless of
-    speed. run.py does NOT use this — it calls platforms one at a time via
-    PLATFORMS so per-platform stats can be recorded.
+    speed. run.py does NOT use this — it submits PLATFORMS concurrently
+    itself so it can record per-platform stats and write jobs sequentially.
 
     failed_platforms is returned (not just logged) so callers can make it
     visible in their own output — a "total postings fetched: N" summary

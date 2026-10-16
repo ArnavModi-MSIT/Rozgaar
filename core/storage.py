@@ -135,28 +135,14 @@ def load_existing_ids(conn):
 
 
 def load_dedup_keys(conn):
-    """Preloads dedup keys for every job ever saved (including dismissed
-    ones), regardless of `dismissed` status — one query, then O(1) set
-    lookups per fetched job in run.py, instead of a DB round-trip or
-    fuzzy comparison per job. Catches reposts (same job, new ATS req id)
-    that job_id() alone would treat as new.
-
-    Deliberately NOT filtered to dismissed=0: dedup means "have we ever
-    seen this posting", which is independent of whether the person marked
-    it applied/not-interested. Filtering dismissed rows out here used to
-    mean dismissing a job removed it from the dedup memory too — so if it
-    got reposted under a new ATS req id (common, see module docstring),
-    the repost would pass the dedup check as "new" and silently reappear,
-    directly undermining what "dismiss" is supposed to mean. `dismissed`
-    should only ever affect what's DISPLAYED (see api/data.py,
-    which filters on it) — never whether something counts as
-    previously seen.
-
-    Calls dedup_key() rather than reconstructing the tuple format inline —
-    the two MUST stay identical or preloaded and newly-computed keys
-    silently stop matching."""
-    rows = conn.execute("SELECT company, title, location, description FROM jobs").fetchall()
-    return {dedup_key(company, title, location, description) for company, title, location, description in rows}
+    """Map strong duplicate evidence to saved IDs, including dismissed jobs."""
+    rows = conn.execute("SELECT id, company, title, location, description, url FROM jobs")
+    keys = {}
+    for jid, company, title, location, description, url in rows:
+        key = dedup_key(company, title, location, description, url)
+        if key[3] and key[4]:
+            keys.setdefault(key, set()).add(jid)
+    return keys
 
 
 def save_job(conn, jid, job, source):
@@ -287,18 +273,19 @@ def add_custom_skill(conn, skill):
     core.skills.build_patterns() does its own case-insensitive dedup
     against the built-in list, but normalizing here too keeps the stored
     table itself free of near-duplicate casing variants. Returns False
-    (no-op) for an empty/whitespace-only skill."""
+    for an empty or already-present skill."""
     skill = skill.strip().lower()
     if not skill:
         return False
-    conn.execute("INSERT OR IGNORE INTO custom_skills (skill) VALUES (?)", (skill,))
+    cur = conn.execute("INSERT OR IGNORE INTO custom_skills (skill) VALUES (?)", (skill,))
     conn.commit()
-    return True
+    return bool(cur.rowcount)
 
 
 def remove_custom_skill(conn, skill):
-    conn.execute("DELETE FROM custom_skills WHERE skill = ?", (skill.strip().lower(),))
+    cur = conn.execute("DELETE FROM custom_skills WHERE skill = ?", (skill.strip().lower(),))
     conn.commit()
+    return bool(cur.rowcount)
 
 
 def get_resume_skill_override(conn, resume_key):
@@ -408,10 +395,9 @@ def record_stats(conn, run_id, platform, fetched, matched, saved, runtime_second
 
 
 def cleanup_old(conn, days=365):
-    """Delete rows older than `days`. Not run automatically — call via
-    Runs after normal collection; `python run.py --cleanup` also runs it explicitly."""
+    """Expire unobserved jobs; retain old vacancies still seen by a collector."""
     cutoff = int(time.time()) - days * 86400
-    cur = conn.execute("DELETE FROM jobs WHERE first_seen < ?", (cutoff,))
+    cur = conn.execute("DELETE FROM jobs WHERE COALESCE(last_seen, first_seen) < ?", (cutoff,))
     conn.commit()
     return cur.rowcount
 

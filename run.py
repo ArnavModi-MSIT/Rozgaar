@@ -7,8 +7,8 @@ couldn't parse it — see core/location.py is_india_or_unknown).
 
 Dedup layers:
   1. job_id() — same ATS req id already seen (exact, cheap)
-  2. dedup_key() — same company+normalized-title+location already saved
-     under a DIFFERENT req id (catches reposts — see core/dedup.py)
+  2. dedup_key() — matching title, city, full description and posting URL
+     under a different source ID (see core/dedup.py)
 
 Run:  python run.py                    (single pass, run manually whenever you want)
       python run.py --process-only     (skip fetching — just run classification/
@@ -235,8 +235,7 @@ def _run():
                         # Correct legacy blank locations before the country
                         # gate, so known US postings stop appearing in the UI.
                         mark_observed(conn, jid, int(time.time()))
-                        if refresh_atlassian_job(conn, jid, job):
-                            dedup_keys.add(dedup_key(job["company"], job["title"], job.get("location"), job.get("description")))
+                        refresh_atlassian_job(conn, jid, job)
                     if ((platform_name == "smartrecruiters" and not is_smartrecruiters_india_location(job.get("location")))
                             or (job.get("company") == "databricks" and parse_country(job.get("location")) != "India")
                             or not is_india_or_unknown(job.get("location"))):
@@ -247,19 +246,22 @@ def _run():
                             refresh_collected_description(conn, jid, job)
                         if platform_name != "atlassian":
                             mark_observed(conn, jid, int(time.time()))
-                        if platform_name == "qualcomm_students" and refresh_qualcomm_student(conn, jid, job):
-                            dedup_keys.add(dedup_key(job["company"], job["title"], job.get("location"), job.get("description")))
-                        if platform_name == "mastercard_workday" and refresh_mastercard_from_workday(conn, jid, job):
-                            dedup_keys.add(dedup_key(job["company"], job["title"], job.get("location"), job.get("description")))
+                        if platform_name == "qualcomm_students":
+                            refresh_qualcomm_student(conn, jid, job)
+                        if platform_name == "mastercard_workday":
+                            refresh_mastercard_from_workday(conn, jid, job)
+                        dedup_keys.setdefault(dedup_key(job["company"], job["title"], job.get("location"), job.get("description"), job.get("url")), set()).add(jid)
                         skipped += 1
                         continue
-                    key = dedup_key(job["company"], job["title"], job.get("location"), job.get("description"))
-                    if key in dedup_keys:
+                    key = dedup_key(job["company"], job["title"], job.get("location"), job.get("description"), job.get("url"))
+                    if key[3] and key[4] and key in dedup_keys:
+                        for previous_id in dedup_keys[key]:
+                            mark_observed(conn, previous_id, int(time.time()))
                         reposts += 1
                         continue
                     save_job(conn, jid, job, platform_name)
                     existing_ids.add(jid)
-                    dedup_keys.add(key)
+                    dedup_keys.setdefault(key, set()).add(jid)
                     saved += 1
                     p_saved += 1
                 # jobs_matched kept equal to jobs_fetched in run_stats — no separate
@@ -289,7 +291,7 @@ def _run():
         # jobs.db grew unbounded otherwise, which slowly degrades every
         # query in this file and in api/data.py. Same 365-day default as the
         # manual flag; harmless/cheap to run every time since it's a single
-        # indexed-by-nothing DELETE on first_seen, small relative to the
+        # indexed-by-nothing DELETE on last_seen, small relative to the
         # fetch/classify work already done this run.
         removed = cleanup_old(conn)
         if removed:

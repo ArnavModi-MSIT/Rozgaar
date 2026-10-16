@@ -54,6 +54,60 @@ class SavedResumeTests(unittest.TestCase):
         return self.client.post("/api/resume", files={"file": (name, text.encode(), "text/plain")},
                                 data={"save_for_later": str(save).lower()})
 
+    def test_global_vocabulary_edits_preserve_manual_and_empty_overrides(self):
+        for manual in [["python", "power bi"], []]:
+            with self.subTest(manual=manual):
+                self.assertEqual(self.upload().status_code, 200)
+                self.assertEqual(self.client.put("/api/resume/skills", json={"skills": manual}).status_code, 200)
+                self.assertEqual(self.client.post("/api/custom-skills", json={"skill": "pipeline"}).status_code, 200)
+                self.assertEqual(self.client.get("/api/resume").json()["skills"], sorted(manual))
+                self.assertEqual(self.client.delete("/api/custom-skills/pipeline").status_code, 200)
+                self.assertEqual(self.client.get("/api/resume").json()["skills"], sorted(manual))
+                self.assertEqual(self.client.post("/api/resume/previous").status_code, 200)
+                self.assertEqual(self.client.get("/api/resume").json()["skills"], sorted(manual))
+
+    def test_vocabulary_edits_refresh_auto_skills_without_reembedding_resume(self):
+        self.assertEqual(self.upload().status_code, 200)
+        initial = self.encode.call_count
+        self.client.post("/api/custom-skills", json={"skill": "pipeline"})
+        self.assertIn("pipeline", self.client.get("/api/resume").json()["skills"])
+        with patch.object(data, "rescore", wraps=data.rescore) as rescore:
+            response = self.client.post("/api/custom-skills", json={"skill": "pipeline"})
+            self.assertFalse(response.json()["added"])
+            self.client.delete("/api/custom-skills/does-not-exist")
+            rescore.assert_not_called()
+        self.client.delete("/api/custom-skills/pipeline")
+        self.assertNotIn("pipeline", self.client.get("/api/resume").json()["skills"])
+        self.assertEqual(self.encode.call_count, initial)
+
+    def test_job_cache_write_failure_does_not_reject_resume(self):
+        with patch.object(data, "save_embedding_cache", side_effect=OSError("Read-only cache")), self.assertLogs("jobbot.api", level="WARNING"):
+            response = self.upload(save=False)
+        self.assertEqual(response.status_code, 200, response.text)
+        self.assertEqual(response.json()["scored"], 1)
+
+    def test_list_and_detail_share_one_pool_hash_until_jobs_reload(self):
+        self.assertEqual(self.upload().status_code, 200)
+        data.invalidate_jobs()
+        with patch.object(data, "compute_job_pool_key", wraps=data.compute_job_pool_key) as fingerprint:
+            self.client.get("/api/jobs")
+            self.client.get("/api/jobs/a")
+            self.client.get("/api/jobs")
+            self.assertEqual(fingerprint.call_count, 1)
+            self.add_job("b")
+            jobs = self.client.get("/api/jobs").json()["jobs"]
+            self.assertEqual(len(jobs), 2)
+            self.assertEqual(fingerprint.call_count, 2)
+            self.assertEqual(set(data.resume_state()["scores"]), {"a", "b"})
+
+    def test_failed_vocabulary_rescore_retains_active_manual_corrections(self):
+        self.assertEqual(self.upload().status_code, 200)
+        self.client.put("/api/resume/skills", json={"skills": ["python"]})
+        with patch.object(data, "rank_by_resume", side_effect=RuntimeError("Synthetic scoring failure")):
+            with self.assertRaises(RuntimeError):
+                self.client.post("/api/custom-skills", json={"skill": "pipeline"})
+        self.assertEqual(self.client.get("/api/resume").json()["skills"], ["python"])
+
     def test_restart_reuses_parsing_and_embedding_with_equal_scores(self):
         response = self.upload()
         self.assertEqual(response.status_code, 200, response.text)

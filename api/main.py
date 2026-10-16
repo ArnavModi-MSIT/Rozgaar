@@ -307,26 +307,36 @@ def create_custom_skill(req: CustomSkillRequest):
         skills = sorted(get_custom_skills(conn))
     finally:
         conn.close()
-    # A new keyword changes what extract_skills() finds in the RESUME
-    # immediately; jobs keep their stored skills until
-    # `run.py --reprocess-skills` is run.
-    state = data.resume_state()
-    if added and state["text"].strip():
-        data.set_resume(state["key"], state["text"], data.extract_resume_skills(state["text"]))
+    if added:
+        _refresh_resume_skills()
     return {"added": bool(added), "skills": skills}
+
+
+@data.synchronized
+def _refresh_resume_skills():
+    """Global vocabulary edits respect the user's full-set correction, even empty."""
+    state = data.resume_state()
+    if not state["text"].strip():
+        return
+    conn = data.connect()
+    try:
+        saved = get_resume_skill_override(conn, state["key"])
+    finally:
+        conn.close()
+    effective = saved if saved is not None else data.extract_resume_skills(state["text"])
+    data.set_resume(state["key"], state["text"], effective)
 
 
 @app.delete("/api/custom-skills/{skill}")
 def delete_custom_skill(skill: str):
     conn = data.connect()
     try:
-        remove_custom_skill(conn, skill)
+        removed = remove_custom_skill(conn, skill)
         skills = sorted(get_custom_skills(conn))
     finally:
         conn.close()
-    state = data.resume_state()
-    if state["text"].strip():
-        data.set_resume(state["key"], state["text"], data.extract_resume_skills(state["text"]))
+    if removed:
+        _refresh_resume_skills()
     return {"skills": skills}
 
 

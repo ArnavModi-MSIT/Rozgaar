@@ -1,92 +1,78 @@
 # Improvement roadmap
 
-This file lists proposed work for the current local, single-user prototype. Items here are **not implemented** unless marked otherwise. Start with data quality and evaluation before adding application automation.
+Updated October 16, 2026. Job Intel is a personal, local application. Favor fewer missed opportunities, useful filters and quick repeat use. Add features only when they solve an observed problem.
 
-## 1. Make listings trustworthy
+## Completed in this implementation
 
-### Check whether a job is still open
+- **Experience parsing:** numeric-only Experience fields, required/preferred field labels, HTML boundaries and Unicode ranges work. Zero-based ranges remain distinct from unknowns and 1+ minima.
+- **Requirement headings:** Qualifications, Who you are, Key Requirements, What we're looking for and Skills required are recognized. Preferred sections stay separate.
+- **Manual skills:** global custom-skill edits preserve the saved full-set resume correction, including an empty set. No-op edits skip rescoring; automatic profiles update when there is no correction.
+- **Retention:** cleanup uses `last_seen`, with a legacy `first_seen` fallback, preserving recently observed old jobs and dismissals.
+- **Conservative deduplication:** full normalized descriptions and canonical posting URLs replace the shared 500-character prefix. Distinct URLs and incomplete descriptions remain separate. Confirmed duplicates refresh observation dates without resetting dismissals.
+- **Embedding-cache safety:** shared model/parser/chunk signatures, finite/shape validation, atomic writes and a nonfatal disk-cache failure path. Old vectors rebuild once after updating.
+- **Repeat-use speed:** bounded caches reuse job skill sections and experience results; the job snapshot stores its fingerprint once instead of hashing full descriptions on every list/detail click.
 
-The database now records when a job was first seen and when the same source ID was observed again. Old rows are removed after 365 days. These dates do not tell us whether an employer closed a posting yesterday.
+No additional service, cloud API, database schema or model was introduced. The existing local saved-resume feature, MiniLM matcher and strict required-or-preferred 1+ experience filter remain in use.
 
-- Add `last_checked` and an `open`, `closed`, or `unknown` status to each job.
-- Continue updating `last_seen` for exact source IDs. Mark a job closed only after a reliable source signal or repeated absence from a proven-complete source, since a failed or partial fetch must not close every job from that source.
-- Show the check date and status in the React UI. Let the user open the original posting before applying.
+### Verification
 
-**Done when:** a closed sample posting disappears from the default list, while a temporary source failure leaves existing postings marked unknown rather than closed.
+Offline unit/API tests cover these failures, unchanged-job cache reuse, model/parser changes, malformed vectors, interrupted writes, saved-resume reload and manual corrections. A separate smoke check uses the real already-cached MiniLM model with synthetic jobs/resume. These checks establish behavior, not measured recommendation accuracy. The per-step synthetic skill-cache benchmark is not a full-app speed benchmark.
 
-### Store eligibility as data
+Close the previous API console, then launch **Open Job Intel.cmd**. Existing descriptions are re-evaluated on API reload. A later normal collection is needed to recover postings skipped by the former dedup policy. The more conservative rule can show genuine reposts with new URLs separately; that tradeoff avoids silently losing distinct openings.
 
-The current experience extractor in [`core/experience.py`](core/experience.py) can miss postings that offer separate fresher and experienced tracks. Other sources may expose explicit eligibility fields that the current common job record does not store.
+## Next useful local improvements
 
-- Save explicit source fields for minimum experience, student eligibility, degree or course, graduation year, and deadline when available.
-- Keep `unknown` distinct from `not eligible`; do not infer eligibility from a missing field.
-- Add filters for genuinely relevant student roles when a supported source provides verifiable student, course, or graduation-year fields.
-- Check extracted experience against a small set of manually reviewed postings, especially mixed-track descriptions.
+### 1. Make removed jobs easy to recover
 
-**Done when:** the UI can distinguish a confirmed fresher role from a role with no stated experience requirement.
+- Add undo for a removal and a view of dismissed jobs.
+- Add lightweight saved/applied states only if useful to the daily workflow.
+- Keep original links, notes and dates in the existing SQLite database.
 
-### Monitor source health
+**Success:** a mistaken removal is recoverable from the UI and application progress survives a restart.
 
-[`run.py`](run.py) stores per-platform run statistics, and `python stats.py --health` now reports latest status, last successful fetch, fetched/saved counts, failure reason, and unusual drops. Extend the report to per-company boards and add an explicit completeness signal to the remaining fetchers. Keep rate limits and source access rules in mind; do not work around blocked or private endpoints.
+### 2. Show source problems clearly
 
-**Done when:** every collector distinguishes a complete empty result from an interrupted or partial fetch, and a broken company board is visible without inspecting a long console log.
+- Extend existing `stats.py --health` information with per-company counts, missing descriptions and complete/partial/failure reasons.
+- Expose a compact health view through the existing API and UI when it is useful; a separate metrics service is unnecessary.
+- Coordinate requests to shared ATS hosts, honor date/numeric Retry-After values and report cooldowns/partial results explicitly.
+- Consume completed collection results promptly while keeping SQLite writes sequential.
 
-## 2. Measure and improve matching
+**Success:** a broken or incomplete company source is obvious without reading a long traceback.
 
-### Build a small evaluation set
+### 3. Improve freshness without hiding valid jobs
 
-The current [`core/matcher.py`](core/matcher.py) blends semantic similarity and skill overlap. Its score clipping bounds and relevance rules have not been calibrated on labeled resume–job pairs, so the displayed percentage is a ranking score rather than a probability of fit.
+- Show the latest observation/check date clearly.
+- Add open/closed/unknown only when a source gives reliable evidence. A failed or partial run must not close its jobs.
+- Preserve source IDs and user state. Consider duplicate relationships only if visible duplicates become a practical problem; no learned deduplication system is needed by default.
 
-- Label about 100–200 resume–job pairs as relevant, borderline, or irrelevant across data, software, and unrelated roles. Keep resumes private and use only data you may share.
-- Report precision at 10 for each resume, the rate of clearly irrelevant jobs in the top 10, and examples of false positives and false negatives.
-- Compare the current blend with keyword-only and embedding-only baselines before changing weights or thresholds.
-- If a new method wins on a held-out set, document the measured improvement and the cases it still misses.
+**Success:** confirmed closed jobs leave the default list while temporary source failures preserve existing opportunities.
 
-**Done when:** changes to the match formula are supported by a repeatable evaluation, not just a few attractive examples.
+### 4. Improve matching from actual mistakes
 
-### Handle long and difficult resumes
+- Hand-review a small representative set of relevant, borderline and irrelevant jobs, including adjacent roles and overlapping-skill false positives.
+- For numerical comparisons, keep held-out labels private and compare BM25, MiniLM-only and the current hybrid on identical data. The existing evaluator reports precision and NDCG; do not invent results.
+- Experiment with SQLite FTS5/BM25 or a local top-N reranker only if the baseline shows a need and local latency is acceptable.
+- Make required-only experience filtering or role-preference controls explicit options if wanted. Keep the current strict filter as the existing default.
+- Inspect difficult PDF extraction and scanned resumes. Optional local OCR should run only when needed and show the extracted text for review.
 
-[`core/embeddings.py`](core/embeddings.py) limits model input length, so later sections of a long resume can be truncated. [`core/resume_text.py`](core/resume_text.py) extracts text from PDF, DOCX, and TXT files but does not OCR scanned PDFs.
+**Success:** changes address reviewed errors and preserve useful fresher opportunities. A larger model is not automatically an improvement.
 
-- Detect empty or very short extraction and show a clear message; consider OCR only for scanned files.
-- Compare whole-resume matching with section-level embeddings for skills, experience, and projects.
-- Improve the current React resume skill editor with suggestions from the global skill vocabulary and clearer feedback when a correction changes job ranking.
+### 5. Keep maintenance practical
 
-**Done when:** a scanned or long sample resume has an understandable result, and section-level matching improves the labeled evaluation before replacing the current method.
+- Record tested Python/dependency versions so updates are repeatable; React already has a lockfile.
+- Fix Windows-specific test isolation before adding cross-platform CI. Use the existing offline unittest suite and React build; pytest conversion is optional.
+- Add SQLite indexes only after checking actual queries; use ordered migrations when the next schema change is needed.
+- Share common ATS/request helpers where contracts match, preserving employer-specific country and detail rules.
+- Simplify README/config prose as those areas are touched. Keep source audits in docs.
 
-## 3. Make the app easier to rely on
+## Remaining limits
 
-### Add useful application states
+Scoring still uses the shared API state lock, explanations are generated for the full ranked pool, and ranking constants are uncalibrated. Source completeness varies and postings do not yet have a verified lifecycle state. Those are remaining improvements, not completed features.
 
-The UI can dismiss jobs. Add optional `saved`, `applied`, and `interview` states with dates and notes so users can track work without losing the original job link. Keep these records only in the local database by default.
+Celery/Redis, Kafka, Kubernetes, a separate vector database, multi-user hosting and LLM agents are outside the current local-use plan.
 
-**Done when:** a job can be saved, marked applied, and found again after restarting the app.
+## Review evidence
 
-### Improve cold-start feedback and privacy
-
-First-time embedding of a large job pool can take time. Show progress and explain when the model is downloading or new jobs are being embedded. The API now rejects resume files over 5 MB; consider a text-length limit and better file validation if larger inputs become common. Avoid logging resume text. The current FastAPI resume state is shared process memory, so keep the server on localhost until per-user state and authentication exist.
-
-**Done when:** users see useful progress during a cold start, malformed uploads fail clearly, and resume contents do not appear in logs.
-
-### Add automated checks
-
-- Use saved, non-sensitive response fixtures to test pagination, normalization, and failures for representative fetchers such as Greenhouse and Workday.
-- Test deduplication, India location handling, experience extraction, and skill matching with edge cases found in real postings.
-- Test the FastAPI resume and job endpoints using a temporary SQLite database.
-- Run Python tests and the React production build in GitHub Actions without live scraping or model downloads on every pull request.
-
-**Done when:** a change that breaks parsing, the API contract, or the React build fails locally or in CI before it is merged.
-
-## 4. Explore later
-
-- **Application assistance:** investigate Playwright for opening a posting and prefilling common fields, with user review before any submission. Treat each employer's form and access rules separately.
-- **Multi-user deployment:** only after adding authentication, per-user resume storage, access controls, and a deployment plan. The current API is designed for localhost use.
-- **Source expansion:** add a source only when it provides real, relevant listings and can be maintained; improve existing source quality first.
-
-## Suggested next milestone
-
-1. Label a small resume–job evaluation set and record the current top-10 quality.
-2. Add `last_seen` and a reliable open/closed/unknown status for collected jobs.
-3. Add fixture-based tests for more ATS collectors, then set up CI.
-
-These three tasks give evidence that the listings and ranking are useful before expanding the feature set.
+- [Initial audit comparison](docs/ARCHITECTURE_AUDIT_REVIEW.md)
+- [Consolidated audit validation](docs/AUDIT_VALIDATION_OCT16.md)
+- [Current architecture](ARCHITECTURE.md)

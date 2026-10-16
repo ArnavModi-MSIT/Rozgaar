@@ -1,5 +1,15 @@
 # Job Intel
 
+## Personal-use fixes (October 16)
+
+- Experience fields such as `Experience: 1+ years` are now recognized; zero-based ranges stay eligible under the existing filter. Common requirement headings are recognized too.
+- Global custom-skill edits preserve manual resume corrections, including an intentionally empty corrected set.
+- Cleanup uses the last observation, and duplicate checks use the full description plus posting URL. Distinct requisition URLs remain separate; confirmed duplicates preserve dismissals and refresh observation dates.
+- Embedding caches validate the model/parser identity and vector shape. Cache writes are atomic; a cache-write failure does not reject the loaded resume.
+- Unchanged experience/skill parsing and the current job snapshot's fingerprint are reused to reduce repeated scoring work.
+
+Close an older running API console, then use **Open Job Intel.cmd** to launch the updated app without scraping. The first resume load after this update rebuilds incompatible section embeddings once. Existing saved job descriptions are re-evaluated automatically; recovering jobs skipped by the old dedup rule requires a later collection. Saved resumes and dismissals are retained. See [improvement.md](improvement.md) for the remaining optional work.
+
 The [October 15 source audit](docs/COMPANY_BATCH_OCT15.md) checks 106 requested
 employers: **63 connected and 43 skipped**, with links and reasons for each.
 [CONNECTED_COMPANIES.md](CONNECTED_COMPANIES.md) is the alphabetized names-only

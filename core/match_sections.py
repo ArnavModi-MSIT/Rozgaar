@@ -1,10 +1,13 @@
 """Deterministic section parsing and explainable skill weighting, all local."""
 import re
+from functools import lru_cache
 from core.skills import build_patterns, extract_skills
 from core.experience import extract_min_experience, experience_requirements
 
+SECTION_VERSION = "sections-v4"
+
 HEADINGS = {
-    "required": r"(?:basic|minimum|required) qualifications|requirements|essential skills|what you bring|what you need",
+    "required": r"(?:(?:basic|minimum|required) )?qualifications|(?:key |job )?requirements|(?:key )?skills required|required skills|essential skills|what you bring|what you need|who you are|what (?:we.re|we are) looking for",
     "preferred": r"preferred qualifications|preferred skills|nice to have|bonus skills",
     "responsibilities": r"responsibilities|job description|what you.ll do|your role|about the role",
     "projects": r"projects|personal projects|academic projects|selected projects",
@@ -50,9 +53,11 @@ def resume_parts(text):
     relevant = "\n".join(filter(None, [parts["skills"], evidence]))
     return [relevant or text, evidence or relevant or text], bool(evidence)
 
-def weighted_skills(description, stored_skills, resume_skills):
+@lru_cache(maxsize=16384)
+def _job_skill_sections(description, extra_skills):
+    """Cache job-only parsing; manual resume skills still affect vocabulary and scores."""
     parts = sections(description)
-    patterns = build_patterns(set(stored_skills) | set(resume_skills))
+    patterns = _skill_patterns(extra_skills)
     required = extract_skills(parts["required"], patterns)
     preferred = extract_skills(parts["preferred"], patterns) - required
     for line in re.split(r"\n+|(?<=[.!?])\s+", parts["general"] + "\n" + parts["responsibilities"]):
@@ -61,7 +66,20 @@ def weighted_skills(description, stored_skills, resume_skills):
         if re.search(r"\b(must have|required|mandatory|essential)\b", line, re.I) and not re.search(r"\b(preferred|nice to have)\b", line, re.I):
             required |= extract_skills(line, patterns)
     preferred -= required
-    all_skills = set(stored_skills) | extract_skills(description, patterns) | required | preferred
+    all_skills = extract_skills(description, patterns) | required | preferred
+    return frozenset(required), frozenset(preferred), frozenset(all_skills)
+
+
+@lru_cache(maxsize=32)
+def _skill_patterns(extra_skills):
+    return build_patterns(extra_skills)
+
+
+def weighted_skills(description, stored_skills, resume_skills):
+    vocabulary = tuple(sorted(set(stored_skills) | set(resume_skills)))
+    required, preferred, detected = _job_skill_sections(description or "", vocabulary)
+    required, preferred = set(required), set(preferred)
+    all_skills = set(stored_skills) | set(detected)
     weights = {skill: 3 if skill in required else 1 if skill in preferred else 2 for skill in all_skills}
     denominator = sum(weights.values())
     pct = 100 * sum(weight for skill, weight in weights.items() if skill in resume_skills) / denominator if denominator else None

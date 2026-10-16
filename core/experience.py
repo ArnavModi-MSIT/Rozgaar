@@ -45,6 +45,8 @@ window. Documented here rather than papered over.
 """
 
 import re
+from html import unescape
+from functools import lru_cache
 
 _WINDOW = 60  # chars of context scanned on each side of "experience"
 _LOCAL_WINDOW = 40  # tighter window around each NUMBER match itself, used
@@ -157,7 +159,31 @@ def _extract_min_experience_legacy(text):
     return None
 
 
-_SECTION_RE = re.compile(r"\b(basic qualifications|required qualifications|minimum qualifications|required skills|preferred qualifications|preferred skills|experience(?=\s*:)|(?:key )?responsibilities|benefits)\s*:?[ \t]*", re.I)
+_SECTION_RE = re.compile(r"\b(basic qualifications|required qualifications|minimum qualifications|required skills|preferred qualifications|preferred skills|(?:(?:required|minimum|preferred|professional|work|total)\s+)?experience(?:\s+(?:required|preferred))?(?=\s*:)|(?:key )?responsibilities|benefits)\s*:?[ \t]*", re.I)
+
+
+def _bare_experience_years(text):
+    """A numeric-only first line is meaningful under an explicit Experience heading."""
+    lines = [line.strip(" \t:-•") for line in text.splitlines() if line.strip()]
+    if not lines:
+        return []
+    line = _REQUIRED_SIGNAL_RE.sub("", _PREFERRED_SIGNAL_RE.sub("", lines[0])).strip(" .,:;")
+    match = _YEAR_NUM_RE.fullmatch(line)
+    return [_year_value(match.group(1))] if match else []
+
+
+def _plain_experience_text(text):
+    text = unescape(text or "")
+    text = re.sub(r"</?(?:p|div|li|h[1-6]|br)\b[^>]*>", "\n", text, flags=re.I)
+    return re.sub(r"<[^>]+>", " ", text)
+
+
+def _preferred_section(name, previous):
+    if "preferred" in name:
+        return True
+    if name in {"experience", "work experience", "professional experience", "total experience"}:
+        return previous
+    return False
 
 def _long_requirement_years(text):
 
@@ -188,6 +214,7 @@ def extract_min_experience(text):
 
     """Description-based heuristic; required sections outrank preferred sections."""
 
+    text = _plain_experience_text(text)
     if not text:return None
 
     headings=list(_SECTION_RE.finditer(text))
@@ -204,16 +231,24 @@ def extract_min_experience(text):
     required=[]
 
     remaining=[text[:headings[0].start()]]
+    preferred_context = False
 
     for index,heading in enumerate(headings):
 
         section=text[heading.end():headings[index+1].start() if index+1<len(headings) else len(text)]
 
         name=heading.group(1).lower()
+        preferred_context = _preferred_section(name, preferred_context)
+        if preferred_context:
+            continue
 
-        if name.startswith(('basic','required','minimum','experience')):
+        if 'preferred' not in name and name.startswith(('basic','required','minimum','experience','professional','work','total')):
 
             years=_long_requirement_years(section)
+
+            first_line = section.strip().splitlines()[0] if section.strip() else ""
+            if 'experience' in name and not _PREFERRED_SIGNAL_RE.search(first_line):
+                years.extend(_bare_experience_years(section))
 
             legacy=_extract_min_experience_legacy(section)
 
@@ -222,7 +257,7 @@ def extract_min_experience(text):
 
             required.extend(years)
 
-        elif not name.startswith('preferred'):
+        elif 'preferred' not in name:
 
             remaining.append(section)
 
@@ -241,25 +276,35 @@ _SENTENCE_SPLIT_RE = re.compile(r"(?<=[.!?])\s+|\n+")
 
 def extract_preferred_experience(text):
     """Preferred years remain separate from mandatory minimum experience."""
+    text = _plain_experience_text(text)
     if not text:
         return None
     headings = list(_SECTION_RE.finditer(text))
     candidates = []
+    bare_years = []
+    preferred_context = False
     for index, heading in enumerate(headings):
-        if heading.group(1).lower().startswith("preferred"):
+        name = heading.group(1).lower()
+        preferred_context = _preferred_section(name, preferred_context)
+        if preferred_context:
             end = headings[index + 1].start() if index + 1 < len(headings) else len(text)
             candidates.append(text[heading.end():end])
+            if "experience" in name:
+                bare_years.extend(_bare_experience_years(text[heading.end():end]))
     # Handle explicit preferences without a preferred-section heading too.
     for line in _SENTENCE_SPLIT_RE.split(text):
         if _PREFERRED_SIGNAL_RE.search(line) and not _REQUIRED_SIGNAL_RE.search(line):
             candidates.append(line)
+            heading = _SECTION_RE.search(line)
+            if heading and "experience" in heading.group(1).lower():
+                bare_years.extend(_bare_experience_years(line[heading.end():]))
     years = []
     for candidate in candidates:
         # The containing section or clause already established preference.
         # Removing those words lets the existing year/experience association
         # check run without promoting this preference to a required minimum.
         years.extend(_long_requirement_years(_PREFERRED_SIGNAL_RE.sub(" ", candidate)))
-    return _strongest_requirement(years, "\n".join(candidates))
+    return _strongest_requirement(years + bare_years, "\n".join(candidates))
 
 
 def extract_title_experience(title):
@@ -278,6 +323,7 @@ def extract_title_experience(title):
     return _strongest_requirement(values, title)
 
 
+@lru_cache(maxsize=16384)
 def experience_requirements(description, title=""):
     """Combine description requirements with numeric title evidence separately."""
     required = extract_min_experience(description)

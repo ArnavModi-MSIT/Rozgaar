@@ -16,6 +16,7 @@ per-session store.
 """
 
 from functools import wraps
+import logging
 import sqlite3
 import threading
 import time
@@ -41,6 +42,7 @@ DB_PATH = str(Path(__file__).resolve().parents[1] / "db" / "jobs.db")
 # thread pool, so two requests really can touch this concurrently — e.g.
 # a dismiss landing while a resume upload is mid-score.
 _lock = threading.RLock()
+log = logging.getLogger("jobbot.api")
 
 _jobs_cache = {"df": None, "loaded_at": 0.0}
 _JOBS_TTL_SECONDS = 30
@@ -132,6 +134,7 @@ def get_jobs_df(force_reload=False):
             return _jobs_cache["df"]
         df = _load_jobs_df()
         _jobs_cache["df"] = df
+        _jobs_cache["pool_key"] = compute_job_pool_key(df)
         _jobs_cache["loaded_at"] = time.time()
         return df
 
@@ -140,6 +143,14 @@ def invalidate_jobs():
     with _lock:
         _jobs_cache["df"] = None
         _jobs_cache["loaded_at"] = 0.0
+        _jobs_cache.pop("pool_key", None)
+
+
+def _pool_key(df):
+    """One fingerprint per cached snapshot; external/test frames are computed directly."""
+    if df is _jobs_cache["df"] and "pool_key" in _jobs_cache:
+        return _jobs_cache["pool_key"]
+    return compute_job_pool_key(df)
 
 
 def _ensure_embeddings(df):
@@ -151,7 +162,10 @@ def _ensure_embeddings(df):
         _embedding_cache = load_embedding_cache()
     embeddings, updated, num_new = embed_jobs_incremental(df, _embedding_cache)
     if num_new:
-        save_embedding_cache(updated)
+        try:
+            save_embedding_cache(updated)
+        except OSError:
+            log.warning("Job embeddings are available in memory, but their cache could not be saved.")
     _embedding_cache = updated
     return embeddings
 
@@ -182,7 +196,7 @@ def rescore(df=None):
     )
     _resume["scores"] = dict(zip(scored["id"], scored["match_pct"]))
     _resume["explanations"] = dict(zip(scored["id"], scored["match_explanation"]))
-    _resume["pool_key"] = compute_job_pool_key(df)
+    _resume["pool_key"] = _pool_key(df)
     return len(_resume["scores"])
 
 
@@ -239,7 +253,7 @@ def job_list_payload(df):
     several thousand jobs, which would make this response tens of
     megabytes. The detail endpoint serves description/experience-lines on
     demand instead."""
-    if _resume["text"].strip() and _resume.get("pool_key") != compute_job_pool_key(df):
+    if _resume["text"].strip() and _resume.get("pool_key") != _pool_key(df):
         rescore(df)
     scores = _resume["scores"]
     rows = []
@@ -282,7 +296,7 @@ def job_detail_payload(job_id):
     df = get_jobs_df()
     if df.empty:
         return None
-    if _resume["text"].strip() and _resume.get("pool_key") != compute_job_pool_key(df):
+    if _resume["text"].strip() and _resume.get("pool_key") != _pool_key(df):
         rescore(df)
     match = df[df["id"] == job_id]
     if match.empty:

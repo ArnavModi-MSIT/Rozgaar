@@ -2,6 +2,7 @@
 from sentence_transformers import util
 
 import os
+import tempfile
 from pathlib import Path
 
 import torch
@@ -10,7 +11,13 @@ import pandas as pd
 import config
 from core.embeddings import get_model, model_cache_identity
 from core.skills import extract_skills
-from core.match_sections import job_parts, resume_parts, weighted_skills, eligibility_checks
+from core.match_sections import SECTION_VERSION, job_parts, resume_parts, weighted_skills, eligibility_checks
+
+CHUNK_TOKENS = 192
+
+
+def _embedding_pipeline_identity():
+    return f"{SECTION_VERSION}|tokens={CHUNK_TOKENS}|mean|{model_cache_identity()}"
 
 # Provisional fixed scaling, not calibrated on a labeled job dataset.
 SIM_FLOOR = 0.15
@@ -60,9 +67,10 @@ def compute_job_pool_key(jobs_df):
     return hashlib.sha256(combined.encode()).hexdigest()
 
 
-def _job_content_hash(job_id, title, description):
+def _job_content_hash(job_id, title, description, identity=None):
     import hashlib
-    return hashlib.sha256(f"sections-v3|{job_id}|{title or ''}|{description or ''}".encode()).hexdigest()
+    identity = identity or _embedding_pipeline_identity()
+    return hashlib.sha256(f"{identity}|{job_id}|{title or ''}|{description or ''}".encode()).hexdigest()
 
 
 def embed_jobs(jobs_df):
@@ -88,8 +96,8 @@ def _encode_section_pairs(pairs):
             tokens = model.tokenizer.encode(
                 text, add_special_tokens=False, truncation=False, verbose=False
             )
-            pieces = [model.tokenizer.decode(tokens[i:i+192], skip_special_tokens=True)
-                      for i in range(0, len(tokens), 192)] or [""]
+            pieces = [model.tokenizer.decode(tokens[i:i+CHUNK_TOKENS], skip_special_tokens=True)
+                      for i in range(0, len(tokens), CHUNK_TOKENS)] or [""]
             pair_groups.append((len(chunks), len(chunks) + len(pieces)))
             chunks.extend(pieces)
         groups.append(pair_groups)
@@ -101,7 +109,7 @@ def embed_jobs_incremental(jobs_df, cache=None):
     """Embeds only jobs NOT already covered by `cache` — a dict of
     job_id -> (content_hash, embedding_row_tensor), typically loaded via
     load_embedding_cache(). A cached embedding is reused only when BOTH
-    the job_id AND its content hash (id+title+description) match; a job
+    the job_id AND its model/parser/content hash match and its tensor is valid; a job
     whose description changed later without its id changing (e.g. via
     run.py --refetch-oracle) is correctly NOT reused.
 
@@ -124,6 +132,10 @@ def embed_jobs_incremental(jobs_df, cache=None):
         return None, {}, 0
 
     cache = dict(cache) if cache else {}
+    model = get_model()
+    get_dimension = getattr(model, "get_embedding_dimension", None) or model.get_sentence_embedding_dimension
+    dimension = get_dimension()
+    identity = _embedding_pipeline_identity()
     job_ids = jobs_df["id"].tolist()
     titles = jobs_df["title"].fillna("").tolist()
     descriptions = jobs_df["description"].fillna("").tolist()
@@ -133,9 +145,12 @@ def embed_jobs_incremental(jobs_df, cache=None):
     to_embed_idx = []
     to_embed_texts = []
     for i, (jid, title, desc) in enumerate(zip(job_ids, titles, descriptions)):
-        h = _job_content_hash(jid, title, desc)
+        h = _job_content_hash(jid, title, desc, identity)
         entry = cache.get(jid)
-        if entry is not None and entry[0] == h:
+        if (isinstance(entry, (tuple, list)) and len(entry) == 2 and entry[0] == h
+                and isinstance(entry[1], torch.Tensor) and entry[1].is_floating_point()
+                and entry[1].layout == torch.strided
+                and tuple(entry[1].shape) == (2, dimension) and torch.isfinite(entry[1]).all()):
             rows[i] = entry[1]
         else:
             to_embed_idx.append(i)
@@ -147,7 +162,7 @@ def embed_jobs_incremental(jobs_df, cache=None):
             row_tensor = new_embeddings[offset]
             rows[i] = row_tensor
             jid = job_ids[i]
-            h = _job_content_hash(jid, titles[i], descriptions[i])
+            h = _job_content_hash(jid, titles[i], descriptions[i], identity)
             cache[jid] = (h, row_tensor)
 
     # Drop cache entries for jobs no longer in the current pool — keeps
@@ -165,8 +180,17 @@ DEFAULT_EMBEDDINGS_CACHE_PATH = str(Path(__file__).resolve().parents[1] / "db" /
 def save_embedding_cache(cache, path=DEFAULT_EMBEDDINGS_CACHE_PATH):
     """Persist the per-job embedding cache to disk across process restarts. cache: dict of job_id -> (content_hash,
     embedding_row_tensor), as produced by embed_jobs_incremental()."""
-    os.makedirs(os.path.dirname(path) or ".", exist_ok=True)
-    torch.save(cache, path)
+    target = Path(path)
+    target.parent.mkdir(parents=True, exist_ok=True)
+    temporary = None
+    try:
+        with tempfile.NamedTemporaryFile(dir=target.parent, prefix=target.name + ".", suffix=".tmp", delete=False) as stream:
+            temporary = Path(stream.name)
+            torch.save(cache, stream)
+        os.replace(temporary, target)
+    finally:
+        if temporary is not None:
+            temporary.unlink(missing_ok=True)
 
 
 def load_embedding_cache(path=DEFAULT_EMBEDDINGS_CACHE_PATH):
@@ -190,7 +214,7 @@ def resume_embedding_key(text):
     import hashlib
     import json
     pair, _ = resume_parts(text)
-    value = ["resume-sections-v1:chunks192:mean", model_cache_identity(), pair]
+    value = [_embedding_pipeline_identity(), pair]
     return hashlib.sha256(json.dumps(value, ensure_ascii=False).encode()).hexdigest()
 
 
