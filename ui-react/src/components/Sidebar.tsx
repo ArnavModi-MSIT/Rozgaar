@@ -5,8 +5,10 @@ interface Props {
   filters: Filters;
   onFilterChange: (patch: Partial<Filters>) => void;
   resume: ResumeState;
-  onUpload: (file: File) => void;
+  onUpload: (file: File, saveForLater: boolean) => void;
   onClearResume: () => void;
+  onUsePreviousResume: () => void;
+  onDeleteSavedResume: () => void;
   onUpdateResumeSkills: (skills: string[]) => Promise<void>;
   resumeBusy: boolean;
   resumeError: string | null;
@@ -50,6 +52,8 @@ export default function Sidebar({
   resume,
   onUpload,
   onClearResume,
+  onUsePreviousResume,
+  onDeleteSavedResume,
   onUpdateResumeSkills,
   resumeBusy,
   resumeError,
@@ -62,6 +66,7 @@ export default function Sidebar({
   const fileRef = useRef<HTMLInputElement>(null);
   const [draftSkills, setDraftSkills] = useState<string[]>([]);
   const [newSkill, setNewSkill] = useState("");
+  const [saveForLater, setSaveForLater] = useState(true);
   useEffect(() => setDraftSkills(resume.skills), [resume.skills]);
 
   const addSkill = () => {
@@ -78,11 +83,36 @@ export default function Sidebar({
         <h2 className="text-sm font-semibold tracking-wide uppercase text-gray-500 mb-2">
           Resume
         </h2>
+        {resume.saved_resume && (
+          <div className="mb-3 rounded-md border border-gray-200 bg-gray-50 px-3 py-2">
+            <p className="text-xs text-gray-600">Saved on this PC</p>
+            <p className="text-sm break-all mt-0.5">{resume.saved_resume.filename}</p>
+            {(!resume.loaded || resume.resume_key !== resume.saved_resume.resume_key) && (
+              <button
+                type="button"
+                disabled={resumeBusy}
+                onClick={onUsePreviousResume}
+                className="w-full mt-2 rounded-md bg-amber-700 px-3 py-2 text-sm text-white hover:bg-amber-800 disabled:opacity-60"
+              >
+                {resumeBusy ? "Loading…" : "Use previous resume"}
+              </button>
+            )}
+            <button
+              type="button"
+              disabled={resumeBusy}
+              onClick={onDeleteSavedResume}
+              className="mt-2 text-xs text-gray-600 underline hover:text-gray-900 disabled:opacity-40"
+            >
+              Delete saved copy
+            </button>
+          </div>
+        )}
         {resume.loaded ? (
           <div className="rounded-md bg-green-50 border border-green-200 px-3 py-2">
             <p className="text-sm text-green-800">
               Loaded — {resume.word_count} words
             </p>
+            {resume.filename && <p className="mt-0.5 text-xs text-green-700 break-all">{resume.filename}</p>}
             <p className="text-xs text-green-700 mt-0.5">
               {resume.skills.length} resume skills
             </p>
@@ -127,7 +157,7 @@ export default function Sidebar({
               disabled={resumeBusy}
               className="mt-2 text-xs text-gray-600 underline hover:text-gray-900 disabled:opacity-40"
             >
-              Remove resume
+              Unload resume
             </button>
           </div>
         ) : (
@@ -139,7 +169,7 @@ export default function Sidebar({
               className="hidden"
               onChange={(e) => {
                 const f = e.target.files?.[0];
-                if (f) onUpload(f);
+                if (f) onUpload(f, saveForLater);
                 e.target.value = "";
               }}
             />
@@ -150,8 +180,18 @@ export default function Sidebar({
             >
               {resumeBusy ? "Scoring jobs…" : "Upload resume (pdf, docx, txt)"}
             </button>
+            <label className="flex items-center gap-2 mt-2 text-xs text-gray-600">
+              <input
+                type="checkbox"
+                checked={saveForLater}
+                disabled={resumeBusy}
+                onChange={(e) => setSaveForLater(e.target.checked)}
+                className="accent-amber-700"
+              />
+              Save for next time on this PC
+            </label>
             <p className="text-xs text-gray-500 mt-1.5">
-              Ranks every job by how well it matches.
+              Reuse saved resume text and embeddings after restarting. Delete the saved copy anytime.
             </p>
           </>
         )}

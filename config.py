@@ -117,8 +117,7 @@ ASHBY = [
 #   Ashby: "cohere" (144 postings, but cohere.com's own careers page lists
 #     no India office — likely a dead end), "pinecone" (8, thin regardless)
 #   Workable: "huggingface" (7 postings, small NYC/Paris company, doubtful)
-#     — config.WORKABLE is currently empty; this would be its first entry
-#     if you want to confirm the Workable fetcher against a real board.
+#     — not configured. The verified Workable boards are listed below.
 # (twilio/vercel moved up into GREENHOUSE above — confirmed India-relevant.)
 
 # --- Oracle Recruiting Cloud (ORC) --------------------------------------------
@@ -775,3 +774,136 @@ DISPLAY_NAMES["bms"] = "Bristol Myers Squibb"
 
 # October 14 additional student/graduate employer batch.
 DISPLAY_NAMES.update({'redhat': 'Red Hat', 'nxp': 'NXP Semiconductors', 'marvell': 'Marvell Technology', 'microchip': 'Microchip Technology', 'cloudera': 'Cloudera', 'ciena': 'Ciena', 'proofpoint': 'Proofpoint', 'workdaycompany': 'Workday', 'silabs': 'Silicon Labs', 'f5': 'F5', 'browserstack': 'BrowserStack', 'guidewire': 'Guidewire', 'appian': 'Appian', 'couchbaseinc': 'Couchbase', 'inmobi': 'InMobi', 'typeface': 'Typeface', 'coupa': 'Coupa', 'Netradyne': 'Netradyne', 'amagi': 'Amagi', 'netapp': 'NetApp'})
+
+
+# October 15 requested employer expansion (live source checks in docs/COMPANY_BATCH_OCT15.md).
+GREENHOUSE.extend(['cloudflare', 'druva', 'elastic', 'harnessinc', 'highradius', 'jfrog', 'observeai', 'sumologic'])
+LEVER.extend(['epifi'])
+ASHBY.extend(['uipath'])
+WORKABLE.extend(['innovaccer-analytics', 'tiger-analytics'])
+
+# Every new Workday feed verifies each accepted detail country. Boards without
+# complete India facets scan their public global board and retain India details.
+WORKDAY_INDIA.extend([
+    {'company': 'wellsfargo', 'tenant': 'wf', 'wd_server': 'wd1', 'site': 'WellsFargoJobs', 'verify_detail_country': True},
+    {'company': 'accenture', 'tenant': 'accenture', 'wd_server': 'wd103', 'site': 'AccentureCareers', 'verify_detail_country': True},
+    {'company': 'airbus', 'tenant': 'ag', 'wd_server': 'wd3', 'site': 'Airbus', 'verify_detail_country': True},
+    {'company': 'apollo', 'tenant': 'athene', 'wd_server': 'wd5', 'site': 'Apollo_Careers', 'verify_detail_country': True},
+    {'company': 'bakerhughes', 'tenant': 'bakerhughes', 'wd_server': 'wd5', 'site': 'BakerHughes', 'verify_detail_country': True, 'verify_global_country': True},
+    {'company': 'blackstone', 'tenant': 'blackstone', 'wd_server': 'wd1', 'site': 'Blackstone_Careers', 'verify_detail_country': True, 'verify_global_country': True},
+    {'company': 'boeing', 'tenant': 'boeing', 'wd_server': 'wd1', 'site': 'EXTERNAL_CAREERS', 'verify_detail_country': True},
+    {'company': 'broadridge', 'tenant': 'broadridge', 'wd_server': 'wd5', 'site': 'Careers', 'verify_detail_country': True},
+    {'company': 'capitalone', 'tenant': 'capitalone', 'wd_server': 'wd12', 'site': 'Capital_One', 'verify_detail_country': True, 'india_facet_pattern': '^Bangalore,\\s*IN$'},
+    {'company': 'citi', 'tenant': 'citi', 'wd_server': 'wd5', 'site': '2', 'verify_detail_country': True},
+    {'company': 'dbs', 'tenant': 'dbs', 'wd_server': 'wd3', 'site': 'DBS_Careers', 'verify_detail_country': True},
+    {'company': 'factset', 'tenant': 'factset', 'wd_server': 'wd108', 'site': 'FactSetCareers', 'verify_detail_country': True, 'verify_global_country': True},
+    {'company': 'fidelityinvestments', 'tenant': 'fmr', 'wd_server': 'wd1', 'site': 'FidelityCareers', 'verify_detail_country': True},
+    {'company': 'fis', 'tenant': 'fis', 'wd_server': 'wd5', 'site': 'SearchJobs', 'verify_detail_country': True, 'verify_global_country': True},
+    {'company': 'gartner', 'tenant': 'gartner', 'wd_server': 'wd5', 'site': 'EXT', 'verify_detail_country': True},
+    {'company': 'geaerospace', 'tenant': 'geaerospace', 'wd_server': 'wd5', 'site': 'GE_ExternalSite', 'verify_detail_country': True, 'verify_global_country': True},
+    {'company': 'iqvia', 'tenant': 'iqvia', 'wd_server': 'wd1', 'site': 'IQVIA', 'verify_detail_country': True},
+    {'company': 'morningstar', 'tenant': 'morningstar', 'wd_server': 'wd5', 'site': 'Americas', 'verify_detail_country': True},
+    {'company': 'nasdaq', 'tenant': 'nasdaq', 'wd_server': 'wd1', 'site': 'Global_External_Site', 'verify_detail_country': True},
+    {'company': 'natwest', 'tenant': 'rbs', 'wd_server': 'wd3', 'site': 'RBS', 'verify_detail_country': True, 'id_bullet_index': 1},
+    {'company': 'northerntrust', 'tenant': 'ntrs', 'wd_server': 'wd1', 'site': 'northerntrust', 'verify_detail_country': True},
+    {'company': 'quantiphi', 'tenant': 'quantiphi', 'wd_server': 'wd1', 'site': 'Careers_at_Quantiphi', 'verify_detail_country': True, 'verify_global_country': True},
+    {'company': 'shell', 'tenant': 'shell', 'wd_server': 'wd3', 'site': 'ShellCareers', 'verify_detail_country': True},
+    {'company': 'statestreet', 'tenant': 'statestreet', 'wd_server': 'wd1', 'site': 'Global', 'verify_detail_country': True},
+    {'company': 'thomsonreuters', 'tenant': 'thomsonreuters', 'wd_server': 'wd5', 'site': 'External_Career_Site', 'verify_detail_country': True, 'id_bullet_index': 2},
+    {'company': 'thoughtspot', 'tenant': 'thoughtspot', 'wd_server': 'wd5', 'site': 'careers', 'verify_global_country': True},
+    {'company': 'uniphore', 'tenant': 'uniphore', 'wd_server': 'wd503', 'site': 'Uniphore', 'verify_detail_country': True},
+])
+
+# Separate public employer portals; see fetchers/employer_portals.py.
+EMPLOYER_PORTALS = [
+    {'company': 'upstox', 'kind': 'upstox'},
+    {'company': 'hasura', 'kind': 'gem', 'board': 'promptql', 'expected_team': 'PromptQL'},
+    {'company': 'c5i', 'kind': 'c5i'},
+    {'company': 'mathco', 'kind': 'peoplestrong', 'host': 'mathco-careers.peoplestrong.com'},
+    {'company': 'acko', 'kind': 'kula', 'account': 'acko'},
+    {'company': 'akamai', 'kind': 'oracle', 'base_url': 'https://fa-extu-saasfaprod1.fa.ocs.oraclecloud.com', 'site': 'CX_1'},
+    {'company': 'anz', 'kind': 'successfactors', 'host': 'careers.anz.com'},
+    {'company': 'bny', 'kind': 'oracle', 'base_url': 'https://eofe.fa.us2.oraclecloud.com', 'site': 'BNY-Careers'},
+    {'company': 'cashfree', 'kind': 'kula', 'account': 'cashfree'},
+    {'company': 'clevertap', 'kind': 'kula', 'account': 'clevertap'},
+    {'company': 'eightfoldai', 'kind': 'pcsx', 'host': 'app.eightfold.ai', 'domain': 'volkscience.com'},
+    {'company': 'evalueserve', 'kind': 'darwinbox', 'host': 'lighthouse.darwinbox.com'},
+    {'company': 'exxonmobil', 'kind': 'successfactors', 'host': 'jobs.exxonmobil.com'},
+    {'company': 'honeywell', 'kind': 'oracle', 'base_url': 'https://ibqbjb.fa.ocs.oraclecloud.com', 'site': 'CX_1'},
+    {'company': 'icertis', 'kind': 'oracle', 'base_url': 'https://iaaviz.fa.ocs.oraclecloud.com', 'site': 'Jobs-at-Icertis'},
+    {'company': 'jupiter', 'kind': 'keka', 'host': 'jupiter.keka.com'},
+    {'company': 'latentview', 'kind': 'darwinbox', 'host': 'latentview.darwinbox.in'},
+    {'company': 'moengage', 'kind': 'trakstar', 'host': 'moengage.hire.trakstar.com'},
+    {'company': 'perfios', 'kind': 'darwinbox', 'host': 'perfios.darwinbox.in'},
+    {'company': 'porter', 'kind': 'darwinbox', 'host': 'porter.darwinbox.in'},
+    {'company': 'slice', 'kind': 'kula', 'account': 'slice'},
+    {'company': 'spinny', 'kind': 'darwinbox', 'host': 'spinzone.darwinbox.in'},
+    {'company': 'whatfix', 'kind': 'trakstar', 'host': 'whatfix101.hire.trakstar.com'},
+    {'company': 'wingify', 'kind': 'keka', 'host': 'wingify.keka.com'},
+]
+
+DISPLAY_NAMES.update({
+    'upstox': 'Upstox',
+    'hasura': 'PromptQL (Hasura)',
+    'c5i': 'C5i',
+    'mathco': 'MathCo',
+    'accenture': 'Accenture',
+    'acko': 'Acko',
+    'akamai': 'Akamai Technologies',
+    'evalueserve': 'Evalueserve',
+    'wellsfargo': 'Wells Fargo',
+    'airbus': 'Airbus',
+    'anz': 'ANZ',
+    'apollo': 'Apollo Global Management',
+    'bakerhughes': 'Baker Hughes',
+    'blackstone': 'Blackstone',
+    'bny': 'BNY',
+    'boeing': 'Boeing',
+    'broadridge': 'Broadridge',
+    'capitalone': 'Capital One',
+    'cashfree': 'Cashfree Payments',
+    'citi': 'Citi',
+    'clevertap': 'CleverTap',
+    'cloudflare': 'Cloudflare',
+    'dbs': 'DBS Bank',
+    'druva': 'Druva',
+    'eightfoldai': 'Eightfold AI',
+    'elastic': 'Elastic',
+    'epifi': 'Fi Money',
+    'exxonmobil': 'ExxonMobil',
+    'factset': 'FactSet',
+    'fidelityinvestments': 'Fidelity Investments',
+    'fis': 'FIS',
+    'gartner': 'Gartner',
+    'geaerospace': 'GE Aerospace',
+    'harnessinc': 'Harness',
+    'highradius': 'HighRadius',
+    'honeywell': 'Honeywell',
+    'icertis': 'Icertis',
+    'innovaccer-analytics': 'Innovaccer',
+    'iqvia': 'IQVIA',
+    'jfrog': 'JFrog',
+    'jupiter': 'Jupiter Money',
+    'latentview': 'LatentView Analytics',
+    'moengage': 'MoEngage',
+    'morningstar': 'Morningstar',
+    'nasdaq': 'Nasdaq',
+    'natwest': 'NatWest Group',
+    'northerntrust': 'Northern Trust',
+    'observeai': 'Observe.AI',
+    'perfios': 'Perfios',
+    'porter': 'Porter',
+    'quantiphi': 'Quantiphi',
+    'shell': 'Shell',
+    'slice': 'Slice',
+    'spinny': 'Spinny',
+    'statestreet': 'State Street',
+    'sumologic': 'Sumo Logic',
+    'thomsonreuters': 'Thomson Reuters',
+    'thoughtspot': 'ThoughtSpot',
+    'tiger-analytics': 'Tiger Analytics',
+    'uipath': 'UiPath',
+    'uniphore': 'Uniphore',
+    'whatfix': 'Whatfix',
+    'wingify': 'Wingify',
+})

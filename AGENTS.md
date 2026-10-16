@@ -7,7 +7,7 @@ Read [ARCHITECTURE.md](ARCHITECTURE.md) before changing behavior. It describes t
 - This is a local, single-user prototype. `python run.py` collects jobs into SQLite; FastAPI serves that database and ranks it when a resume is uploaded; React displays and filters the results.
 - Collection fetchers return common job dictionaries and are registered in `core/collector.py`. Network fetching overlaps, while `run.py` writes to SQLite sequentially.
 - Job categories and resume matching use `all-MiniLM-L6-v2`. Skill extraction and experience parsing are separate heuristic steps. A displayed match percentage is a ranking score, not an eligibility probability.
-- The loaded resume and current scores live in API process memory. The job database, embedding cache, dismissals, and saved resume skill overrides are local state.
+- The active resume and scores live in API process memory. An optional saved parsed resume and its section embeddings live in ignored `db/saved_resume.json`; the sidebar can reuse or delete that copy. Job embeddings, dismissals and resume skill overrides are also local state. Never commit saved resume files.
 - The React sidebar edits the current resume's skill set through the API. Global custom-skill endpoints still have no React controls. Roadmap items are not implemented features.
 - Keep inference, resume data, and storage local. `JOB_INTEL_OFFLINE=1` blocks normal collection and requires the downloaded model in `models/`; do not add a paid API or hosted runtime dependency.
 

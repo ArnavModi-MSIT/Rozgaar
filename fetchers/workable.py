@@ -47,25 +47,37 @@ def fetch_workable(slug):
     data = _get(f"https://apply.workable.com/api/v1/widget/accounts/{slug}?details=true")
     if not isinstance(data,dict) or not isinstance(data.get("jobs"),list):
         raise RuntimeError("Workable board unavailable: "+slug)
-    jobs = []
+    jobs = {}
     for j in data.get("jobs", []):
-        loc = j.get("location") or {}
-        if slug == "amagi" and (loc.get("country_code", "").upper() != "IN" and loc.get("country", "").lower() != "india"):
+        locations = j.get("locations") or [j.get("location") or {
+            "country": j.get("country", ""), "city": j.get("city", ""), "region": j.get("state", "")
+        }]
+        if slug in {"amagi", "tiger-analytics", "innovaccer-analytics"}:
+            locations = [loc for loc in locations if
+                         (loc.get("country_code") or loc.get("countryCode") or "").upper() == "IN"
+                         or (loc.get("country") or "").lower() == "india"]
+        if not locations:
             continue
-        location = loc.get("location_str", "") or ", ".join(
+        location = "; ".join(dict.fromkeys(loc.get("location_str") or ", ".join(
             p for p in [loc.get("city", ""), loc.get("region", ""), loc.get("country", "")] if p
-        )
+        ) for loc in locations))
         shortcode = j.get("shortcode", "")
         description = f"{j.get('description', '')} {j.get('full_description', '')}".strip()
-        jobs.append({
+        if not shortcode or not j.get("title"):
+            raise RuntimeError("Workable listing ID or title missing: " + slug)
+        if shortcode in jobs:
+            previous = jobs[shortcode]["location"]
+            jobs[shortcode]["location"] = "; ".join(dict.fromkeys([previous, location]))
+            continue
+        jobs[shortcode] = {
             "company": slug,
             "source_id": shortcode,
             "title": j.get("title", ""),
             "location": location,
             "url": j.get("url") or j.get("shortlink") or f"https://apply.workable.com/{slug}/j/{shortcode}/",
             "description": strip_html(description, max_chars=None),
-        })
-    return jobs
+        }
+    return list(jobs.values())
 
 
 def collect(slugs):

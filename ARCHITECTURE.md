@@ -1,5 +1,85 @@
 # Architecture and code guide
 
+## October 15 employer expansion
+
+The [106-company audit](docs/COMPANY_BATCH_OCT15.md) records 63 new connections,
+43 skipped companies, verification scope and partial-source limitations.
+[CONNECTED_COMPANIES.md](CONNECTED_COMPANIES.md) contains 228 distinct configured
+employer names; it is an inventory, not a live source-health or salary guarantee.
+
+`config.EMPLOYER_PORTALS` is registered as `employer_portals` in the collector.
+`fetchers/employer_portals.py` handles public Darwinbox, Keka, Kula, Trakstar,
+Oracle, SuccessFactors, PCSX and PeopleStrong boards. It counts listing IDs before selecting
+explicit India locations, retains available full descriptions, and returns
+`CollectionResult` with partial status for missing pages, counts or descriptions.
+Keka supplies descriptions in its active-jobs response. Darwinbox supplies JD and
+experience fields. Kula supplies a delivered React data stream: JSON is decoded
+without executing JavaScript, and text references use UTF-8 byte lengths.
+Trakstar uses listing cards and public detail HTML/JSON-LD; Oracle combines
+description, responsibilities and qualifications. The new PCSX employer adapter
+reads full public job-page JSON-LD instead of a department-only stub. These
+adapters read vacancy data and do not call applicant or application endpoints.
+
+`fetchers/peoplestrong.py` handles MathCo using the public `jobs/v1` listing and
+`job/{code}/v2` detail endpoints, even though the listing HTML returns 404. It
+paginates global counts before filtering the country-first location hierarchy
+to India, verifies detail requisition code/title/country, retains the full JD
+and explicit experience years, and reports incomplete listings or details as
+partial. Its 29 India listings and all descriptions were verified October 16;
+the two US listings were excluded. It is registered through `employer_portals`.
+
+`fetchers/c5i.py` discovers every city in the official India country block,
+reads its public WordPress `c5i_jobs_by_city` action with the current page nonce,
+checks each city count and `hasNext`, and deduplicates by requisition ID while
+merging city memberships. It reads full `.job-description` content from public
+detail pages and verifies ID/title before accepting text. A `0/0` source
+experience pair is omitted as an unset placeholder; valid ranges are appended
+to the full JD. Failures, mismatches or future unconsumed pages produce partial
+status. October 16 verified 12 unique jobs across Bengaluru/Gurugram/Mumbai
+(10/8/5 memberships) with all 12 descriptions. It uses `employer_portals`.
+
+`fetchers/gem.py` reads the public Gem job-board GraphQL listing and detail
+queries, registered through `employer_portals`. PromptQL uses company key
+`hasura` and display name `PromptQL (Hasura)`, matching the JD naming. The
+collector verifies board ownership, posting IDs, titles, public visibility and
+India country codes (`IN`/`IND`), then combines uncut description, intro/outro
+and compensation sections. The current listing query returns the full array
+without pagination. An explicit generic talent-community title is excluded.
+Failed queries or details are distinguished from valid empty results. October
+16 verified 5 global entries: 3 US-only roles, 1 India vacancy and 1 general
+talent-community form. Only the India vacancy is collected; it requires 5+ years.
+
+`employer_portals.fetch_upstox` selects only rows explicitly published on the
+official careers page (`post_on_careers_page=1`) with country India from its
+first-party open jobs feed. It joins those IDs to `fetch_darwinbox` full JDs,
+verifies titles, and excludes extra board-only IDs. It retains explicit
+experience metadata and restates numeric Experience headings for the existing
+parser, without assigning a zero minimum to internships. Missing details or
+partial board pages remain partial. October 16 verified all 17 published India
+jobs, including Product Intern (CX), with all descriptions. That internship has
+conflicting Mumbai structured location and Bangalore JD text; source metadata
+is retained and the audit records the discrepancy.
+
+Existing ATS adapters handle the other additions. Cloudflare's geographic
+posting metadata replaces its non-geographic `In-Office` label. UiPath uses
+structured country metadata. Workable supports both flat and array location
+formats, selects India locations for the new boards and merges duplicate
+shortcodes. Innovaccer's current slug is `innovaccer-analytics`.
+
+The India Workday adapter overlaps at most four employer boards, each with four
+detail workers. Each detail worker reuses its own HTTP session, closed after the
+pool finishes. New configurations verify each detail's country; explicit India
+secondary locations are retained without displaying foreign locations. Boards
+without a complete India facet use global pagination and country verification.
+An optional `india_facet_pattern` handles a verified tenant-specific location
+label; it is not a general city-to-country guess. NatWest and Thomson Reuters
+configure their requisition-ID bullet positions explicitly. The normal shared
+run deadline still applies, so large sources may return partial results.
+
+These checks did not populate SQLite. A normal collection is still required to
+save new postings. Existing matching, experience thresholds, dismissals and the
+API/UI collection boundary continue to apply.
+
 The [October 8 company expansion](docs/COMPANY_BATCH_20.md) adds seventeen active
 companies and records three pending investigations. `career_html.py` handles
 Nutanix HTML, MathWorks RSS, MAQ Atom, SAP public Next.js data, Micron PCSX,
@@ -160,16 +240,20 @@ The API applies the same India-or-unknown country rule when loading previously s
 | `custom_skills` | `skill` | User-added terms used by the regex skill extractor. |
 | `resume_skill_overrides` | `resume_key`, `skills` | Corrected skill set keyed by SHA-256 of the uploaded file bytes. |
 
-`db/jobs.db` and `db/job_embeddings_cache.pt` are ignored by Git. The full resume text is **not stored in SQLite**: `api/data.py` keeps the current resume text, key, skill set, and per-job scores in a module-level `_resume` dictionary. Restarting the API clears that live state; saved skill overrides remain in SQLite. This design is only suitable for one local user and one API process.
+`db/jobs.db`, `db/job_embeddings_cache.pt` and `db/saved_resume.*` are ignored by Git. Resume text is **not stored in SQLite**. The active text, file hash, filename, skills, resume section embedding, scores and explanations live in `api/data.py` process memory. With the save checkbox selected, `core/resume_cache.py` atomically writes one optional local JSON copy containing parsed text, automatic skills, hashes, filename and two section vectors. The original uploaded PDF/DOCX bytes and per-job scores are not retained in this file. Restarting clears active state; `Use previous resume` explicitly restores the copy and recomputes scores. SQLite skill overrides still take precedence. This remains a single-user, single-process localhost design.
 
 ## Resume upload and ranking
 
-1. React sends a PDF, DOCX, or TXT file to `POST /api/resume` as multipart form data. The API rejects unsupported extensions and files larger than 5 MB.
+1. React sends a PDF, DOCX, or TXT file to `POST /api/resume` with the optional multipart `save_for_later` boolean. The API rejects unsupported extensions and files larger than 5 MB. The sidebar defaults to saving; direct API clients default to not saving.
 2. `api/main.py` hashes the file bytes and adapts FastAPI's `UploadFile` to the file-like interface of `core/resume_text.py`.
-3. The parser uses PyMuPDF for PDF text, `python-docx` for paragraphs and table cells, and UTF-8 decoding for TXT. Empty extracted text is rejected. There is no OCR for scanned PDFs.
-4. The API extracts recognized resume skills. If `resume_skill_overrides` has a saved set for the file hash, that corrected set takes precedence.
-5. `api/data.py:set_resume()` calls `rescore()`. It loads or incrementally computes job embeddings and calls `rank_by_resume()`.
+3. For a matching saved file hash and document-parser signature, reuse extracted text. Otherwise the parser uses PyMuPDF for PDF, `python-docx` for DOCX paragraphs/table cells, and UTF-8 for TXT. Empty text is rejected. No OCR is provided. Upload parsing/scoring runs in a worker thread rather than blocking the API event loop.
+4. Automatic skills are reused only while the vocabulary/pattern signature matches; otherwise they are re-extracted. SQLite `resume_skill_overrides` for the file hash take precedence, including an explicitly empty override.
+5. `api/data.py:set_resume()` calls `rescore()`. It incrementally loads/computes job embeddings and reuses the resume vector if its section/model signature and tensor shape match. Otherwise it computes that vector once. `rank_by_resume()` accepts the cached vector; skill-only changes and new jobs do not re-embed unchanged resume text.
 6. Scores are held in memory as `{job_id: match_pct}` and included in later `/api/jobs` responses. Changed job content, skills, locations, or visible IDs trigger rescoring when list/detail payloads are requested. Resume state and scoring use one reentrant lock, and failed replacement restores the preceding resume state.
+
+`POST /api/resume/previous` restores the saved parsed profile without requiring another file upload. It skips document parsing and uses compatible cached vectors; current job scores are computed afresh. `DELETE /api/resume/saved` removes the persisted copy, while `DELETE /api/resume` only unloads active state. Saved metadata is returned as `saved_resume` in `GET /api/resume`, with no full text exposed there. A corrupt JSON file is a cache miss; malformed vectors trigger re-embedding. Writes use a same-directory temporary file plus atomic replacement, preserving the previous copy on failure. A write failure keeps the successfully loaded resume active and returns a visible `save_warning`.
+
+Resume vector signatures include the actual parsed section texts, chunk/pooling version, model ID, installed transformer versions and local model/Hugging Face snapshot file metadata, without loading weights or fetching the network. Reusing the saved text intentionally retains the last document extraction; reuploading after document-parser code changes reparses the original file. This file is optional personal data and is mirrored to neither Git nor the source-only export.
 
 `core/embeddings.py` lazily loads one `all-MiniLM-L6-v2` model for classification and matching within each Python process. It prefers the project-local `models/all-MiniLM-L6-v2`; outside strict offline mode it can still download the model on first use if that directory is absent. Job embeddings represent two parsed sections with token-bounded chunk pooling, described below. The model sequence limit is 512 tokens, while matching chunks use 192 content tokens. Each cached job embedding is keyed by job ID plus a versioned content hash, so unchanged jobs do not need to be re-embedded; the cache is saved with PyTorch under `db/`.
 
@@ -191,14 +275,15 @@ The React sidebar calls `PUT /api/resume/skills` to save corrections to the curr
 | --- | --- |
 | `GET /api/jobs`, `GET /api/jobs/{id}` | Lists all non-dismissed jobs, then fetches description and experience lines for one job on demand. The list omits descriptions to reduce payload size. |
 | `GET /api/stats` | Count of visible jobs, distinct companies, and whether a resume is loaded. |
-| `POST /api/resume`, `GET /api/resume`, `DELETE /api/resume` | Upload and score a resume; inspect or clear process-memory resume state. |
+| `POST /api/resume`, `GET /api/resume`, `DELETE /api/resume` | Upload/score with optional local saving; inspect active/saved metadata; unload active state. |
+| `POST /api/resume/previous`, `DELETE /api/resume/saved` | Restore the saved parsed resume and embeddings; delete the persisted copy. |
 | `PUT /api/resume/skills` | Save a corrected skill set for the current resume and rescore. |
 | `GET/POST /api/custom-skills`, `DELETE /api/custom-skills/{skill}` | Read, add, or remove custom skill terms. Existing job rows need `--reprocess-skills` after taxonomy changes. |
 | `POST /api/jobs/{id}/dismiss`, `POST /api/jobs/dismiss-bulk` | Persist `dismissed=1` and invalidate the 30-second job DataFrame cache. |
 
 The API reads non-dismissed jobs from SQLite into a Pandas DataFrame, computes derived location flags and the `is_senior` flag, then serializes list rows. `ui-react/src/types.ts` manually mirrors those JSON fields. Update both sides when the API contract changes.
 
-The React app fetches the full list once per refresh and filters in browser memory. Its default filter hides jobs with **2 or more years required or preferred**; jobs with both values unknown (`-1`) stay visible. Location text is a substring search; Remote/NCR/India checkboxes combine with OR. With a resume loaded it hides scores below 20 and sorts by score; otherwise it sorts by `first_seen`. It displays 40 rows at first and reveals more in batches. Opening a job link dismisses it only when the optional auto-remove toggle is enabled; the toggle defaults to off. Dismissal is stored in SQLite. The React UI does not currently distinguish “applied” from “not interested.”
+The React app fetches the full list once per refresh and filters in browser memory. Its default filter hides jobs with **1 or more years required or preferred**; jobs with both values unknown (`-1`) stay visible. Location text is a substring search; Remote/NCR/India checkboxes combine with OR. With a resume loaded it hides scores below 20 and sorts by score; otherwise it sorts by `first_seen`. It displays 40 rows at first and reveals more in batches. Opening a job link dismisses it only when the optional auto-remove toggle is enabled; the toggle defaults to off. Dismissal is stored in SQLite. The React UI does not currently distinguish “applied” from “not interested.”
 
 In development, Vite on port 5173 proxies `/api` to FastAPI on `127.0.0.1:8000`. After `npm run build`, `api/main.py` serves the `ui-react/dist` index and assets from the API origin. The built directory is generated and ignored by Git.
 
@@ -444,13 +529,25 @@ Saved descriptions refresh while retaining dismissals; role and numeric
 experience filters apply after collection.
 
 Swiss Re (`fetchers/swissre.py`) reads the supplied `country=IN` search with
-Bangalore, Hyderabad and Mumbai city selections. All 14 cards are present in
+Bangalore, Hyderabad and Mumbai city selections. Cards are present in
 server-rendered HTML; slider controls change visibility rather than fetch pages.
-The collector checks reported total and unique IDs, requires each card's `IN`
-country label, and reads full detail text from `ArticleSection .richtext`,
-retaining paragraph boundaries. October 10, 2026 validation returned 14 jobs
-and 14 descriptions, status `ok`. Count mismatches and missing descriptions
+The collector checks reported total and unique IDs and reads full detail text
+from `ArticleSection .richtext`, retaining paragraph boundaries. October 16,
+2026 validation returned 26 India jobs and 26 descriptions, status `ok`.
+Multi-location cards are parsed from accessible link text with explicit
+city/state/country codes. This avoids duplicate mobile/desktop labels and
+`+ 1 more` controls; only locations explicitly marked `IN` are retained. A
+single primary label is a fallback, with controls removed. Foreign or unknown
+country labels are still rejected. Count mismatches and missing descriptions
 report partial results; saved text refreshes without clearing dismissals.
+
+HRT (`fetchers/hrt.py`) remains configured, but its careers HTML and WordPress
+AJAX endpoint returned HTTP 403 during October 16 checks. Its public REST
+page returned builder shortcodes without a usable vacancy feed. No working
+alternative was verified. The collector now distinguishes HTTP rejection and
+access-challenge HTML from a missing page configuration and a valid empty
+response. It reports failed access honestly; no challenge bypass is attempted.
+Other collectors continue when this individual platform fails.
 
 GE Appliances is configured in `WORKDAY_INDIA` (tenant `haier`, server `wd3`,
 site `GE_Appliances`, company key `geappliances`). The shared adapter discovers

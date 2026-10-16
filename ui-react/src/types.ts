@@ -77,17 +77,29 @@ export interface Stats {
   resume_loaded: boolean;
 }
 
+export interface SavedResumeInfo {
+  resume_key: string;
+  filename: string;
+  word_count: number;
+  saved_at: string;
+}
+
 export interface ResumeState {
   loaded: boolean;
   resume_key: string | null;
   word_count: number;
   skills: string[];
+  filename: string | null;
+  saved_resume: SavedResumeInfo | null;
 }
 
 export interface ResumeUploadResult extends ResumeState {
   auto_skills: string[];
   had_saved_override: boolean;
   scored: number;
+  reused_text: boolean;
+  reused_embedding: boolean;
+  save_warning: string | null;
 }
 
 export interface Filters {

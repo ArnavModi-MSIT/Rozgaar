@@ -35,6 +35,8 @@ export default function App() {
     resume_key: null,
     word_count: 0,
     skills: [],
+    filename: null,
+    saved_resume: null,
   });
   const [resumeBusy, setResumeBusy] = useState(false);
   const [resumeError, setResumeError] = useState<string | null>(null);
@@ -162,12 +164,13 @@ export default function App() {
   );
 
   const uploadResume = useCallback(
-    async (file: File) => {
+    async (file: File, saveForLater: boolean) => {
       setResumeBusy(true);
       setResumeError(null);
       try {
-        await api.uploadResume(file);
+        const result = await api.uploadResume(file, saveForLater);
         await refresh();
+        if (result.save_warning) setResumeError(result.save_warning);
       } catch (e) {
         setResumeError(e instanceof Error ? e.message : "upload failed");
       } finally {
@@ -176,6 +179,35 @@ export default function App() {
     },
     [refresh],
   );
+
+  const usePreviousResume = useCallback(async () => {
+    if (resumeBusy) return;
+    setResumeBusy(true);
+    setResumeError(null);
+    try {
+      const result = await api.usePreviousResume();
+      await refresh();
+      if (result.save_warning) setResumeError(result.save_warning);
+    } catch (e) {
+      setResumeError(e instanceof Error ? e.message : "couldn't load the saved resume");
+    } finally {
+      setResumeBusy(false);
+    }
+  }, [refresh, resumeBusy]);
+
+  const deleteSavedResume = useCallback(async () => {
+    if (resumeBusy) return;
+    setResumeBusy(true);
+    setResumeError(null);
+    try {
+      await api.deleteSavedResume();
+      await refresh();
+    } catch (e) {
+      setResumeError(e instanceof Error ? e.message : "couldn't delete the saved copy");
+    } finally {
+      setResumeBusy(false);
+    }
+  }, [refresh, resumeBusy]);
 
   const clearResume = useCallback(async () => {
     if (resumeBusy) return;
@@ -218,6 +250,8 @@ export default function App() {
         resume={resume}
         onUpload={uploadResume}
         onClearResume={clearResume}
+        onUsePreviousResume={usePreviousResume}
+        onDeleteSavedResume={deleteSavedResume}
         onUpdateResumeSkills={updateResumeSkills}
         resumeBusy={resumeBusy}
         resumeError={resumeError}
@@ -276,7 +310,7 @@ export default function App() {
 
           {!loading && !loadError && !resume.loaded && (
             <div className="rounded-md border border-sky-200 bg-sky-50 px-3 py-2 text-sm text-sky-800 mb-4">
-              Upload your resume in the sidebar to rank jobs by how well they match.
+              Upload a resume or use your previous resume in the sidebar to rank jobs.
             </div>
           )}
 

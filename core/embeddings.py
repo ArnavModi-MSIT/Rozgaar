@@ -15,6 +15,29 @@ _model = None
 MODEL_DIR = Path(__file__).resolve().parents[1] / "models" / "all-MiniLM-L6-v2"
 
 
+def model_cache_identity():
+    """Cheap model fingerprint without loading weights or making network calls."""
+    import hashlib
+    from importlib.metadata import version
+    from huggingface_hub.constants import HF_HUB_CACHE
+    parts = ["sentence-transformers/all-MiniLM-L6-v2", "max_seq_length=512",
+             version("sentence-transformers"), version("transformers")]
+    source = MODEL_DIR
+    if not source.is_dir():
+        hub_model = Path(HF_HUB_CACHE) / "models--sentence-transformers--all-MiniLM-L6-v2"
+        ref = hub_model / "refs" / "main"
+        revision = ref.read_text(encoding="utf-8").strip() if ref.is_file() else ""
+        if revision:
+            parts.append(revision)
+            source = hub_model / "snapshots" / revision
+    if source.is_dir():
+        for path in sorted(source.rglob("*")):
+            if path.is_file() and path.suffix in {".json", ".safetensors", ".bin", ".txt"}:
+                stat = path.stat()
+                parts.append(f"{path.relative_to(source)}:{stat.st_size}:{stat.st_mtime_ns}")
+    return hashlib.sha256("\n".join(parts).encode()).hexdigest()
+
+
 def get_model():
     global _model
     if _model is None:

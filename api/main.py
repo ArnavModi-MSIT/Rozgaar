@@ -14,6 +14,8 @@ Endpoints (all JSON unless noted):
   POST   /api/resume                   multipart upload -> parse -> score
   GET    /api/resume                   what's currently loaded
   DELETE /api/resume                   unload it
+  POST   /api/resume/previous          use the locally saved resume
+  DELETE /api/resume/saved             delete the saved copy
   PUT    /api/resume/skills            correct the extracted skills + rescore
   GET    /api/custom-skills            user-added skill keywords
   POST   /api/custom-skills            add one
@@ -27,16 +29,18 @@ import hashlib
 import logging
 from pathlib import Path
 
-from fastapi import FastAPI, HTTPException, UploadFile, File, Request
+from fastapi import FastAPI, HTTPException, UploadFile, File, Form, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
+from starlette.concurrency import run_in_threadpool
 
 import os
 
 from api import data
 from core.resume_text import extract_text
+from core import resume_cache
 from core.runtime import runtime_identity
 from core.storage import (
     add_custom_skill, get_custom_skills, get_resume_skill_override,
@@ -161,29 +165,29 @@ def dismiss_job(job_id: str):
     return {"dismissed": 1, "id": job_id}
 
 
-@app.post("/api/resume")
-async def upload_resume(file: UploadFile = File(...)):
-    name = file.filename or ""
-    if Path(name).suffix.lower() not in {".pdf", ".docx", ".txt"}:
-        raise HTTPException(status_code=400, detail="upload a PDF, DOCX, or TXT resume")
-    max_bytes = 5 * 1024 * 1024
-    content = await file.read(max_bytes + 1)
-    if len(content) > max_bytes:
-        raise HTTPException(status_code=413, detail="resume exceeds the 5 MB limit")
-    adapter = _UploadAdapter(name, content)
-    resume_key = hashlib.sha256(adapter.read()).hexdigest()
-    try:
-        text = extract_text(adapter)
-    except Exception as e:
-        raise HTTPException(status_code=400, detail=f"couldn't read resume: {e}")
-
+@data.synchronized
+def _activate_resume(name=None, content=None, *, previous=None, save_for_later=False):
+    cached = previous if previous is not None else resume_cache.load()
+    parser_signature = resume_cache.parser_signature()
+    resume_key = hashlib.sha256(content).hexdigest() if content is not None else cached["resume_key"]
+    reuse_text = bool(cached and cached["resume_key"] == resume_key and
+                     (content is None or cached.get("parser_signature") == parser_signature))
+    if reuse_text:
+        text = cached["text"]
+        parser_signature = cached.get("parser_signature", "")
+        name = name or cached["filename"]
+    else:
+        try:
+            text = extract_text(_UploadAdapter(name, content))
+        except Exception as e:
+            raise HTTPException(status_code=400, detail=f"couldn't read resume: {e}")
     if not text.strip():
-        raise HTTPException(
-            status_code=400,
-            detail="no text could be extracted from that file",
-        )
-
-    auto_skills = data.extract_resume_skills(text)
+        raise HTTPException(status_code=400, detail="no text could be extracted from that file")
+    patterns = data.custom_skill_patterns()
+    signature = hashlib.sha256(repr(sorted((skill, pattern.pattern, pattern.flags)
+                                          for skill, pattern in patterns.items())).encode()).hexdigest()
+    auto_skills = (set(cached["auto_skills"]) if reuse_text and cached.get("skills_signature") == signature
+                   else data.extract_resume_skills(text))
     # A correction saved for this exact resume (by content hash) in an
     # earlier session wins over the raw extraction.
     conn = data.connect()
@@ -193,7 +197,21 @@ async def upload_resume(file: UploadFile = File(...)):
         conn.close()
     effective = saved if saved is not None else auto_skills
 
-    scored = data.set_resume(resume_key, text, effective)
+    embedding = cached.get("embedding") if reuse_text else None
+    embedding_key = cached.get("embedding_key") if reuse_text else None
+    scored = data.set_resume(resume_key, text, effective, filename=name,
+                             embedding=embedding, embedding_key=embedding_key)
+    state = data.resume_state()
+    save_warning = None
+    if save_for_later:
+        try:
+            resume_cache.save({"resume_key": resume_key, "filename": name, "text": text,
+                               "auto_skills": sorted(auto_skills), "skills_signature": signature,
+                               "parser_signature": parser_signature, "embedding": state.get("embedding"),
+                               "embedding_key": state.get("embedding_key")})
+        except OSError:
+            log.warning("Could not save the local resume cache", exc_info=True)
+            save_warning = "Resume loaded, but the saved copy could not be written. Check free disk space and folder permissions."
     return {
         "loaded": True,
         "resume_key": resume_key,
@@ -202,7 +220,40 @@ async def upload_resume(file: UploadFile = File(...)):
         "auto_skills": sorted(auto_skills),
         "had_saved_override": saved is not None,
         "scored": scored,
+        "filename": name,
+        "saved_resume": resume_cache.info(),
+        "reused_text": reuse_text,
+        "reused_embedding": scored > 0 and embedding is not None and state.get("embedding") is embedding,
+        "save_warning": save_warning,
     }
+
+
+@app.post("/api/resume")
+async def upload_resume(file: UploadFile = File(...), save_for_later: bool = Form(False)):
+    name = (file.filename or "").replace("\\", "/").rsplit("/", 1)[-1]
+    if Path(name).suffix.lower() not in {".pdf", ".docx", ".txt"}:
+        raise HTTPException(status_code=400, detail="upload a PDF, DOCX, or TXT resume")
+    max_bytes = 5 * 1024 * 1024
+    content = await file.read(max_bytes + 1)
+    if len(content) > max_bytes:
+        raise HTTPException(status_code=413, detail="resume exceeds the 5 MB limit")
+    return await run_in_threadpool(_activate_resume, name, content, save_for_later=save_for_later)
+
+
+@app.post("/api/resume/previous")
+@data.synchronized
+def use_previous_resume():
+    cached = resume_cache.load()
+    if cached is None:
+        raise HTTPException(status_code=404, detail="No saved resume available. Upload a resume and select Save for next time.")
+    return _activate_resume(previous=cached, save_for_later=True)
+
+
+@app.delete("/api/resume/saved")
+@data.synchronized
+def delete_saved_resume():
+    resume_cache.delete()
+    return {"saved_resume": None}
 
 
 @app.get("/api/resume")
@@ -213,6 +264,8 @@ def get_resume():
         "resume_key": state["key"],
         "word_count": len(state["text"].split()) if state["text"] else 0,
         "skills": sorted(state["skills"]),
+        "filename": state.get("filename"),
+        "saved_resume": resume_cache.info(),
     }
 
 

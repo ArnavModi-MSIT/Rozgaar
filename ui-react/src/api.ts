@@ -48,14 +48,23 @@ export const api = {
     return data.dismissed;
   },
 
-  async uploadResume(file: File): Promise<ResumeUploadResult> {
+  async uploadResume(file: File, saveForLater: boolean): Promise<ResumeUploadResult> {
     const form = new FormData();
     form.append("file", file);
+    form.append("save_for_later", String(saveForLater));
     return json(await fetch("/api/resume", { method: "POST", body: form }));
   },
 
   async resume(): Promise<ResumeState> {
     return json(await fetch("/api/resume"));
+  },
+
+  async usePreviousResume(): Promise<ResumeUploadResult> {
+    return json(await fetch("/api/resume/previous", { method: "POST" }));
+  },
+
+  async deleteSavedResume(): Promise<void> {
+    await json(await fetch("/api/resume/saved", { method: "DELETE" }));
   },
 
   async clearResume(): Promise<void> {

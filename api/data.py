@@ -8,8 +8,8 @@ This module owns NO matching or parsing logic of its own — it is a thin
 adapter between SQLite and JSON. Job filtering and matching reuse core/
 logic so the React UI receives the same derived fields used by the backend.
 
-STATE: this holds the loaded resume and its scores in module-level
-memory. That's deliberate and safe for what this is — a single-user tool
+STATE: the active resume and scores live in module-level memory. An optional
+local saved copy is managed by core/resume_cache.py. This is a single-user tool
 running on localhost. It is NOT safe for a multi-user deployment, and
 this backend shouldn't be exposed to one without moving this into a real
 per-session store.
@@ -30,6 +30,7 @@ from core.location import is_remote, parse_city, parse_country, is_smartrecruite
 from core.matcher import (
     embed_jobs_incremental, load_embedding_cache, rank_by_resume,
     save_embedding_cache, compute_job_pool_key,
+    embed_resume, resume_embedding_key,
 )
 from core.skills import build_patterns, extract_skills, skill_overlap
 from core.storage import get_custom_skills, init_db
@@ -48,7 +49,8 @@ _embedding_cache = None  # job_id -> (content_hash, tensor), lazily loaded
 _initialized_db_paths = set()
 
 # Current resume, if one has been uploaded this run.
-_resume = {"key": None, "text": "", "skills": set(), "scores": {}, "explanations": {}, "pool_key": None}
+_resume = {"key": None, "text": "", "skills": set(), "scores": {}, "explanations": {}, "pool_key": None,
+           "filename": None, "embedding": None, "embedding_key": None}
 
 
 def synchronized(fn):
@@ -169,8 +171,14 @@ def rescore(df=None):
         _resume["explanations"] = {}
         return 0
     embeddings = _ensure_embeddings(df)
+    embedding_key = resume_embedding_key(_resume["text"])
+    if (_resume.get("embedding") is None or _resume.get("embedding_key") != embedding_key
+            or tuple(_resume["embedding"].shape) != (2, embeddings.shape[-1])):
+        _resume["embedding"] = embed_resume(_resume["text"])
+        _resume["embedding_key"] = embedding_key
     scored = rank_by_resume(
-        df, _resume["text"], job_embeddings=embeddings, resume_skills=_resume["skills"]
+        df, _resume["text"], job_embeddings=embeddings, resume_skills=_resume["skills"],
+        resume_embedding=_resume["embedding"],
     )
     _resume["scores"] = dict(zip(scored["id"], scored["match_pct"]))
     _resume["explanations"] = dict(zip(scored["id"], scored["match_explanation"]))
@@ -179,11 +187,16 @@ def rescore(df=None):
 
 
 @synchronized
-def set_resume(key, text, skills):
+def set_resume(key, text, skills, *, filename=None, embedding=None, embedding_key=None):
     previous = dict(_resume)
     _resume["key"] = key
     _resume["text"] = text
     _resume["skills"] = set(skills)
+    _resume["filename"] = filename
+    if filename is None and key == previous["key"]:
+        _resume["filename"] = previous.get("filename")
+    if embedding is not None:
+        _resume["embedding"], _resume["embedding_key"] = embedding, embedding_key
     try:
         return rescore()
     except Exception:
@@ -200,6 +213,9 @@ def clear_resume():
     _resume["skills"] = set()
     _resume["scores"] = {}
     _resume["explanations"] = {}
+    _resume["filename"] = None
+    _resume["embedding"] = None
+    _resume["embedding_key"] = None
 
 
 @synchronized

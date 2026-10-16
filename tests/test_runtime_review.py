@@ -2,11 +2,13 @@
 from contextlib import contextmanager
 import io
 import json
+import sys
 from pathlib import Path
 import tempfile
 import unittest
 from unittest.mock import patch
 import pandas as pd
+import torch
 
 import start
 from api import data, main
@@ -31,7 +33,7 @@ class RuntimeReviewTests(unittest.TestCase):
                 pass
 
     def test_stale_backend_is_not_silently_reused(self):
-        with patch.object(start,"ui_needs_build",return_value=False),patch.object(start,"api_ready",return_value=False),patch.object(start,"api_status",return_value="stale"),patch.object(start.subprocess,"Popen") as spawn:
+        with patch.object(start,"PYTHON",Path(sys.executable)),patch.object(start,"ui_needs_build",return_value=False),patch.object(start,"api_ready",return_value=False),patch.object(start,"api_status",return_value="stale"),patch.object(start.subprocess,"Popen") as spawn:
             with self.assertRaisesRegex(RuntimeError,"older Job Intel"):
                 start.main(["--no-scrape"])
             spawn.assert_not_called()
@@ -60,7 +62,7 @@ class RuntimeReviewTests(unittest.TestCase):
         def score(jobs,*args,**kwargs):
             result=jobs.copy();result["match_pct"]=80.0;result["match_explanation"]=[{"missing_required":[]}]*len(result)
             return result
-        with patch.object(data,"_resume",state),patch.object(data,"_ensure_embeddings",return_value=None),patch.object(data,"rank_by_resume",side_effect=score) as rank:
+        with patch.object(data,"_resume",state),patch.object(data,"_ensure_embeddings",return_value=torch.ones(1,2,3)),patch.object(data,"embed_resume",return_value=torch.ones(2,3)),patch.object(data,"rank_by_resume",side_effect=score) as rank:
             payload=data.job_list_payload(df)
             self.assertEqual(payload[0]["match_pct"],80)
             self.assertEqual(payload[0]["experience_years"],2.5)

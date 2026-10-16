@@ -8,7 +8,7 @@ import torch
 import pandas as pd
 
 import config
-from core.embeddings import get_model
+from core.embeddings import get_model, model_cache_identity
 from core.skills import extract_skills
 from core.match_sections import job_parts, resume_parts, weighted_skills, eligibility_checks
 
@@ -186,7 +186,19 @@ def load_embedding_cache(path=DEFAULT_EMBEDDINGS_CACHE_PATH):
     return data if isinstance(data, dict) else {}
 
 
-def rank_by_resume(jobs_df, resume_text, job_embeddings=None, resume_skills=None):
+def resume_embedding_key(text):
+    import hashlib
+    import json
+    pair, _ = resume_parts(text)
+    value = ["resume-sections-v1:chunks192:mean", model_cache_identity(), pair]
+    return hashlib.sha256(json.dumps(value, ensure_ascii=False).encode()).hexdigest()
+
+
+def embed_resume(text):
+    return _encode_section_pairs([resume_parts(text)[0]])[0]
+
+
+def rank_by_resume(jobs_df, resume_text, job_embeddings=None, resume_skills=None, resume_embedding=None):
     """Section relevance and weighted skills; eligibility reported independently."""
     jobs_df = jobs_df.copy()
     if jobs_df.empty or not resume_text.strip():
@@ -196,7 +208,10 @@ def rank_by_resume(jobs_df, resume_text, job_embeddings=None, resume_skills=None
     if job_embeddings is None:
         job_embeddings = embed_jobs(jobs_df)
     pair, has_evidence = resume_parts(resume_text)
-    resume_embedding = _encode_section_pairs([pair])[0]
+    if resume_embedding is None:
+        resume_embedding = embed_resume(resume_text)
+    else:
+        resume_embedding = resume_embedding.to(job_embeddings.device)
     semantic = []
     for channel in range(2):
         sims = util.cos_sim(job_embeddings[:, channel, :], resume_embedding[channel:channel+1]).flatten().cpu().numpy()

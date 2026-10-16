@@ -1,5 +1,16 @@
 # Job Intel
 
+The [October 15 source audit](docs/COMPANY_BATCH_OCT15.md) checks 106 requested
+employers: **63 connected and 43 skipped**, with links and reasons for each.
+[CONNECTED_COMPANIES.md](CONNECTED_COMPANIES.md) is the alphabetized names-only
+inventory of **228 configured companies**. Some sources returned partial results
+or only received listing/sample-description checks; the audit distinguishes them.
+New postings enter SQLite on the next collection run.
+Upstox uses its official published India IDs matched to full Darwinbox descriptions: all 17 jobs verified October 16, including Product Intern (CX).
+PromptQL (Hasura) is connected through its public Gem board. Of 5 current entries, 1 is an India vacancy with a full description; US-only roles and the general talent-community form are excluded.
+C5i reads all three India city sections and deduplicates overlapping roles: 12 unique jobs with full descriptions verified October 16.
+MathCo was connected on October 16 through its public PeopleStrong vacancy API: 29 India jobs and 29 full descriptions verified; US listings are excluded and source experience is retained for the existing filters.
+
 The [additional 20-company audit](docs/COMPANY_BATCH_20.md) records seventeen
 newly connected employers, live coverage counts, and three pending sources.
 
@@ -112,6 +123,16 @@ npm run dev
 
 Open `http://localhost:5173`. Alternatively, run `npm run build` in `ui-react`, then serve the built interface from `http://127.0.0.1:8000` with the FastAPI command above.
 
+## Reuse your resume
+
+1. Upload a PDF, DOCX or TXT with **Save for next time on this PC** selected.
+2. After restarting Job Intel, click **Use previous resume** in the sidebar. It reuses the saved text and compatible embeddings, then scores the current jobs.
+3. **Unload resume** clears the active ranking while keeping the saved copy. **Delete saved copy** removes the local text/embedding file; an already loaded resume stays active until unloaded.
+
+Uploading the identical file also reuses saved parsing. A changed resume is parsed again, and changed resume sections or model fingerprints rebuild the resume vector. Editing skills or adding jobs reuses the unchanged resume vector. Job embeddings already use the incremental cache. Scores are recalculated against the current pool, so reusing a resume does not freeze old results. The optional saved copy stays on this PC; uncheck the save option to upload without replacing it.
+
+Restart an already running backend once after this update; the Windows launcher will use the rebuilt UI. No scraper rerun is needed just to enable resume reuse.
+
 ## How it works
 
 1. [`config.py`](config.py) lists companies and search filters. [`fetchers/`](fetchers/) contains separate adapters for ATS APIs and HTML career pages.
@@ -125,7 +146,7 @@ The app is intended for local, single-user use. The FastAPI server has no authen
 
 ## Repository data
 
-`db/jobs.db` stores collected listings and local actions such as dismissals. `db/job_embeddings_cache.pt` stores generated embeddings. Both are excluded from Git, along with virtual environments, React dependencies, and build output. A fresh clone starts with an empty database until the collector runs.
+`db/jobs.db` stores collected listings and local actions such as dismissals. `db/job_embeddings_cache.pt` stores generated job embeddings. When selected, `db/saved_resume.json` stores one parsed resume, filename, automatic skills and resume embeddings locally. The original PDF/DOCX is not retained. All these runtime files are excluded from Git, along with virtual environments, React dependencies and build output. A fresh clone starts with an empty database until the collector runs.
 
 Airbnb careers are included through its public Greenhouse board, with descriptions and the existing India location and app filters.
 
@@ -256,7 +277,7 @@ The shared location parser recognizes Morocco and additional explicit foreign-co
 
 ## Resume ranking explanations
 
-Upload a resume to rank jobs using separately embedded requirements and responsibilities, projects/work evidence, and skills weighted by required versus preferred context. Open **Why this ranking?** on a card for component scores, required skill gaps and separate eligibility checks. Education, unclear student eligibility and unclear work experience remain unknown for manual review; only explicit graduation-year statements are compared. Scores are heuristic relevance, not hiring probability. Existing location, experience and minimum-score filters still apply. Restart the backend after updating, rebuild React with `npm ci` and `npm run build`, and upload the resume again. The old embedding cache is automatically invalidated; no scraper rerun is required.
+Upload a resume to rank jobs using separately embedded requirements and responsibilities, projects/work evidence, and skills weighted by required versus preferred context. Open **Why this ranking?** on a card for component scores, required skill gaps and separate eligibility checks. Education, unclear student eligibility and unclear work experience remain unknown for manual review; only explicit graduation-year statements are compared. Scores are heuristic relevance, not hiring probability. Existing location, experience and minimum-score filters still apply. Restart the backend after updating, rebuild React with `npm ci` and `npm run build`, and load your saved resume (or upload once). The old embedding cache is automatically invalidated; no scraper rerun is required.
 
 To evaluate ranking on your own labeled sample, run `python scripts/evaluate_matcher.py C:\path\to\private-labels.json`. The JSON format is documented in that script; keep personal resume text and labeled job data outside the public repository. It reports precision@10 and NDCG@10.
 
@@ -334,13 +355,25 @@ Saved descriptions refresh while retaining dismissals; role and numeric
 experience filters apply after collection.
 
 Swiss Re (`fetchers/swissre.py`) reads the supplied `country=IN` search with
-Bangalore, Hyderabad and Mumbai city selections. All 14 cards are present in
+Bangalore, Hyderabad and Mumbai city selections. Cards are present in
 server-rendered HTML; slider controls change visibility rather than fetch pages.
-The collector checks reported total and unique IDs, requires each card's `IN`
-country label, and reads full detail text from `ArticleSection .richtext`,
-retaining paragraph boundaries. October 10, 2026 validation returned 14 jobs
-and 14 descriptions, status `ok`. Count mismatches and missing descriptions
+The collector checks reported total and unique IDs and reads full detail text
+from `ArticleSection .richtext`, retaining paragraph boundaries. October 16,
+2026 validation returned 26 India jobs and 26 descriptions, status `ok`.
+Multi-location cards are parsed from accessible link text with explicit
+city/state/country codes. This avoids duplicate mobile/desktop labels and
+`+ 1 more` controls; only locations explicitly marked `IN` are retained. A
+single primary label is a fallback, with controls removed. Foreign or unknown
+country labels are still rejected. Count mismatches and missing descriptions
 report partial results; saved text refreshes without clearing dismissals.
+
+HRT (`fetchers/hrt.py`) remains configured, but its careers HTML and WordPress
+AJAX endpoint returned HTTP 403 during October 16 checks. Its public REST
+page returned builder shortcodes without a usable vacancy feed. No working
+alternative was verified. The collector now distinguishes HTTP rejection and
+access-challenge HTML from a missing page configuration and a valid empty
+response. It reports failed access honestly; no challenge bypass is attempted.
+Other collectors continue when this individual platform fails.
 
 GE Appliances is configured in `WORKDAY_INDIA` (tenant `haier`, server `wd3`,
 site `GE_Appliances`, company key `geappliances`). The shared adapter discovers

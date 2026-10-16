@@ -19,6 +19,7 @@ from core.location import parse_country
 
 INDIA_SCOPED_BOARDS = {"databricks", "roku", "gleanwork", "okta", "purestorage", "gitlab", "squarepointcapital", "quberesearchandtechnologies","alphagrepsecurities", "nksecuritiesresearch", "worldquant", "imc", "optiverus", "mongodb", "datadog"}
 INDIA_SCOPED_BOARDS.update({"appian", "couchbaseinc", "inmobi", "typeface", "commvault", "sigmoid", "fanaticsinc", "fanaticscommerce", "fanaticsfbg", "fanaticscollectibles"})
+INDIA_SCOPED_BOARDS.update({"sumologic", "observeai", "elastic", "cloudflare", "jfrog", "druva", "highradius", "harnessinc"})
 
 log = logging.getLogger("jobbot")
 
@@ -83,6 +84,19 @@ def _get(url):
 
 def _greenhouse_location(slug, job):
     location = (job.get("location") or {}).get("name", "")
+    if slug == "cloudflare":
+        # The normal location says "In-Office"/"Hybrid", not a country.
+        # Use the employer's geographic posting metadata, never that label.
+        locations = [value for field in job.get("metadata") or []
+                     if field.get("name") == "Job Posting Location"
+                     for value in (field.get("value") if isinstance(field.get("value"), list) else [field.get("value")])
+                     if isinstance(value, str) and re.search(r"\bIndia\b", value, re.I)]
+        return "; ".join(locations) if locations else "Unknown"
+    if slug in {"observeai", "jfrog"} and parse_country(location) != "India":
+        locations = [office.get("location") or "" for office in job.get("offices") or []]
+        india = [value for value in locations if parse_country(value) == "India"]
+        if india:
+            return "; ".join(india)
     if slug == "inmobi" and location.strip().lower() in {"bangalore", "bengaluru", "lucknow", "new delhi", "mumbai"}:
         location = location.strip()+", India"
     # Rubrik department pages group city-only jobs under explicit India offices.
@@ -207,6 +221,14 @@ def _ashby_location(j):
     return loc or ""
 
 
+def _scoped_ashby_location(slug, job):
+    location = _ashby_location(job)
+    if slug == "uipath":
+        country = ((job.get("address") or {}).get("postalAddress") or {}).get("addressCountry")
+        return location + ", India" if country in {"IN", "India"} else "Unknown"
+    return location
+
+
 def fetch_ashby(slug):
     data = _get(f"https://api.ashbyhq.com/posting-api/job-board/{slug}")
     if not isinstance(data, dict) or not isinstance(data.get("jobs"), list):
@@ -216,14 +238,14 @@ def fetch_ashby(slug):
             "company": slug,
             "source_id": str(j.get("id", "")),
             "title": j["title"],
-            "location": _ashby_location(j),
+            "location": _scoped_ashby_location(slug, j),
             "url": j["jobUrl"],
             "description": strip_html(
                 j.get("descriptionPlain", "") or j.get("description", ""), max_chars=None
             ),
         }
         for j in data.get("jobs", [])
-        if slug != "confluent" or parse_country(_ashby_location(j)) == "India"
+        if slug not in {"confluent", "uipath"} or parse_country(_scoped_ashby_location(slug, j)) == "India"
     ]
 
 

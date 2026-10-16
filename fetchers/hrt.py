@@ -10,7 +10,16 @@ URL="https://www.hudsonrivertrading.com/careers/"
 def collect(deadline=None):
     if deadline is not None and time.monotonic()>=deadline:return CollectionResult(status="partial",error="deadline reached")
     with requests.Session() as session:
-        soup=BeautifulSoup(get_text(session,URL) or "","html.parser")
+        # Distinguish HTTP rejection from a real careers-page layout change.
+        responses=[]
+        session.hooks['response'].append(lambda response,*args,**kwargs: responses.append(response.status_code))
+        html=get_text(session,URL)
+        if not html:
+            status=f"HTTP {responses[-1]}" if responses else "network request failed"
+            raise RuntimeError(f"HRT careers page unavailable ({status}); no listings fetched")
+        soup=BeautifulSoup(html,"html.parser")
+        if soup.title and 'just a moment' in soup.title.get_text().lower():
+            raise RuntimeError("HRT careers page returned an access challenge; no listings fetched")
         wrapper=soup.select_one('.hrt-card-wrapper[data-filters-settings]')
         if not wrapper:raise RuntimeError("HRT careers settings unavailable")
         data=post_json(session,"https://www.hudsonrivertrading.com/wp-admin/admin-ajax.php",data={"action":"get_hrt_jobs_handler","setting":wrapper['data-filters-settings'],"data":"","queryparams":""})

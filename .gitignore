@@ -9,6 +9,7 @@ db/*.db-journal
 db/*.db-wal
 db/*.db-shm
 db/*.pt
+db/saved_resume.*
 models/
 
 # Generated at runtime, not source
