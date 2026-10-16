@@ -26,6 +26,7 @@ import pandas as pd
 
 import config
 from core.eligibility import eligibility_evidence
+from core.match_sections import eligibility_checks
 from core.experience import extract_experience_sentences, extract_min_experience, extract_preferred_experience, experience_requirements
 from core.location import is_remote, parse_city, parse_country, is_smartrecruiters_india_location
 from core.matcher import (
@@ -192,7 +193,7 @@ def rescore(df=None):
         _resume["embedding_key"] = embedding_key
     scored = rank_by_resume(
         df, _resume["text"], job_embeddings=embeddings, resume_skills=_resume["skills"],
-        resume_embedding=_resume["embedding"],
+        resume_embedding=_resume["embedding"], include_eligibility=False,
     )
     _resume["scores"] = dict(zip(scored["id"], scored["match_pct"]))
     _resume["explanations"] = dict(zip(scored["id"], scored["match_explanation"]))
@@ -285,6 +286,9 @@ def job_list_payload(df):
             "is_senior": bool(config.EXCLUDE_SENIOR.search(r.title or "")),
             "match_pct": scores.get(r.id),
             "match_explanation": _resume["explanations"].get(r.id),
+            "tracking_status": getattr(r, "tracking_status", "none"),
+            "posting_status": getattr(r, "posting_status", "unknown"),
+            "status_evidence": getattr(r, "status_evidence", ""),
         })
     return rows
 
@@ -305,11 +309,15 @@ def job_detail_payload(job_id):
     description = row["description"] or ""
     job_skills = {s for s in (row["skills"] or "").split(",") if s}
     matched, missing, pct = skill_overlap(_resume["skills"], job_skills)
+    explanation = _resume["explanations"].get(job_id)
+    if explanation is not None and "eligibility_checks" in explanation:
+        explanation = {**explanation, "eligibility_checks": eligibility_checks(
+            description, row["location"], _resume["text"], set(explanation.get("missing_required", [])), row["title"])}
     return {
         "id": row["id"],
         "title": row["title"],
         "description": description,
-        "match_explanation": _resume["explanations"].get(job_id),
+        "match_explanation": explanation,
         "experience_lines": extract_experience_sentences(row["title"] + "\n" + description),
         "eligibility": eligibility_evidence(description, _resume["skills"], row["title"]),
         "skill_match": {
@@ -322,3 +330,21 @@ def job_detail_payload(job_id):
 
 def extract_resume_skills(text):
     return extract_skills(text, patterns=custom_skill_patterns())
+
+
+def tracker_payload(view, limit=100, offset=0):
+    """Tracker bypasses relevance/experience filters, so saved jobs remain reachable."""
+    clauses = {"saved": "tracking_status = 'saved'", "applied": "tracking_status = 'applied'",
+               "removed": "dismissed = 1", "closed": "posting_status = 'closed'", "notes": "notes != ''"}
+    clause = clauses[view]
+    conn = connect()
+    conn.row_factory = sqlite3.Row
+    try:
+        total = conn.execute("SELECT COUNT(*) FROM jobs WHERE " + clause).fetchone()[0]
+        rows = conn.execute("""SELECT id, title, company, location, url, tracking_status, notes,
+            saved_at, applied_at, dismissed, posting_status, status_checked_at, status_evidence,
+            last_seen FROM jobs WHERE """ + clause + " ORDER BY first_seen DESC, id LIMIT ? OFFSET ?", (limit, offset))
+        jobs = [{**dict(row), "display_company": config.DISPLAY_NAMES.get(row["company"], row["company"].title())} for row in rows]
+        return {"jobs": jobs, "total": total}
+    finally:
+        conn.close()

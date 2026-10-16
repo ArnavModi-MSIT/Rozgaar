@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { api } from "../api";
-import type { Job, JobDetail } from "../types";
+import type { Job, JobDetail, JobStatePatch } from "../types";
 
 interface Props {
   job: Job;
@@ -8,6 +8,7 @@ interface Props {
   resumeLoaded: boolean;
   autoRemove: boolean;
   onDismiss: (id: string) => void;
+  onUpdate: (id: string, patch: JobStatePatch) => Promise<void>;
 }
 
 function experienceLabel(years: number): string | null {
@@ -24,10 +25,22 @@ export default function JobCard({
   resumeLoaded,
   autoRemove,
   onDismiss,
+  onUpdate,
 }: Props) {
   const [expanded, setExpanded] = useState(false);
   const [detail, setDetail] = useState<JobDetail | null>(null);
   const [detailError, setDetailError] = useState<string | null>(null);
+  const [whyOpen, setWhyOpen] = useState(false);
+  const [updating, setUpdating] = useState(false);
+  const [actionError, setActionError] = useState<string | null>(null);
+  const needsDetail = expanded || whyOpen;
+  const explanation = detail?.match_explanation ?? job.match_explanation;
+  async function update(patch: JobStatePatch) {
+    setUpdating(true); setActionError(null);
+    try { await onUpdate(job.id, patch); }
+    catch (e) { setActionError(e instanceof Error ? e.message : "Couldn't save change"); }
+    finally { setUpdating(false); }
+  }
 
   const matched = job.skills.filter((s) => resumeSkills.has(s));
   const missing = job.skills.filter((s) => !resumeSkills.has(s));
@@ -39,7 +52,7 @@ export default function JobCard({
   // Detail contains resume-dependent eligibility evidence. Refresh it when
   // the list or resume changes, and ignore responses from an older request.
   useEffect(() => {
-    if (!expanded) return;
+    if (!needsDetail) return;
     let cancelled = false;
     setDetail(null);
     setDetailError(null);
@@ -50,7 +63,7 @@ export default function JobCard({
       },
     );
     return () => { cancelled = true; };
-  }, [expanded, job, resumeSkills, resumeLoaded]);
+  }, [needsDetail, job, resumeSkills, resumeLoaded]);
 
   function toggleDetail() {
     setExpanded((current) => !current);
@@ -96,6 +109,8 @@ export default function JobCard({
               <span className="rounded bg-amber-50 text-amber-800 px-1.5 py-0.5">NCR</span>
             )}
             <span title="Last observed by a collector; verify the posting is still open before applying">Seen {job.last_seen}</span>
+            <span title={job.status_evidence}>{job.posting_status === "open" ? "Open in feed / marked open" : `Posting ${job.posting_status}`}</span>
+            {job.tracking_status !== "none" && <strong>{job.tracking_status === "saved" ? "Saved" : "Applied"}</strong>}
           </div>
 
           {resumeLoaded && skillPct !== null && (
@@ -111,19 +126,20 @@ export default function JobCard({
           )}
 
           <div className="flex flex-wrap items-start gap-3 mt-2.5">
-            {resumeLoaded && job.match_explanation && (
-              <details className="text-xs text-gray-700">
+            {resumeLoaded && explanation && (
+              <details className="text-xs text-gray-700" onToggle={e => setWhyOpen(e.currentTarget.open)}>
                 <summary className="cursor-pointer underline">Why this ranking?</summary>
                 <div className="mt-2 space-y-2 max-w-xl">
-                  <p>{job.match_explanation.note}</p>
-                  <p>Requirements relevance: {job.match_explanation.requirements_relevance.toFixed(0)} · Weighted skills: {job.match_explanation.weighted_skill_pct?.toFixed(0) ?? "unknown"}
-                    {job.match_explanation.project_responsibility_relevance !== null && <> · Project/work relevance: {job.match_explanation.project_responsibility_relevance.toFixed(0)}</>}</p>
-                  <p>Matched required skills: {job.match_explanation.matched_required.join(", ") || "none identified"}</p>
-                  <p>Required skill gaps: {job.match_explanation.missing_required.join(", ") || "none identified"}</p>
-                  <p>Matched preferred skills: {job.match_explanation.matched_preferred.join(", ") || "none identified"}</p>
-                  {job.match_explanation.relevance_gate_applied && <p>Score capped because neither target role nor sufficient skill overlap was identified.</p>}
+                  <p>{explanation.note}</p>
+                  <p>Requirements relevance: {explanation.requirements_relevance.toFixed(0)} · Weighted skills: {explanation.weighted_skill_pct?.toFixed(0) ?? "unknown"}
+                    {explanation.project_responsibility_relevance !== null && <> · Project/work relevance: {explanation.project_responsibility_relevance.toFixed(0)}</>}</p>
+                  <p>Matched required skills: {explanation.matched_required.join(", ") || "none identified"}</p>
+                  <p>Required skill gaps: {explanation.missing_required.join(", ") || "none identified"}</p>
+                  <p>Matched preferred skills: {explanation.matched_preferred.join(", ") || "none identified"}</p>
+                  {explanation.relevance_gate_applied && <p>Score capped because neither target role nor sufficient skill overlap was identified.</p>}
                   <h3 className="font-semibold">Eligibility checks — separate from relevance</h3>
-                  {job.match_explanation.eligibility_checks.map(check => <p key={check.label}><strong>{check.label}: {check.status}</strong><br />{check.evidence}</p>)}
+                  {!detail && <p>{detailError ?? "Loading eligibility evidence…"}</p>}
+                  {explanation.eligibility_checks.map(check => <p key={check.label}><strong>{check.label}: {check.status}</strong><br />{check.evidence}</p>)}
                 </div>
               </details>
             )}
@@ -139,7 +155,11 @@ export default function JobCard({
             >
               Remove
             </button>
+            <button disabled={updating} className="text-xs underline disabled:opacity-50" onClick={() => void update({ tracking_status: job.tracking_status === "saved" ? "none" : "saved" })}>{job.tracking_status === "saved" ? "Unsave" : "Save"}</button>
+            <button disabled={updating} className="text-xs underline disabled:opacity-50" onClick={() => void update({ tracking_status: job.tracking_status === "applied" ? "none" : "applied" })}>{job.tracking_status === "applied" ? "Clear applied" : "Mark applied"}</button>
+            <button disabled={updating} title="Use after confirming closure on the original posting" className="text-xs underline disabled:opacity-50" onClick={() => void update({ posting_status: "closed" })}>Mark closed</button>
           </div>
+          {actionError && <p role="alert" className="text-xs text-red-700 mt-2">{actionError}</p>}
 
           {expanded && (
             <div className="mt-3 border-t border-gray-100 pt-3">

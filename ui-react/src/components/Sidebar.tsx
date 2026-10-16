@@ -252,7 +252,7 @@ export default function Sidebar({
         </h2>
         <Check
           label="Remove a job when I open it"
-          hint="Optional: opening the link permanently hides it. Default is off."
+          hint="Optional: opening the link removes it from discovery. Recover it in Removed. Default is off."
           checked={autoRemove}
           onChange={onAutoRemoveChange}
         />
@@ -281,7 +281,7 @@ export default function Sidebar({
           )}
         </div>
         <p className="text-xs text-gray-400 mt-2">
-          Permanent — same as removing each one individually.
+          Recover removed jobs with Undo or the Removed view.
         </p>
       </div>
     </aside>

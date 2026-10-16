@@ -10,6 +10,11 @@ db/*.db-wal
 db/*.db-shm
 db/*.pt
 db/saved_resume.*
+db/*.json
+db/*.txt
+db/*.log
+db/*.png
+db/verification/
 models/
 
 # Generated at runtime, not source

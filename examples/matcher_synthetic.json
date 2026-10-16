@@ -1,0 +1,151 @@
+{
+  "name": "Synthetic ranking smoke fixture - not real accuracy evidence",
+  "synthetic": true,
+  "resume_text": "Skills:\nPython, SQL, pandas, PostgreSQL, Power BI, Excel, Git\nProjects:\nBuilt an ETL pipeline using Python and SQL, cleaned sales data with pandas and designed Power BI dashboards.\nEducation:\nComputer Science undergraduate",
+  "jobs": [
+    {
+      "id": "data-intern",
+      "title": "Data Engineer Intern",
+      "description": "Required Qualifications:\nPython, SQL\nResponsibilities:\nBuild ETL pipelines with pandas and PostgreSQL",
+      "location": "India",
+      "skills": "",
+      "grade": 2
+    },
+    {
+      "id": "bi-analyst",
+      "title": "Business Intelligence Analyst",
+      "description": "Required Qualifications:\nSQL, Power BI and Excel\nResponsibilities:\nBuild sales dashboards and analyze metrics",
+      "location": "India",
+      "skills": "",
+      "grade": 2
+    },
+    {
+      "id": "analytics-trainee",
+      "title": "Analytics Trainee",
+      "description": "Requirements:\nSQL, Python, Excel\nResponsibilities:\nClean datasets and report insights",
+      "location": "India",
+      "skills": "",
+      "grade": 2
+    },
+    {
+      "id": "python-intern",
+      "title": "Python Backend Intern",
+      "description": "Requirements:\nPython, PostgreSQL, Git\nResponsibilities:\nBuild REST APIs with FastAPI",
+      "location": "India",
+      "skills": "",
+      "grade": 1
+    },
+    {
+      "id": "ml-intern",
+      "title": "Machine Learning Intern",
+      "description": "Requirements:\nPython, pandas, scikit-learn\nResponsibilities:\nTrain classification models and evaluate predictions",
+      "location": "India",
+      "skills": "",
+      "grade": 1
+    },
+    {
+      "id": "sales-engineer",
+      "title": "Enterprise Sales Engineer",
+      "description": "Requirements:\nSalesforce, CRM, negotiation\nResponsibilities:\nClose enterprise sales contracts",
+      "location": "India",
+      "skills": "",
+      "grade": 0
+    },
+    {
+      "id": "security",
+      "title": "Network Security Engineer",
+      "description": "Requirements:\nFirewalls, Linux, routing, VPN\nPreferred Skills:\nPython\nResponsibilities:\nManage secure network infrastructure",
+      "location": "India",
+      "skills": "",
+      "grade": 0
+    },
+    {
+      "id": "frontend",
+      "title": "Frontend Developer",
+      "description": "Requirements:\nReact, TypeScript, CSS\nResponsibilities:\nBuild responsive user interfaces",
+      "location": "India",
+      "skills": "",
+      "grade": 0
+    },
+    {
+      "id": "finance",
+      "title": "Finance Analyst",
+      "description": "Requirements:\nExcel, financial modeling, accounting\nResponsibilities:\nPrepare budgets and financial statements",
+      "location": "India",
+      "skills": "",
+      "grade": 1
+    },
+    {
+      "id": "data-scientist",
+      "title": "Data Scientist",
+      "description": "Requirements:\nPython, SQL, statistics, machine learning\nResponsibilities:\nAnalyze customer datasets and develop forecasts",
+      "location": "India",
+      "skills": "",
+      "grade": 2
+    },
+    {
+      "id": "mobile",
+      "title": "Android Engineer",
+      "description": "Requirements:\nKotlin, Java, Android SDK\nResponsibilities:\nBuild mobile applications",
+      "location": "India",
+      "skills": "",
+      "grade": 0
+    },
+    {
+      "id": "devops",
+      "title": "DevOps Engineer",
+      "description": "Requirements:\nKubernetes, Docker, Terraform, Linux\nPreferred Skills:\nPython\nResponsibilities:\nManage cloud deployments and incident response",
+      "location": "India",
+      "skills": "",
+      "grade": 0
+    },
+    {
+      "id": "research",
+      "title": "Research Assistant - Data",
+      "description": "Requirements:\nPython, pandas, SQL\nResponsibilities:\nClean survey data, analyze results and publish dashboards",
+      "location": "India",
+      "skills": "",
+      "grade": 2
+    },
+    {
+      "id": "product",
+      "title": "Product Analyst",
+      "description": "Requirements:\nSQL, Excel, statistics\nResponsibilities:\nAnalyze user funnels and communicate business insights",
+      "location": "India",
+      "skills": "",
+      "grade": 2
+    },
+    {
+      "id": "qa",
+      "title": "QA Automation Intern",
+      "description": "Requirements:\nPython, Selenium, pytest\nResponsibilities:\nAutomate UI tests and investigate failures",
+      "location": "India",
+      "skills": "",
+      "grade": 1
+    },
+    {
+      "id": "designer",
+      "title": "Graphic Designer",
+      "description": "Requirements:\nPhotoshop, Illustrator\nResponsibilities:\nDesign marketing graphics",
+      "location": "India",
+      "skills": "",
+      "grade": 0
+    },
+    {
+      "id": "senior-data",
+      "title": "Senior Data Engineer",
+      "description": "Required Qualifications:\n5+ years of experience. Python, SQL, ETL, PostgreSQL\nResponsibilities:\nBuild analytical data pipelines",
+      "location": "India",
+      "skills": "",
+      "grade": 2
+    },
+    {
+      "id": "nurse",
+      "title": "Nurse",
+      "description": "Requirements:\nNursing degree and patient care\nResponsibilities:\nProvide clinical care",
+      "location": "India",
+      "skills": "",
+      "grade": 0
+    }
+  ]
+}

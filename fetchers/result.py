@@ -6,9 +6,12 @@ plain lists are treated as successful results.
 
 
 class CollectionResult(list):
-    def __init__(self, jobs=(), *, status="ok", error=""):
+    def __init__(self, jobs=(), *, status="ok", error="", companies=None):
         super().__init__(jobs)
         if status not in {"ok", "partial", "skipped"}:
             raise ValueError(f"unsupported collection status: {status}")
         self.status = status
         self.error = error
+        # Optional board-level outcomes, keyed by normalized company name.
+        # A platform's success alone does not establish each board's coverage.
+        self.companies = companies or {}

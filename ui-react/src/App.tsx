@@ -3,7 +3,8 @@ import { api } from "./api";
 import JobCard from "./components/JobCard";
 import Sidebar from "./components/Sidebar";
 import StudentPrograms from "./components/StudentPrograms";
-import type { Filters, Job, ResumeState } from "./types";
+import WorkspacePanel from "./components/WorkspacePanel";
+import type { Filters, Job, ResumeState, JobStatePatch, TrackerView } from "./types";
 
 // Once a resume is loaded, hide jobs scoring below this threshold.
 const MIN_MATCH = 20;
@@ -20,6 +21,10 @@ const DEFAULT_FILTERS: Filters = {
 };
 
 export default function App() {
+  const [view, setView] = useState<"discover" | "health" | TrackerView>("discover");
+  const [showClosed, setShowClosed] = useState(false);
+  const [undoIds, setUndoIds] = useState<string[]>([]);
+  const [actionError, setActionError] = useState("");
   const [visitBaseline, setVisitBaseline] = useState(() => {
     try { const value = Number(localStorage.getItem("job-intel-last-visit")); return Number.isFinite(value) && value > 0 ? value : 0; } catch { return 0; }
   });
@@ -83,6 +88,7 @@ export default function App() {
       filters.showRemote || filters.showNcr || filters.showIndia;
 
     let out = jobs.filter((j) => {
+      if (!showClosed && j.posting_status === "closed") return false;
       if (onlyNew && j.first_seen_ms <= visitBaseline) return false;
       // Discovery by title only; enrollment eligibility must be checked in the JD.
       if (studentOnly && !/\b(intern(?:ship)?|apprentice(?:ship)?|student|summer analyst|summer associate|industrial trainee|co[ -]?op)\b/i.test(j.title.replace(/_/g, " "))) return false;
@@ -116,7 +122,7 @@ export default function App() {
       ? out.sort((a, b) => (b.match_pct ?? 0) - (a.match_pct ?? 0))
       : out.sort((a, b) => b.first_seen.localeCompare(a.first_seen));
     return out;
-  }, [jobs, filters, resume.loaded, onlyNew, visitBaseline, studentOnly]);
+  }, [jobs, filters, resume.loaded, onlyNew, visitBaseline, studentOnly, showClosed]);
 
   useEffect(() => {
     setVisibleCount(PAGE_SIZE);
@@ -140,7 +146,9 @@ export default function App() {
     setJobs((prev) => prev.filter((j) => j.id !== id));
     try {
       await api.dismiss(id);
-    } catch {
+      setUndoIds([id]); setActionError("");
+    } catch (e) {
+      setActionError(e instanceof Error ? e.message : "Couldn't remove job");
       void refresh();
     }
   }, [refresh]);
@@ -156,12 +164,23 @@ export default function App() {
       setJobs((prev) => prev.filter((j) => !ids.has(j.id)));
       try {
         await api.dismissBulk([...ids]);
-      } catch {
+        setUndoIds([...ids]); setActionError("");
+      } catch (e) {
+        setActionError(e instanceof Error ? e.message : "Couldn't remove jobs");
         void refresh();
       }
     },
     [jobs, refresh],
   );
+
+  const updateJob = useCallback(async (id: string, patch: JobStatePatch) => {
+    await api.updateJob(id, patch);
+    await refresh();
+  }, [refresh]);
+  async function undo() {
+    try { await api.restore(undoIds); setUndoIds([]); setActionError(""); await refresh(); }
+    catch (e) { setActionError(e instanceof Error ? e.message : "Couldn't restore jobs"); }
+  }
 
   const uploadResume = useCallback(
     async (file: File, saveForLater: boolean) => {
@@ -265,6 +284,12 @@ export default function App() {
       <main className="flex-1 h-screen overflow-y-auto">
         <div className="max-w-4xl mx-auto px-6 py-6">
           <h1 className="text-2xl font-semibold mb-4">Job Intel</h1>
+          <nav aria-label="Job views" className="flex flex-wrap gap-2 mb-4">
+            {([ ["discover", "Discover"], ["saved", "Saved"], ["applied", "Applied"], ["removed", "Removed"], ["closed", "Closed"], ["notes", "Notes"], ["health", "Source health"] ] as const).map(([key, label]) => <button key={key} aria-pressed={view === key} onClick={() => setView(key)} className={`text-sm px-3 py-1.5 rounded border ${view === key ? "bg-sky-100 border-sky-400" : "border-gray-200"}`}>{label}</button>)}
+          </nav>
+          {undoIds.length > 0 && <div role="status" className="text-sm rounded bg-amber-50 p-3 mb-3">Removed {undoIds.length} job(s). <button className="underline" onClick={() => void undo()}>Undo removal</button><button aria-label="Dismiss undo notice" className="ml-4 text-gray-500" onClick={() => setUndoIds([])}>×</button></div>}
+          {actionError && <p role="alert" className="text-sm text-red-700 mb-3">{actionError}</p>}
+          {view !== "discover" ? <WorkspacePanel key={view} view={view} onJobsChange={refresh} /> : <>
           <StudentPrograms />
 
           <div className="flex gap-8 border-b border-gray-200 pb-4 mb-5">
@@ -289,7 +314,7 @@ export default function App() {
                 {jobs.length.toLocaleString()}
               </div>
               <div className="text-xs uppercase tracking-wide text-gray-500">
-                Total in DB
+                In discovery pool
               </div>
             </div>
           </div>
@@ -299,6 +324,7 @@ export default function App() {
             <label><input type="checkbox" checked={onlyNew} onChange={e => setOnlyNew(e.target.checked)} /> New since last visit ({newCount})</label>
             <button disabled={loading || !!loadError} className="underline disabled:opacity-50" onClick={() => { const now = Date.now(); setVisitBaseline(now); try { localStorage.setItem("job-intel-last-visit", String(now)); } catch { /* Optional storage. */ } }}>Mark current jobs reviewed</button>
             <button className="underline" onClick={() => void refresh()}>Refresh jobs</button>
+            <label><input type="checkbox" checked={showClosed} onChange={e => setShowClosed(e.target.checked)} /> Include marked closed</label>
             {visitBaseline === 0 && <span className="text-gray-500">First visit: all saved jobs count as new.</span>}
           </div>
           {loading && <p className="text-sm text-gray-500">Loading jobs…</p>}
@@ -327,6 +353,7 @@ export default function App() {
                 resumeLoaded={resume.loaded}
                 autoRemove={autoRemove}
                 onDismiss={dismiss}
+                onUpdate={updateJob}
               />
             ))}
           </div>
@@ -339,6 +366,7 @@ export default function App() {
               Show more — {filtered.length - visibleCount} remaining
             </button>
           )}
+          </>}
         </div>
       </main>
     </div>

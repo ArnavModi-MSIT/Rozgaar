@@ -45,6 +45,7 @@ import time
 from concurrent.futures import ThreadPoolExecutor
 
 import config
+from core.source_health import record_company_run
 from core.classify import classify_jobs
 from core.run_lock import collection_lock
 from pathlib import Path
@@ -223,6 +224,7 @@ def _run():
                     record_stats(conn, run_id, platform_name, 0, 0, 0,
                                  round(time.monotonic() - platform_start, 2),
                                  status="failed", error=str(e)[:300])
+                    record_company_run(conn, run_id, platform_name, status="failed", error=str(e))
                     conn.commit()
                     continue
                 if getattr(jobs, "status", "ok") != "skipped":
@@ -271,6 +273,8 @@ def _run():
                              round(time.monotonic() - platform_start, 2),
                              status=getattr(jobs, "status", "ok"),
                              error=getattr(jobs, "error", "")[:300] or None)
+                record_company_run(conn, run_id, platform_name, jobs,
+                                   status=getattr(jobs, "status", "ok"), error=getattr(jobs, "error", ""))
                 # Release SQLite's write lock before waiting for the next
                 # network future. The UI can dismiss jobs during collection.
                 conn.commit()

@@ -544,14 +544,19 @@ ADAPTERS = {"darwinbox": fetch_darwinbox, "keka": fetch_keka,
 
 def collect(configs, deadline=None):
     jobs, errors = [], []
+    companies = {}
     with ThreadPoolExecutor(max_workers=min(4, len(configs) or 1)) as pool:
         futures = [(cfg, pool.submit(ADAPTERS[cfg["kind"]], cfg, deadline)) for cfg in configs]
         for cfg, future in futures:
             try:
                 result = future.result()
                 jobs.extend(result)
+                companies[cfg["company"]] = {"status": result.status, "error": result.error}
                 if result.status != "ok":
                     errors.append(cfg["company"] + ": " + result.error)
             except Exception as exc:
                 errors.append(cfg["company"] + ": " + str(exc))
-    return _result(jobs, errors)
+                companies[cfg["company"]] = {"status": "failed", "error": str(exc)[:300]}
+    result = _result(jobs, errors)
+    result.companies = companies
+    return result

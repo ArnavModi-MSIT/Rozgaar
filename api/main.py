@@ -28,12 +28,13 @@ then the client applies location and experience filters in memory.
 import hashlib
 import logging
 from pathlib import Path
+from typing import Literal
 
 from fastapi import FastAPI, HTTPException, UploadFile, File, Form, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from starlette.concurrency import run_in_threadpool
 
 import os
@@ -46,7 +47,9 @@ from core.storage import (
     add_custom_skill, get_custom_skills, get_resume_skill_override,
     mark_dismissed, mark_dismissed_bulk, remove_custom_skill,
     save_resume_skill_override,
+    restore_jobs, update_job_state,
 )
+from core.source_health import dashboard
 
 log = logging.getLogger("jobbot.api")
 
@@ -90,7 +93,13 @@ app.add_middleware(
 
 
 class DismissBulkRequest(BaseModel):
-    ids: list[str]
+    ids: list[str] = Field(max_length=10000)
+
+
+class JobStateRequest(BaseModel):
+    tracking_status: Literal["none", "saved", "applied"] | None = None
+    notes: str | None = Field(default=None, max_length=4000)
+    posting_status: Literal["open", "closed", "unknown"] | None = None
 
 
 class ResumeSkillsRequest(BaseModel):
@@ -141,6 +150,45 @@ def get_job(job_id: str):
     return detail
 
 
+@app.get("/api/source-health")
+def source_health():
+    conn = data.connect()
+    try:
+        return dashboard(conn)
+    finally:
+        conn.close()
+
+
+@app.get("/api/tracker")
+def tracker(view: Literal["saved", "applied", "removed", "closed", "notes"] = "saved",
+            limit: int = 100, offset: int = 0):
+    return data.tracker_payload(view, min(200, max(1, limit)), max(0, offset))
+
+
+@app.put("/api/jobs/{job_id}/state")
+def job_state(job_id: str, req: JobStateRequest):
+    conn = data.connect()
+    try:
+        found = update_job_state(conn, job_id, **req.model_dump())
+    finally:
+        conn.close()
+    if not found:
+        raise HTTPException(status_code=404, detail="job not found")
+    data.invalidate_jobs()
+    return {"id": job_id, "updated": True}
+
+
+@app.post("/api/restore")
+def restore(req: DismissBulkRequest):
+    conn = data.connect()
+    try:
+        count = restore_jobs(conn, req.ids)
+    finally:
+        conn.close()
+    data.invalidate_jobs()
+    return {"restored": count}
+
+
 @app.post("/api/jobs/dismiss-bulk")
 def dismiss_bulk(req: DismissBulkRequest):
     if not req.ids:
@@ -158,11 +206,13 @@ def dismiss_bulk(req: DismissBulkRequest):
 def dismiss_job(job_id: str):
     conn = data.connect()
     try:
-        mark_dismissed(conn, job_id)
+        count = mark_dismissed(conn, job_id)
     finally:
         conn.close()
     data.invalidate_jobs()
-    return {"dismissed": 1, "id": job_id}
+    if not count:
+        raise HTTPException(status_code=404, detail="job not found")
+    return {"dismissed": count, "id": job_id}
 
 
 @data.synchronized

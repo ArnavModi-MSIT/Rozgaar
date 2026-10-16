@@ -110,6 +110,22 @@ def init_db(conn):
     # original discovery time; absence from a fetch is not proof of closure.
     _add_column_if_missing(conn, "ALTER TABLE jobs ADD COLUMN last_seen INTEGER")
     conn.execute("UPDATE jobs SET last_seen = first_seen WHERE last_seen IS NULL")
+    for column, definition in {
+        "tracking_status": "TEXT NOT NULL DEFAULT 'none'",
+        "notes": "TEXT NOT NULL DEFAULT ''",
+        "saved_at": "INTEGER", "applied_at": "INTEGER",
+        "posting_status": "TEXT NOT NULL DEFAULT 'unknown'",
+        "status_checked_at": "INTEGER", "status_evidence": "TEXT NOT NULL DEFAULT ''",
+    }.items():
+        _add_column_if_missing(conn, f"ALTER TABLE jobs ADD COLUMN {column} {definition}")
+    conn.execute("""CREATE TABLE IF NOT EXISTS company_runs (
+        run_id INTEGER, timestamp INTEGER, company TEXT, platform TEXT,
+        status TEXT, fetched INTEGER, india_or_unknown INTEGER,
+        missing_descriptions INTEGER, error TEXT,
+        PRIMARY KEY(run_id, company, platform))""")
+    conn.execute("CREATE INDEX IF NOT EXISTS jobs_visible_date ON jobs(dismissed, first_seen DESC)")
+    conn.execute("CREATE INDEX IF NOT EXISTS company_runs_latest ON company_runs(company, platform, timestamp DESC)")
+    conn.execute("CREATE INDEX IF NOT EXISTS run_stats_latest ON run_stats(platform, timestamp DESC)")
     conn.commit()
 
 
@@ -154,15 +170,21 @@ def save_job(conn, jid, job, source):
     observed_at = int(time.time())
     conn.execute(
         "INSERT OR IGNORE INTO jobs (id, company, title, location, url, "
-        "description, source, score, first_seen, last_seen) VALUES (?,?,?,?,?,?,?,?,?,?)",
+        "description, source, score, first_seen, last_seen, posting_status, status_checked_at, status_evidence) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)",
         (jid, job["company"], job["title"], job.get("location") or "", job["url"],
-         job.get("description") or "", source, 0, observed_at, observed_at),
+         job.get("description") or "", source, 0, observed_at, observed_at,
+         "open", observed_at, "Observed in source feed; verify before applying."),
     )
 
 
 def mark_observed(conn, jid, observed_at):
     """Record a posting seen again by its stable source ID; caller batches commit."""
-    conn.execute("UPDATE jobs SET last_seen = ? WHERE id = ?", (observed_at, jid))
+    conn.execute("""UPDATE jobs SET last_seen = ?,
+        posting_status = CASE WHEN posting_status = 'closed' THEN posting_status ELSE 'open' END,
+        status_checked_at = CASE WHEN posting_status = 'closed' THEN status_checked_at ELSE ? END,
+        status_evidence = CASE WHEN posting_status = 'closed' THEN status_evidence
+            ELSE 'Observed in source feed; verify before applying.' END WHERE id = ?""",
+        (observed_at, observed_at, jid))
 
 
 def refresh_mastercard_from_workday(conn, jid, job):
@@ -206,8 +228,9 @@ def mark_dismissed(conn, jid, dismissed=True):
     """Used by the UI's remove button. Committed
     immediately (not batched) since it's a single interactive click, not
     part of a bulk run.py pass."""
-    conn.execute("UPDATE jobs SET dismissed = ? WHERE id = ?", (1 if dismissed else 0, jid))
+    cur = conn.execute("UPDATE jobs SET dismissed = ? WHERE id = ?", (1 if dismissed else 0, jid))
     conn.commit()
+    return cur.rowcount
 
 
 def mark_dismissed_bulk(conn, job_ids):
@@ -218,9 +241,40 @@ def mark_dismissed_bulk(conn, job_ids):
     separate commits for no benefit. Returns the number of rows affected."""
     if not job_ids:
         return 0
-    conn.executemany("UPDATE jobs SET dismissed = 1 WHERE id = ?", [(jid,) for jid in job_ids])
+    cur = conn.executemany("UPDATE jobs SET dismissed = 1 WHERE id = ? AND dismissed = 0", [(jid,) for jid in set(job_ids)])
     conn.commit()
-    return len(job_ids)
+    return cur.rowcount
+
+
+def restore_jobs(conn, job_ids):
+    cur = conn.executemany("UPDATE jobs SET dismissed = 0 WHERE id = ? AND dismissed = 1",
+                           [(jid,) for jid in set(job_ids)])
+    conn.commit()
+    return cur.rowcount
+
+
+def update_job_state(conn, jid, *, tracking_status=None, notes=None, posting_status=None):
+    """Explicit local user actions; absence from a feed never closes a posting."""
+    if tracking_status is not None and tracking_status not in {"none", "saved", "applied"}:
+        raise ValueError("Invalid tracking status")
+    if posting_status is not None and posting_status not in {"open", "closed", "unknown"}:
+        raise ValueError("Invalid posting status")
+    changes, values = [], []
+    if tracking_status is not None:
+        changes.append("tracking_status = ?"); values.append(tracking_status)
+        if tracking_status in {"saved", "applied"}:
+            changes.append(f"{tracking_status}_at = COALESCE({tracking_status}_at, ?)")
+            values.append(int(time.time()))
+    if notes is not None:
+        changes.append("notes = ?"); values.append(notes)
+    if posting_status is not None:
+        changes.extend(["posting_status = ?", "status_checked_at = ?", "status_evidence = ?"])
+        values.extend([posting_status, int(time.time()), "Marked " + posting_status + " by you after reviewing the source."])
+    if not changes:
+        return bool(conn.execute("SELECT 1 FROM jobs WHERE id = ?", (jid,)).fetchone())
+    cur = conn.execute("UPDATE jobs SET " + ", ".join(changes) + " WHERE id = ?", (*values, jid))
+    conn.commit()
+    return bool(cur.rowcount)
 
 
 def get_unclassified(conn):
@@ -397,7 +451,9 @@ def record_stats(conn, run_id, platform, fetched, matched, saved, runtime_second
 def cleanup_old(conn, days=365):
     """Expire unobserved jobs; retain old vacancies still seen by a collector."""
     cutoff = int(time.time()) - days * 86400
-    cur = conn.execute("DELETE FROM jobs WHERE COALESCE(last_seen, first_seen) < ?", (cutoff,))
+    cur = conn.execute("""DELETE FROM jobs WHERE COALESCE(last_seen, first_seen) < ?
+        AND tracking_status = 'none' AND notes = ''""", (cutoff,))
+    conn.execute("DELETE FROM company_runs WHERE timestamp < ?", (cutoff,))
     conn.commit()
     return cur.rowcount
 

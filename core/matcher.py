@@ -222,7 +222,7 @@ def embed_resume(text):
     return _encode_section_pairs([resume_parts(text)[0]])[0]
 
 
-def rank_by_resume(jobs_df, resume_text, job_embeddings=None, resume_skills=None, resume_embedding=None):
+def rank_by_resume(jobs_df, resume_text, job_embeddings=None, resume_skills=None, resume_embedding=None, *, include_eligibility=True):
     """Section relevance and weighted skills; eligibility reported independently."""
     jobs_df = jobs_df.copy()
     if jobs_df.empty or not resume_text.strip():
@@ -266,8 +266,8 @@ def rank_by_resume(jobs_df, resume_text, job_embeddings=None, resume_skills=None
             "matched_skills": sorted(all_skills & resume_skills),
             "relevance_gate_applied": not relevant,
             "note": "Heuristic relevance score, not eligibility or hiring probability. " + ("Projects/work sections compared with responsibilities." if has_evidence else "No separate projects/work sections identified; using resume text as fallback.") + (" Description unavailable; semantic comparison uses the title only." if not desc.strip() else ""),
-            "eligibility_checks": eligibility_checks(desc, getattr(row,"location",""), resume_text, required-resume_skills, row.title),
+            "eligibility_checks": eligibility_checks(desc, getattr(row,"location",""), resume_text, required-resume_skills, row.title) if include_eligibility else [],
         })
     jobs_df["match_pct"] = scores
     jobs_df["match_explanation"] = explanations
-    return jobs_df.sort_values("match_pct", ascending=False)
+    return jobs_df.sort_values("match_pct", ascending=False, kind="stable")

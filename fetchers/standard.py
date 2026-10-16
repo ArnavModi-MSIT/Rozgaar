@@ -263,6 +263,7 @@ def collect(greenhouse_slugs, lever_slugs, ashby_slugs, deadline=None):
     jobs = []
     failures = 0
     failed_boards = []
+    company_results = {}
     def fetch_before_deadline(fn):
         if deadline is not None and time.monotonic() >= deadline:
             raise RuntimeError("shared collection deadline reached before board fetch")
@@ -271,12 +272,15 @@ def collect(greenhouse_slugs, lever_slugs, ashby_slugs, deadline=None):
         futures = [(name, pool.submit(fetch_before_deadline, fn)) for name, fn in tasks]
         for name, f in futures:
             try:
-                jobs += f.result()
+                result = f.result()
+                jobs += result
+                company_results[name.split(":", 1)[1]] = {"status": "ok", "error": ""}
             except Exception as e:
                 # A bug in one company's fetcher shouldn't take down the rest.
                 log.exception("a company fetch failed: %s", e)
                 failures += 1
                 failed_boards.append(name)
+                company_results[name.split(":", 1)[1]] = {"status": "failed", "error": str(e)[:300]}
     if failures == len(tasks):
         # EVERY company errored, not just returned zero postings — without
         # this, run.py would see an empty list and record status="ok,
@@ -288,4 +292,5 @@ def collect(greenhouse_slugs, lever_slugs, ashby_slugs, deadline=None):
         jobs,
         status="partial" if failures else "ok",
         error=f"{failures}/{len(tasks)} boards failed: {', '.join(failed_boards)}" if failures else "",
+        companies=company_results,
     )

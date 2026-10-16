@@ -16,6 +16,9 @@ export interface MatchExplanation {
 }
 
 export interface Job {
+  tracking_status: TrackingStatus;
+  posting_status: PostingStatus;
+  status_evidence: string;
   id: string;
   title: string;
   company: string;
@@ -44,6 +47,26 @@ export interface Job {
   /** null until a resume is uploaded. */
   match_pct: number | null;
   match_explanation: MatchExplanation | null;
+}
+
+export type TrackingStatus = "none" | "saved" | "applied";
+export type PostingStatus = "open" | "closed" | "unknown";
+export type TrackerView = "saved" | "applied" | "removed" | "closed" | "notes";
+export interface JobStatePatch { tracking_status?: TrackingStatus; posting_status?: PostingStatus; notes?: string }
+export interface TrackedJob {
+  id: string; title: string; company: string; display_company: string; location: string; url: string;
+  tracking_status: TrackingStatus; posting_status: PostingStatus; notes: string; dismissed: number;
+  saved_at: number | null; applied_at: number | null; status_checked_at: number | null;
+  last_seen: number | null; status_evidence: string;
+}
+export interface CompanyHealth {
+  company: string; name: string; platform: string; configured: boolean; status: string;
+  timestamp: number | null; fetched: number | null; india_or_unknown: number | null;
+  missing_descriptions: number | null; error: string; stored: number; closed: number; last_seen: number | null;
+}
+export interface HealthReport {
+  companies: CompanyHealth[]; note: string;
+  platforms: { platform: string; health: string; latest: { jobs_fetched: number; timestamp: number; error: string | null } }[];
 }
 
 export interface JobDetail {

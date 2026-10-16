@@ -1,78 +1,33 @@
 # Improvement roadmap
 
-Updated October 16, 2026. Job Intel is a personal, local application. Favor fewer missed opportunities, useful filters and quick repeat use. Add features only when they solve an observed problem.
+Updated October 16, 2026. This is a personal local app. Prioritize daily usability and fewer missed opportunities.
 
-## Completed in this implementation
+## Implemented
 
-- **Experience parsing:** numeric-only Experience fields, required/preferred field labels, HTML boundaries and Unicode ranges work. Zero-based ranges remain distinct from unknowns and 1+ minima.
-- **Requirement headings:** Qualifications, Who you are, Key Requirements, What we're looking for and Skills required are recognized. Preferred sections stay separate.
-- **Manual skills:** global custom-skill edits preserve the saved full-set resume correction, including an empty set. No-op edits skip rescoring; automatic profiles update when there is no correction.
-- **Retention:** cleanup uses `last_seen`, with a legacy `first_seen` fallback, preserving recently observed old jobs and dismissals.
-- **Conservative deduplication:** full normalized descriptions and canonical posting URLs replace the shared 500-character prefix. Distinct URLs and incomplete descriptions remain separate. Confirmed duplicates refresh observation dates without resetting dismissals.
-- **Embedding-cache safety:** shared model/parser/chunk signatures, finite/shape validation, atomic writes and a nonfatal disk-cache failure path. Old vectors rebuild once after updating.
-- **Repeat-use speed:** bounded caches reuse job skill sections and experience results; the job snapshot stores its fingerprint once instead of hashing full descriptions on every list/detail click.
+- Experience parsing handles numeric-only fields, required/preferred labels, HTML boundaries and Unicode ranges. Ranges starting at zero remain distinct from unknown and 1+ minima.
+- Common requirement headings and full descriptions are retained. Manual skill corrections survive global vocabulary edits, including an empty corrected set.
+- Deduplication uses full descriptions and canonical posting URLs. Distinct URLs or incomplete descriptions are kept; confirmed duplicates refresh observation dates without resetting user state.
+- Atomic embedding caches validate parser/model identity, shape and finite values. Repeated job features and snapshot fingerprints are cached; saved resumes can reuse parsed text and vectors.
+- **Recovery/tracking:** Undo and paginated Removed history, mutually exclusive Saved/Applied states, private notes and dates. Tracker views bypass discovery filters. Retention preserves tracked jobs and notes.
+- **Health/status:** searchable company/source outcomes and missing-JD counts, with explicitly unverified company completeness for older adapters. New feed observations show open in feed, legacy jobs start unknown, and a manual reviewed closure hides a job. Failed/partial/empty runs never infer closure or overwrite a user's closed mark.
+- **Matcher evaluation/speed:** BM25, MiniLM sections and the hybrid are compared on identical labels. Synthetic example included; real accuracy needs representative private labels. Eligibility checks run on card expansion instead of for the entire ranked pool. Scores and weights remain unchanged.
+- **Maintenance:** Windows/Python 3.10.11 dependency lock, scoped lock generator, SQLite visible-date/history indexes and Windows CI for network-guarded offline tests plus the locked React build.
 
-No additional service, cloud API, database schema or model was introduced. The existing local saved-resume feature, MiniLM matcher and strict required-or-preferred 1+ experience filter remain in use.
+## Still useful, when evidence warrants it
 
-### Verification
+1. **Human matching labels:** review at least 30 varied real jobs and retain a separate holdout set. Use `scripts/evaluate_matcher.py` before changing weights or adding a reranker. The synthetic sample is not accuracy validation.
+2. **More board-level health metadata:** standard Greenhouse/Lever/Ashby and employer-portal adapters report per-company outcomes. Other successful adapters explicitly remain unverified at company level. Extend those contracts when diagnosing a real source issue.
+3. **Verified closure automation:** add individual ATS closure signals only when reliable. Current closure is manual; feed observations do not independently prove an application is open. Never infer closure from missing jobs or network errors.
+4. **Shared-host request coordination:** improve fairness/cooldowns where rate limits are observed and consume completed platform futures promptly, preserving sequential SQLite writes. Do not add queues/services by default.
+5. **Difficult resume extraction:** inspect actual PDFs before adding optional local OCR. Offer extracted text for review if layout mistakes recur.
+6. **Scoring latency:** scoring still holds the shared state lock; cheap component explanations remain per-pool while eligibility is lazy. Measure real delays before adding generation-safe background scoring or changing models.
 
-Offline unit/API tests cover these failures, unchanged-job cache reuse, model/parser changes, malformed vectors, interrupted writes, saved-resume reload and manual corrections. A separate smoke check uses the real already-cached MiniLM model with synthetic jobs/resume. These checks establish behavior, not measured recommendation accuracy. The per-step synthetic skill-cache benchmark is not a full-app speed benchmark.
+No Redis/Celery, separate vector database, paid APIs, hosted runtime or multi-user system is needed for the current project.
 
-Close the previous API console, then launch **Open Job Intel.cmd**. Existing descriptions are re-evaluated on API reload. A later normal collection is needed to recover postings skipped by the former dedup policy. The more conservative rule can show genuine reposts with new URLs separately; that tradeoff avoids silently losing distinct openings.
+## Verification and limits
 
-## Next useful local improvements
+Offline tests and real cached-model synthetic checks verify behavior, cache reuse and evaluator operation. Browser checks use synthetic jobs/resume and a temporary database. Live company counts and completeness need a later normal collection. CI configuration is versioned; the actual hosted run status must be checked after pushing.
 
-### 1. Make removed jobs easy to recover
-
-- Add undo for a removal and a view of dismissed jobs.
-- Add lightweight saved/applied states only if useful to the daily workflow.
-- Keep original links, notes and dates in the existing SQLite database.
-
-**Success:** a mistaken removal is recoverable from the UI and application progress survives a restart.
-
-### 2. Show source problems clearly
-
-- Extend existing `stats.py --health` information with per-company counts, missing descriptions and complete/partial/failure reasons.
-- Expose a compact health view through the existing API and UI when it is useful; a separate metrics service is unnecessary.
-- Coordinate requests to shared ATS hosts, honor date/numeric Retry-After values and report cooldowns/partial results explicitly.
-- Consume completed collection results promptly while keeping SQLite writes sequential.
-
-**Success:** a broken or incomplete company source is obvious without reading a long traceback.
-
-### 3. Improve freshness without hiding valid jobs
-
-- Show the latest observation/check date clearly.
-- Add open/closed/unknown only when a source gives reliable evidence. A failed or partial run must not close its jobs.
-- Preserve source IDs and user state. Consider duplicate relationships only if visible duplicates become a practical problem; no learned deduplication system is needed by default.
-
-**Success:** confirmed closed jobs leave the default list while temporary source failures preserve existing opportunities.
-
-### 4. Improve matching from actual mistakes
-
-- Hand-review a small representative set of relevant, borderline and irrelevant jobs, including adjacent roles and overlapping-skill false positives.
-- For numerical comparisons, keep held-out labels private and compare BM25, MiniLM-only and the current hybrid on identical data. The existing evaluator reports precision and NDCG; do not invent results.
-- Experiment with SQLite FTS5/BM25 or a local top-N reranker only if the baseline shows a need and local latency is acceptable.
-- Make required-only experience filtering or role-preference controls explicit options if wanted. Keep the current strict filter as the existing default.
-- Inspect difficult PDF extraction and scanned resumes. Optional local OCR should run only when needed and show the extracted text for review.
-
-**Success:** changes address reviewed errors and preserve useful fresher opportunities. A larger model is not automatically an improvement.
-
-### 5. Keep maintenance practical
-
-- Record tested Python/dependency versions so updates are repeatable; React already has a lockfile.
-- Fix Windows-specific test isolation before adding cross-platform CI. Use the existing offline unittest suite and React build; pytest conversion is optional.
-- Add SQLite indexes only after checking actual queries; use ordered migrations when the next schema change is needed.
-- Share common ATS/request helpers where contracts match, preserving employer-specific country and detail rules.
-- Simplify README/config prose as those areas are touched. Keep source audits in docs.
-
-## Remaining limits
-
-Scoring still uses the shared API state lock, explanations are generated for the full ranked pool, and ranking constants are uncalibrated. Source completeness varies and postings do not yet have a verified lifecycle state. Those are remaining improvements, not completed features.
-
-Celery/Redis, Kafka, Kubernetes, a separate vector database, multi-user hosting and LLM agents are outside the current local-use plan.
-
-## Review evidence
-
-- [Initial audit comparison](docs/ARCHITECTURE_AUDIT_REVIEW.md)
-- [Consolidated audit validation](docs/AUDIT_VALIDATION_OCT16.md)
-- [Current architecture](ARCHITECTURE.md)
+- [Architecture](ARCHITECTURE.md)
+- [Matching evaluation](docs/MATCHER_EVALUATION.md)
+- [Earlier audit validation](docs/AUDIT_VALIDATION_OCT16.md)

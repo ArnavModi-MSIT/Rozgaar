@@ -1,5 +1,25 @@
 # Job Intel
 
+## Daily-use update — October 16
+
+- **Saved / Applied / Notes:** track opportunities locally, keep private notes and first marked dates. Opening a posting does not mark an application.
+- **Undo / Removed:** undo single or bulk removals, or restore older removals from Removed. Restored jobs still follow discovery filters.
+- **Posting status:** new observations show open in the feed; older records start unknown. After reviewing the original posting, use Mark closed to hide it from discovery; reopen it from Closed. Fetch failures or missing listings never close jobs automatically. Saved/applied jobs and notes survive retention cleanup.
+- **Source health:** searchable company/source counts, missing descriptions and failure/partial reasons. Company histories start on your next collection. Successful older adapters show unverified company coverage where no board outcome exists.
+- **Matcher checks:** eligibility evidence loads when expanded. Compare BM25, MiniLM section matching and the hybrid on your own relevance labels using the evaluator below.
+- **Repeatable setup:** pinned Windows/Python dependencies and GitHub checks for offline tests plus the React build.
+
+Close the old API console and double-click **Open Job Intel.cmd**. Existing databases migrate automatically; no fresh collection is needed for tracking. Use **Start Job Intel.cmd** when you want new collection and company-health observations.
+
+### Evaluate matching locally
+
+```powershell
+python scripts/evaluate_matcher.py examples/matcher_synthetic.json --k 5
+python scripts/test_offline.py
+```
+
+The included 18-job sample is synthetic and only checks the evaluation path. For a useful accuracy comparison, copy the example into ignored `db/`, use your own resume text and at least 30 representative jobs, and grade relevance 0 (poor), 1 (partial), or 2 (good). Keep a separate holdout set. Relevance and eligibility are separate: a senior data job can be relevant while failing your experience filter. `--bm25-only` runs without a model; `--output db/matcher-report.json` optionally saves a local report. See [matching evaluation](docs/MATCHER_EVALUATION.md).
+
 ## Personal-use fixes (October 16)
 
 - Experience fields such as `Experience: 1+ years` are now recognized; zero-based ranges stay eligible under the existing filter. Common requirement headings are recognized too.
@@ -65,7 +85,7 @@ Uber collects the public `countries=India` search API, follows its page counts, 
 
 ## Requirements
 
-- Python 3.10 or newer
+- Windows x64 with Python 3.10.11 (tested and pinned; other Python/OS versions are unverified)
 - Node.js and npm for the React interface
 - Internet access for collecting jobs and initial dependency/model installation
 
@@ -78,7 +98,7 @@ After the one-time Python setup below, double-click **`Start Job Intel.cmd`** on
 In PowerShell, from the repository root:
 
 ```powershell
-py -3 -m venv .venv
+py -3.10 -m venv .venv
 .\.venv\Scripts\Activate.ps1
 python -m pip install -r requirements.txt
 python run.py

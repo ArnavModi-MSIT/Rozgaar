@@ -1,7 +1,7 @@
 // Thin fetch wrapper over api/main.py. All URLs are relative on purpose —
 // see vite.config.ts for why (same code path in dev and production).
 
-import type { Job, JobDetail, ResumeState, ResumeUploadResult, Stats } from "./types";
+import type { Job, JobDetail, ResumeState, ResumeUploadResult, Stats, JobStatePatch, TrackedJob, TrackerView, HealthReport } from "./types";
 
 async function json<T>(res: Response): Promise<T> {
   if (!res.ok) {
@@ -20,6 +20,20 @@ async function json<T>(res: Response): Promise<T> {
 }
 
 export const api = {
+  async updateJob(id: string, patch: JobStatePatch): Promise<void> {
+    await json(await fetch(`/api/jobs/${encodeURIComponent(id)}/state`, {
+      method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(patch),
+    }));
+  },
+  async restore(ids: string[]): Promise<void> {
+    await json(await fetch("/api/restore", {
+      method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ ids }),
+    }));
+  },
+  async tracker(view: TrackerView, offset = 0): Promise<{ jobs: TrackedJob[]; total: number }> {
+    return json(await fetch(`/api/tracker?view=${view}&offset=${offset}`));
+  },
+  async sourceHealth(): Promise<HealthReport> { return json(await fetch("/api/source-health")); },
   async stats(): Promise<Stats> {
     return json(await fetch("/api/stats"));
   },
