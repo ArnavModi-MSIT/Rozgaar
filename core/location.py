@@ -175,6 +175,11 @@ def is_india_or_unknown(location):
     return parse_country(location) in ("India", "Unknown")
 
 
+def is_workday_location_placeholder(location):
+    """A listing's aggregate count is not a location or country signal."""
+    return bool(re.fullmatch(r"\s*(?:\d+|multiple|various)\s+locations?\s*", location or "", re.I))
+
+
 _REMOTE_RE = re.compile(r"\bremote\b|\bwork\s*from\s*home\b|\bwfh\b", re.I)
 
 

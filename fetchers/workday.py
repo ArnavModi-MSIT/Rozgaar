@@ -32,8 +32,9 @@ from concurrent.futures import ThreadPoolExecutor
 
 import requests
 
-from core.location import is_india_or_unknown
+from core.location import is_india_or_unknown, is_workday_location_placeholder, parse_country
 from .standard import strip_html
+from .result import CollectionResult
 
 log = logging.getLogger("jobbot")
 TIMEOUT = 15
@@ -106,14 +107,46 @@ def fetch_job_detail(base, tenant, site, ext_path, referer):
     """Full description via the per-job CXS detail endpoint. See module
     docstring — jobPostingInfo.jobDescription is a single HTML field
     (unlike Lever, which splits content across multiple fields)."""
-    url = f"{base}/wday/cxs/{tenant}/{site}{ext_path}"
-    data = _get(url, referer)
-    if not data:
-        return ""
-    html = (data.get("jobPostingInfo") or {}).get("jobDescription", "")
+    info = fetch_job_info(base, tenant, site, ext_path, referer)
+    html = info.get("jobDescription", "")
     if not html:
         return ""
-    return strip_html(html, max_chars=None)[:6000]
+    return strip_html(html, max_chars=None)
+
+
+def fetch_job_info(base, tenant, site, ext_path, referer):
+    data = _get(f"{base}/wday/cxs/{tenant}/{site}{ext_path}", referer)
+    info = data.get("jobPostingInfo") if isinstance(data, dict) else None
+    return info if isinstance(info, dict) else {}
+
+
+def posting_location(info, fallback="", *, india_location_names=()):
+    """Use Workday country/location metadata, preserving explicit India options."""
+    country = info.get("country") or {}
+    country = country.get("descriptor", "") if isinstance(country, dict) else country
+    country = country.strip() if isinstance(country, str) else ""
+    primary = info.get("location")
+    primary = primary.strip() if isinstance(primary, str) else ""
+    extras = [loc.strip() for loc in info.get("additionalLocations") or [] if isinstance(loc, str) and loc.strip()]
+    verified_india = {name.casefold() for name in india_location_names}
+    india_extras = [loc for loc in extras if parse_country(loc) == "India" or loc.casefold() in verified_india]
+    # Walmart's documented country/state/city convention, retained from its
+    # existing special-case location handling.
+    india_extras += [loc for loc in extras if loc.startswith("IN ") or loc.startswith("(IND)")]
+    if country.casefold() == "india":
+        # The primary location's country is authoritative; foreign secondary
+        # options must not be displayed as if they too were in India.
+        locations = list(dict.fromkeys(([primary] if primary else []) + india_extras))
+        location = "; ".join(locations) if locations else "India"
+        return location if parse_country(location) == "India" else location + ", India"
+    if india_extras:
+        location = "; ".join(dict.fromkeys(india_extras))
+        return location if parse_country(location) == "India" else location + ", India"
+    locations = list(dict.fromkeys(([primary] if primary else []) + extras))
+    location = "; ".join(locations) or fallback
+    if country:
+        return (location + ", " if location else "") + country
+    return location
 
 
 def fetch_workday(cfg, deadline=None):
@@ -151,7 +184,7 @@ def fetch_workday(cfg, deadline=None):
     # existing company keeps.
     search_text = cfg.get("search_text", "")
 
-    jobs = []
+    jobs, errors = [], []
     offset = 0
     limit = 20
     known_total = None  # Workday only returns an accurate `total` on the
@@ -165,10 +198,12 @@ def fetch_workday(cfg, deadline=None):
     # infinite loop in the rare case total never comes back at all.
     while True:
         if deadline is not None and time.monotonic() >= deadline:
+            errors.append("listing deadline reached")
             break
         payload = {"appliedFacets": applied_facets, "limit": limit, "offset": offset, "searchText": search_text}
         data = _post(url, payload, referer)
-        if not data:
+        if not isinstance(data, dict) or not isinstance(data.get("jobPostings"), list):
+            errors.append("listing unavailable at offset " + str(offset))
             break
         postings = data.get("jobPostings", [])
         total = data.get("total", 0)
@@ -211,46 +246,46 @@ def fetch_workday(cfg, deadline=None):
             break
         time.sleep(0.3)  # small gap between pages — Workday rate-limits bursts
 
-    # Walmart also has multi-location records without a country title prefix.
-    # Resolve those from the same public CXS detail metadata before filtering.
-    if cfg["company"] == "walmart":
-        for job in jobs:
-            if job["location"].endswith("Locations"):
-                if deadline is not None and time.monotonic() >= deadline:
-                    break
-                data = _get(f"{base}/wday/cxs/{tenant}/{site}{job['_ext_path']}", referer)
-                info = (data or {}).get("jobPostingInfo") or {}
-                country = (info.get("country") or {}).get("descriptor", "")
-                locations = [info.get("location", "")] + (info.get("additionalLocations") or [])
-                if any(loc.startswith("IN ") or loc.startswith("(IND)") for loc in locations):
-                    country = "India"
-                if country:
-                    job["location"] = "; ".join(filter(None, locations)) + ", " + country
+    if known_total is not None and len(jobs) != known_total:
+        errors.append(f"received {len(jobs)} of {known_total} listings")
 
     detail_filter = cfg.get("fetch_details_filter")
     enrich_enabled = cfg.get("fetch_details") or detail_filter
-    if enrich_enabled and jobs and not (deadline is not None and time.monotonic() >= deadline):
+    if jobs and deadline is not None and time.monotonic() >= deadline:
+        errors.append("detail deadline reached")
+    if jobs and not (deadline is not None and time.monotonic() >= deadline):
         to_enrich = [
             j for j in jobs
-            if is_india_or_unknown(j["location"])
-            and (detail_filter is None or detail_filter.search(j["title"]))
+            if is_workday_location_placeholder(j["location"]) or (
+                enrich_enabled and is_india_or_unknown(j["location"])
+                and (detail_filter is None or detail_filter.search(j["title"])))
         ]
         if to_enrich:
             log.info("workday %s: detail-fetching %d/%d job(s)", cfg["company"], len(to_enrich), len(jobs))
             # Low concurrency, same Akamai caution as the list fetch itself.
             with ThreadPoolExecutor(max_workers=5) as pool:
                 futures = {
-                    pool.submit(fetch_job_detail, base, tenant, site, j["_ext_path"], referer): j
+                    pool.submit(fetch_job_info, base, tenant, site, j["_ext_path"], referer): j
                     for j in to_enrich
                 }
                 for f in futures:
                     job = futures[f]
                     try:
-                        desc = f.result()
-                        if desc:
-                            job["description"] = desc
+                        info = f.result()
+                        # Requisition IDs, when supplied, must match the listing.
+                        if info.get("jobReqId") and info["jobReqId"] != job["source_id"]:
+                            errors.append("detail identity mismatch: " + str(job["source_id"]))
+                            continue
+                        job["location"] = posting_location(info, job["location"], india_location_names=cfg.get("india_location_names", ()))
+                        if is_workday_location_placeholder(job["location"]):
+                            errors.append("location unresolved: " + str(job["source_id"]))
+                        if enrich_enabled and is_india_or_unknown(job["location"]) and (detail_filter is None or detail_filter.search(job["title"])):
+                            job["description"] = strip_html(info.get("jobDescription") or "", max_chars=None)
+                            if not job["description"]:
+                                errors.append("description unavailable: " + str(job["source_id"]))
                     except Exception as e:
                         log.exception("workday detail fetch failed for %s: %s", job.get("source_id"), e)
+                        errors.append("detail unavailable: " + str(job["source_id"]))
 
     # _ext_path was only ever needed to build the detail-fetch URL above —
     # strip it so the returned job dicts actually match the documented
@@ -261,23 +296,36 @@ def fetch_workday(cfg, deadline=None):
     for job in jobs:
         job.pop("_ext_path", None)
 
-    return jobs
+    # Unresolved aggregate labels cannot establish an India posting. Keep
+    # partial health evidence, but do not save those placeholders as vacancies.
+    unresolved = [job for job in jobs if is_workday_location_placeholder(job["location"])]
+    if unresolved:
+        errors.append(f"excluded {len(unresolved)} unresolved aggregate locations")
+    jobs = [job for job in jobs if not is_workday_location_placeholder(job["location"])]
+    return CollectionResult(jobs, status="partial" if errors else "ok", error="; ".join(errors[:5]))
 
 
 def collect(workday_configs, deadline=None):
     if not workday_configs:
         return []
-    jobs = []
+    jobs, errors, companies = [], [], {}
     # Lower concurrency than other platforms deliberately: parallel bursts
     # across Workday tenants appear to trigger MORE Akamai rate-limiting,
     # not less (observed 211s for 6 companies at max_workers=8, worse than
     # a naive sequential estimate) — likely rate-limited by source IP across
     # all *.myworkdayjobs.com subdomains, not per-tenant.
     with ThreadPoolExecutor(max_workers=min(3, len(workday_configs))) as pool:
-        futures = [pool.submit(fetch_workday, cfg, deadline) for cfg in workday_configs]
-        for f in futures:
+        futures = [(cfg, pool.submit(fetch_workday, cfg, deadline)) for cfg in workday_configs]
+        for cfg, f in futures:
             try:
-                jobs += f.result()
+                result = f.result()
+                jobs += result
+                status, error = getattr(result, "status", "ok"), getattr(result, "error", "")
+                companies[cfg["company"]] = {"status": status, "error": error}
+                if status != "ok":
+                    errors.append(cfg["company"] + ": " + error)
             except Exception as e:
                 log.exception("a workday company fetch failed: %s", e)
-    return jobs
+                companies[cfg["company"]] = {"status": "failed", "error": str(e)[:300]}
+                errors.append(cfg["company"] + ": " + str(e))
+    return CollectionResult(jobs, status="partial" if errors else "ok", error="; ".join(errors[:5]), companies=companies)

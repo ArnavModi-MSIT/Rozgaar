@@ -1,5 +1,11 @@
 # Architecture and code guide
 
+## Workday multi-location correction — October 16
+
+`fetchers/workday.py` resolves aggregate labels such as `2 Locations` through CXS `jobPostingInfo.location`, `additionalLocations` and `country` before the collector's India gate. Description enrichment reuses that response and retains the full text. Fractal's verified India office descriptors preserve India secondary options without labeling its US offices as India. Failed/mismatched details and unresolved aggregate labels produce partial company health; unresolved aggregate rows are excluded from discovery rather than treated as unknown-country vacancies. The API applies that aggregate-label rule to legacy `source=workday` rows too, while retaining genuinely unknown location text for review.
+
+For stable saved Workday IDs, `run.py` persists location corrections **before** rejecting foreign jobs. This prevents old `2 Locations` rows from surviving an otherwise correct new collection. Only the location field changes; user tracking, notes, removals and discovery/observation dates are preserved. Tracker history still includes filtered rows. `workday.collect` now propagates per-company outcomes to the health dashboard. Missing listings or failed details still never mark a posting closed.
+
 ## Local workflow update — October 16, 2026
 
 - SQLite migrations in `core/storage.py` add `tracking_status` (`none`, `saved`, `applied`), private `notes`, first `saved_at`/`applied_at` dates, and `posting_status` (`unknown`, `open`, `closed`) with check time/evidence. Legacy postings start unknown. New/reobserved postings are open **in the source feed**, not independently verified application availability. A user's closed mark is preserved on recollection. Missing listings, failed/partial runs and HTTP responses are never used to infer closure. Users mark status after reviewing the original source; no automatic URL checker is implemented.

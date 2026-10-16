@@ -46,6 +46,7 @@ from concurrent.futures import ThreadPoolExecutor
 
 import config
 from core.source_health import record_company_run
+from core.storage import refresh_workday_location
 from core.classify import classify_jobs
 from core.run_lock import collection_lock
 from pathlib import Path
@@ -233,6 +234,10 @@ def _run():
                     fetched += 1
                     p_fetched += 1
                     jid = job_id(job)
+                    if platform_name == "workday" and jid in existing_ids:
+                        # Persist foreign corrections before the save-time
+                        # country gate so old placeholder rows stop leaking.
+                        refresh_workday_location(conn, jid, job.get("location"))
                     if platform_name == "atlassian" and jid in existing_ids:
                         # Correct legacy blank locations before the country
                         # gate, so known US postings stop appearing in the UI.

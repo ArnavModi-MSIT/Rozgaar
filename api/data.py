@@ -28,7 +28,7 @@ import config
 from core.eligibility import eligibility_evidence
 from core.match_sections import eligibility_checks
 from core.experience import extract_experience_sentences, extract_min_experience, extract_preferred_experience, experience_requirements
-from core.location import is_remote, parse_city, parse_country, is_smartrecruiters_india_location
+from core.location import is_remote, parse_city, parse_country, is_smartrecruiters_india_location, is_workday_location_placeholder
 from core.matcher import (
     embed_jobs_incremental, load_embedding_cache, rank_by_resume,
     save_embedding_cache, compute_job_pool_key,
@@ -108,6 +108,7 @@ def _load_jobs_df():
     # location parser should remove foreign postings from the UI immediately,
     # without deleting local history from SQLite.
     df = df[df["country"].isin(["India", "Unknown"]) &
+            (~df["source"].eq("workday") | ~df["location"].apply(is_workday_location_placeholder)) &
             (~df["source"].eq("smartrecruiters") | df["location"].apply(is_smartrecruiters_india_location)) &
             (~df["company"].eq("databricks") | df["country"].eq("India"))].copy()
     df["city"] = df["location"].apply(parse_city)

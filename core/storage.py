@@ -550,6 +550,15 @@ def refresh_collected_description(conn, jid, job):
     return cur.rowcount > 0
 
 
+def refresh_workday_location(conn, jid, location):
+    """Correct saved country evidence without altering tracking or observations."""
+    if not location:
+        return False
+    cur = conn.execute("UPDATE jobs SET location = ? WHERE id = ? AND source = 'workday' AND COALESCE(location, '') != ?",
+                       (location, jid, location))
+    return bool(cur.rowcount)
+
+
 def refresh_qualcomm_student(conn, jid, job):
     """Enrich a saved Qualcomm internship without resetting user state."""
     if not job.get("description"):

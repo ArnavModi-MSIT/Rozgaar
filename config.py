@@ -221,7 +221,10 @@ PHENOM = [
 ]
 
 WORKDAY = [
-    {"company": "fractal", "tenant": "fractal", "wd_server": "wd1", "site": "Careers", "fetch_details": True},
+    {"company": "fractal", "tenant": "fractal", "wd_server": "wd1", "site": "Careers", "fetch_details": True,
+     # Verified Fractal location descriptors (Oct 16): keep India secondary
+     # options without labeling its foreign offices as India.
+     "india_location_names": ["Bengaluru", "Chennai", "Coimbatore", "Gurgaon", "Hyderabad", "Mumbai", "Noida", "Pune"]},
     # Fidelity International — confirmed via debug/debug_fidelity.py:
     # applied_facets locationCountry (India GUID) filters server-side,
     # 109 global -> 26 India. Small volume, safe to detail-fetch all.

@@ -2,6 +2,8 @@
 
 ## Daily-use update — October 16
 
+Workday multi-location jobs now use their detail country metadata before India filtering. Existing `N Locations` placeholders are hidden until resolved; recollection refreshes saved locations before the foreign-country gate. This fixes Fractal US jobs being kept as unknown locations, while preserving user history.
+
 - **Saved / Applied / Notes:** track opportunities locally, keep private notes and first marked dates. Opening a posting does not mark an application.
 - **Undo / Removed:** undo single or bulk removals, or restore older removals from Removed. Restored jobs still follow discovery filters.
 - **Posting status:** new observations show open in the feed; older records start unknown. After reviewing the original posting, use Mark closed to hide it from discovery; reopen it from Closed. Fetch failures or missing listings never close jobs automatically. Saved/applied jobs and notes survive retention cleanup.
