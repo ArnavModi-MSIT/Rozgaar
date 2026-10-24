@@ -17,7 +17,7 @@ from backend.core.career_exports import latest_export
 class PlatformService:
     def __init__(self, db_path, data_dir=None, on_change=lambda: None):
         self.db_path = Path(db_path)
-        from raambaad.paths import READER_DATA
+        from rozgaar.paths import READER_DATA
         self.data_dir = Path(data_dir or READER_DATA)
         self.on_change = on_change
         self.token = secrets.token_urlsafe(32)
@@ -111,7 +111,7 @@ class PlatformService:
             career = {"status": self.career_status, "exit_code": self.career_code,
                       "started_at": self.career_started, "logs": list(self.logs)}
         running = bool(self.reader and self.reader.thread and self.reader.thread.is_alive())
-        return {"app": "raambaad", "token": self.token, "data_revision": self.data_revision,
+        return {"app": "rozgaar", "token": self.token, "data_revision": self.data_revision,
                 "mode": "separate", "counts": counts, "latest_export": latest,
                 "career": career, "reader_running": running, "separation": self.separation,
                 "offline": os.environ.get("JOB_INTEL_OFFLINE") == "1"}

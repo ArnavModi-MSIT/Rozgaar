@@ -1,4 +1,4 @@
-"""Shared-platform controls, mounted beside the existing Job Intel API."""
+"""Shared-platform controls, mounted beside the existing Rozgaar API."""
 from contextlib import asynccontextmanager
 import argparse
 import secrets
@@ -32,7 +32,7 @@ async def lifespan(app):
     # Standalone source exports still work without the sibling reader folder.
     # Unit tests substitute DB_PATH and must never import a user's checkpoints.
     from backend.core.reader_bridge import APP_ROOT, READER_ROOT
-    from raambaad.paths import CAREER_DB
+    from rozgaar.paths import CAREER_DB
     service = None
     if READER_ROOT.is_dir() and str(data.DB_PATH) == str(CAREER_DB):
         service = get_service()

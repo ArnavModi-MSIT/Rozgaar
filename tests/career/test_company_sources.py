@@ -6,7 +6,7 @@ from backend.fetchers import workday_india, zerodha, automattic, swiggy, bloombe
 
 class CompanySourceTests(unittest.TestCase):
     def test_manifest_has_exactly_75_unique_companies(self):
-        from raambaad.paths import ROOT
+        from rozgaar.paths import ROOT
         rows=json.loads((ROOT/"docs/catalog/COMPANY_SOURCES.json").read_text())
         self.assertEqual(len(rows),75)
         self.assertEqual(len({r["key"] for r in rows}),75)

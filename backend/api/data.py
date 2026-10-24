@@ -33,7 +33,7 @@ from backend.core.matcher import embed_jobs_incremental, load_embedding_cache, r
 from backend.core.skills import build_patterns, extract_skills, skill_overlap
 from backend.core.storage import get_custom_skills, init_db
 
-from raambaad.paths import CAREER_DB
+from rozgaar.paths import CAREER_DB
 DB_PATH = str(CAREER_DB)
 
 # Guards the mutable module state below. FastAPI serves requests from a

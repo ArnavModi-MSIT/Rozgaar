@@ -27,7 +27,7 @@ from playwright.sync_api import Error as PlaywrightError
 from playwright.sync_api import TimeoutError as PlaywrightTimeoutError
 from playwright.sync_api import sync_playwright
 
-from raambaad.paths import ROOT as PROJECT_ROOT, READER_RUNTIME
+from rozgaar.paths import ROOT as PROJECT_ROOT, READER_RUNTIME
 BASE_DIR = READER_RUNTIME
 BASE_DIR.mkdir(parents=True, exist_ok=True)
 DEFAULT_SEARCH = "https://www.linkedin.com/jobs/search/?keywords=data%20analyst&location=Delhi%2C%20India"

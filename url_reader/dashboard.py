@@ -25,7 +25,7 @@ from url_reader.browser.pagination import PaginationResult
 def source_name(url):
     return reader.source_for_url(url) or "linkedin"
 
-from raambaad.paths import ROOT as PROJECT_ROOT, READER_RUNTIME
+from rozgaar.paths import ROOT as PROJECT_ROOT, READER_RUNTIME
 BASE_DIR = READER_RUNTIME
 WEB_DIR = Path(__file__).resolve().parent / "web"
 APP_ID = "local-linkedin-reader"

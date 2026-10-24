@@ -6,7 +6,7 @@ def runtime_identity(root):
     root=Path(root).resolve()
     digest=hashlib.sha256()
     paths=[]
-    for name in ("backend","url_reader","raambaad"):
+    for name in ("backend","url_reader","rozgaar"):
         paths.extend(p for p in (root/name).rglob("*.py") if "__pycache__" not in p.parts)
     for path in sorted(paths):
         digest.update(path.relative_to(root).as_posix().encode())

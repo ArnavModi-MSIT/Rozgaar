@@ -10,7 +10,7 @@ from unittest.mock import patch
 import pandas as pd
 import torch
 
-import raambaad.launcher as start
+import rozgaar.launcher as start
 from backend.api import data, main
 from backend.core.matcher import compute_job_pool_key
 from backend.core.run_lock import collection_lock
@@ -34,7 +34,7 @@ class RuntimeReviewTests(unittest.TestCase):
 
     def test_stale_backend_is_not_silently_reused(self):
         with patch.object(start,"PYTHON",Path(sys.executable)),patch.object(start,"ui_needs_build",return_value=False),patch.object(start,"api_ready",return_value=False),patch.object(start,"api_status",return_value="stale"),patch.object(start.subprocess,"Popen") as spawn:
-            with self.assertRaisesRegex(RuntimeError,"older Job Intel"):
+            with self.assertRaisesRegex(RuntimeError,"older Rozgaar"):
                 start.main(["--no-scrape"])
             spawn.assert_not_called()
 
@@ -43,7 +43,7 @@ class RuntimeReviewTests(unittest.TestCase):
         @contextmanager
         def response(value):
             yield io.BytesIO(json.dumps(value).encode())
-        with patch.object(start,"runtime_identity",return_value=expected),patch.object(start,"urlopen",side_effect=[response({"info":{"title":"Job Intel API"}}),response({**expected,"revision":"old"})]):
+        with patch.object(start,"runtime_identity",return_value=expected),patch.object(start,"urlopen",side_effect=[response({"info":{"title":"Rozgaar API"}}),response({**expected,"revision":"old"})]):
             self.assertEqual(start.api_status(),"stale")
 
     def test_failed_new_resume_preserves_previous_state(self):

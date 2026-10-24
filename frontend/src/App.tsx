@@ -306,7 +306,7 @@ export default function App() {
 
       <main className="flex-1 h-screen overflow-y-auto">
         <div className="max-w-4xl mx-auto px-6 py-6">
-          <div className="flex flex-wrap justify-between gap-3 mb-4"><div><h1 className="text-2xl font-semibold">RaamBaad</h1><p className="text-sm text-gray-500 mt-1">Separate pipelines · download JSON for shortlisting</p></div><span className="text-xs text-gray-500 self-center">{platform?.reader_running || platform?.career.status === "running" ? "Collection running" : "Localhost"}</span></div>
+          <div className="flex flex-wrap justify-between gap-3 mb-4"><div><h1 className="text-2xl font-semibold">Rozgaar</h1><p className="text-sm text-gray-500 mt-1">Separate pipelines · download JSON for shortlisting</p></div><span className="text-xs text-gray-500 self-center">{platform?.reader_running || platform?.career.status === "running" ? "Collection running" : "Localhost"}</span></div>
           <nav aria-label="Pipeline views" className="flex flex-wrap gap-2 mb-4">
             {([ ["careers", "Career pages"], ["reader", "URL reader"] ] as const).map(([key, label]) => <button key={key} aria-pressed={view === key} onClick={() => setView(key)} className={`text-sm px-3 py-1.5 rounded border ${view === key ? "bg-sky-100 border-sky-400" : "border-gray-200"}`}>{label}</button>)}
           </nav>

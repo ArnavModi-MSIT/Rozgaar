@@ -5,7 +5,7 @@ import os
 import subprocess
 import sys
 import unittest
-from raambaad.paths import ROOT
+from rozgaar.paths import ROOT
 
 BROWSER_FIXTURES = (
     "browser_smoke", "internshala_browser_smoke", "reliability_browser_smoke",
@@ -20,7 +20,7 @@ def main():
     args = parser.parse_args()
     os.environ.setdefault("HF_HUB_OFFLINE", "1")
     os.environ.setdefault("TRANSFORMERS_OFFLINE", "1")
-    for name in ("backend", "url_reader", "raambaad", "scripts"):
+    for name in ("backend", "url_reader", "rozgaar", "scripts"):
         if not compileall.compile_dir(ROOT / name, quiet=1):
             return 1
     suite = unittest.defaultTestLoader.discover(str(ROOT / "tests"), top_level_dir=str(ROOT))

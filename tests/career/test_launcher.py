@@ -3,7 +3,7 @@ from pathlib import Path
 import sys
 import unittest
 from unittest.mock import patch
-import raambaad.launcher as start
+import rozgaar.launcher as start
 
 class LauncherTests(unittest.TestCase):
     def launch(self, args):

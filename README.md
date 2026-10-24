@@ -1,4 +1,4 @@
-# RaamBaad
+# Rozgaar
 
 A localhost workspace for collecting job listings and exporting JSON batches for manual shortlisting. Built with Python, FastAPI, React, SQLite and Playwright.
 
@@ -26,7 +26,7 @@ npm run build
 Pop-Location
 ```
 
-Then double-click **Start RaamBaad.cmd**, or run:
+Then double-click **Start Rozgaar.cmd**, or run:
 
 ```powershell
 & '.\runtime\python\Scripts\python.exe' start.py
@@ -66,7 +66,7 @@ Use the exact stored filename. `--latest` and `--input path/to/export.json` are 
 | `backend/config/` | Sources, matching rules and display names |
 | `frontend/src/` | React interface |
 | `url_reader/` | Browser adapters, checkpoint/history storage and watchdog |
-| `raambaad/` | Shared paths and localhost launcher |
+| `rozgaar/` | Shared paths and localhost launcher |
 | `scripts/` | Checks, audits and maintenance tools |
 | `tests/` | Synthetic unit/API tests and intercepted browser fixtures |
 | `examples/` | Synthetic matcher input |

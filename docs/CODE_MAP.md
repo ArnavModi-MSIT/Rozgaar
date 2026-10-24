@@ -4,8 +4,8 @@
 
 | Task | Files |
 |---|---|
-| Start localhost / check build freshness | `start.py`, `raambaad/launcher.py` |
-| Change data, model or browser paths | `raambaad/paths.py` |
+| Start localhost / check build freshness | `start.py`, `rozgaar/launcher.py` |
+| Change data, model or browser paths | `rozgaar/paths.py` |
 | Add or edit employer inventories | `backend/config/sources.py` |
 | Change role/location matching rules | `backend/config/matching.py` |
 | Change company display names | `backend/config/display.py` |

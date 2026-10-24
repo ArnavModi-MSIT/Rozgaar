@@ -31,7 +31,7 @@ def ui_needs_build():
 def api_status():
     try:
         with urlopen(URL + "/openapi.json", timeout=2) as response:
-            if json.load(response).get("info", {}).get("title") != "Job Intel API":
+            if json.load(response).get("info", {}).get("title") != "Rozgaar API":
                 return "other"
         with urlopen(URL + "/api/runtime", timeout=2) as response:
             return "ready" if json.load(response) == runtime_identity(ROOT) else "stale"
@@ -69,11 +69,11 @@ def main(argv=None):
         subprocess.run([npm, "run", "build"], cwd=UI, check=True)
     status = "ready" if api_ready() else api_status()
     if status in {"stale", "other"}:
-        raise RuntimeError("An older Job Intel backend or another checkout is running on port 8000. Close its API console (Ctrl+C), then launch again.")
+        raise RuntimeError("An older Rozgaar backend or another checkout is running on port 8000. Close its API console (Ctrl+C), then launch again.")
     if status == "ready":
         if not args.no_open:
             webbrowser.open(URL)
-        print(f"RaamBaad is already running: {URL}")
+        print(f"Rozgaar is already running: {URL}")
         return 0
     if not args.no_open:
         def open_when_ready():
@@ -83,6 +83,6 @@ def main(argv=None):
                     return
                 time.sleep(0.5)
         threading.Thread(target=open_when_ready, daemon=True).start()
-    print(f"RaamBaad: {URL}\nKeep this console open. Ctrl+C stops the platform.\nStart collection from the website.", flush=True)
+    print(f"Rozgaar: {URL}\nKeep this console open. Ctrl+C stops the platform.\nStart collection from the website.", flush=True)
     uvicorn.run("backend.api.main:app", host="127.0.0.1", port=8000, log_level="info", access_log=False)
     return 0

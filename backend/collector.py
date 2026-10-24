@@ -61,7 +61,7 @@ from backend.fetchers.workday import fetch_job_detail
 
 log = logging.getLogger("jobbot")
 
-from raambaad.paths import CAREER_DB
+from rozgaar.paths import CAREER_DB
 DB_PATH = str(CAREER_DB)
 # Fresh clones won't have db/ at all — git never tracks empty directories,
 # and .gitignore excludes the .db files themselves (personal data, not

@@ -1,6 +1,6 @@
 # URL reader
 
-Use the URL reader tab in RaamBaad, launched by `Start RaamBaad.cmd`. Use `Open Reader Chrome.cmd` to prepare the dedicated browser without collecting.
+Use the URL reader tab in Rozgaar, launched by `Start Rozgaar.cmd`. Use `Open Reader Chrome.cmd` to prepare the dedicated browser without collecting.
 
 ## Modules
 

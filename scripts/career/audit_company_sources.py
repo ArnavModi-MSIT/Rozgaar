@@ -7,7 +7,7 @@ import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime, timezone
 from pathlib import Path
-from raambaad.paths import ROOT as PROJECT_ROOT, RUNTIME
+from rozgaar.paths import ROOT as PROJECT_ROOT, RUNTIME
 ROOT = PROJECT_ROOT / "docs" / "catalog"
 import backend.config as config
 from backend.core.collector import PLATFORMS

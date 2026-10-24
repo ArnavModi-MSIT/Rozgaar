@@ -49,9 +49,9 @@ from backend.api.platform import router as platform_router, lifespan as platform
 
 log = logging.getLogger("jobbot.api")
 
-app = FastAPI(title="Job Intel API", lifespan=platform_lifespan)
+app = FastAPI(title="Rozgaar API", lifespan=platform_lifespan)
 app.include_router(platform_router)
-from raambaad.paths import ROOT, FRONTEND
+from rozgaar.paths import ROOT, FRONTEND
 _RUNTIME = runtime_identity(ROOT)
 _LOCAL_ORIGINS = {
     f"http://{host}:{port}"
@@ -64,7 +64,7 @@ _LOCAL_ORIGINS = {
 async def protect_local_mutations(request: Request, call_next):
     origin = request.headers.get("origin")
     if request.method not in {"GET", "HEAD", "OPTIONS"} and origin and origin not in _LOCAL_ORIGINS:
-        return JSONResponse({"detail": "Changes are only allowed from the local Job Intel UI."}, status_code=403)
+        return JSONResponse({"detail": "Changes are only allowed from the local Rozgaar UI."}, status_code=403)
     return await call_next(request)
 
 

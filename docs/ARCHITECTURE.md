@@ -1,6 +1,6 @@
 # Architecture
 
-RaamBaad is a local, single-user application. The launcher serves the React build and FastAPI on `127.0.0.1:8000`. Startup does not collect jobs. Shared filesystem locations are defined in `raambaad/paths.py`.
+Rozgaar is a local, single-user application. The launcher serves the React build and FastAPI on `127.0.0.1:8000`. Startup does not collect jobs. Shared filesystem locations are defined in `rozgaar/paths.py`.
 
 ## Career pipeline
 
