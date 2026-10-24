@@ -1,6 +1,6 @@
 # Public-release preparation
 
-Prepared on 24 October 2026. All changes are local; publishing and Git history changes are separate actions.
+Prepared on 24 October 2026. This records the preparation checks; publication is recorded by the repository commit history.
 
 ## Changes
 
@@ -22,4 +22,4 @@ The detailed scan is saved privately as `runtime/artifacts/public-release-audit.
 
 ## Publication decisions
 
-The repository uses the MIT license, selected by the owner. See the root `LICENSE` file. Third-party dependencies retain their own licenses. The existing origin remote is unchanged. No commit, push, history rewrite or repository-visibility change was performed.
+The repository uses the MIT license, selected by the owner. See the root `LICENSE` file. Third-party dependencies retain their own licenses. The owner subsequently authorized publication to `ArnavModi-MSIT/Rozgaar`. Existing Git history is preserved; local private archives and runtime data are excluded.

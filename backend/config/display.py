@@ -57,4 +57,3 @@ DISPLAY_NAMES = {
     "spglobal": "S&P Global",  # .title() would give "Spglobal"
     "hp": "HP",  # .title() would give "Hp" — wrong branding
 }
-

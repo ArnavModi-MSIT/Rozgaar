@@ -50,4 +50,3 @@ STUDENT_TITLE_RE = re.compile(
     r"\b(intern(?:ship)?|apprentice(?:ship)?|student|summer analyst|"
     r"summer associate|industrial trainee|co[ -]?op)\b", re.I,
 )
-

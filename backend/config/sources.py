@@ -602,4 +602,3 @@ DISPLAY_NAMES.update({
     'whatfix': 'Whatfix',
     'wingify': 'Wingify',
 })
-

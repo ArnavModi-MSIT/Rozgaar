@@ -81,4 +81,3 @@ def save_result(path, result):
                     f"Previous checkpoint preserved; unsaved snapshot retained at {temp}. Original error: {exc}"
                 ) from exc
             time.sleep(delays[attempt])
-
