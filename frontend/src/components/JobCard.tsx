@@ -1,0 +1,225 @@
+import { useEffect, useState } from "react";
+import { api } from "../api";
+import { sourceLabel } from "../platform";
+import type { Job, JobDetail, JobStatePatch } from "../types";
+
+interface Props {
+  exportOnly?: boolean;
+  job: Job;
+  resumeSkills: Set<string>;
+  resumeLoaded: boolean;
+  autoRemove: boolean;
+  onDismiss: (id: string) => void;
+  onUpdate: (id: string, patch: JobStatePatch) => Promise<void>;
+}
+
+function experienceLabel(years: number): string | null {
+  // -1 is the project-wide "couldn't determine" sentinel — deliberately
+  // shown as nothing rather than "0 years", which would be a real claim.
+  if (years < 0) return "Experience requirement unknown — review description";
+  if (years === 0) return "Fresher-friendly (0 years stated)";
+  return `${years}+ year(s) required`;
+}
+
+export default function JobCard({
+  exportOnly = false,
+  job,
+  resumeSkills,
+  resumeLoaded,
+  autoRemove,
+  onDismiss,
+  onUpdate,
+}: Props) {
+  const [expanded, setExpanded] = useState(false);
+  const [detail, setDetail] = useState<JobDetail | null>(null);
+  const [detailError, setDetailError] = useState<string | null>(null);
+  const [whyOpen, setWhyOpen] = useState(false);
+  const [updating, setUpdating] = useState(false);
+  const [actionError, setActionError] = useState<string | null>(null);
+  const needsDetail = expanded || whyOpen;
+  const explanation = detail?.match_explanation ?? job.match_explanation;
+  async function update(patch: JobStatePatch) {
+    setUpdating(true); setActionError(null);
+    try { await onUpdate(job.id, patch); }
+    catch (e) { setActionError(e instanceof Error ? e.message : "Couldn't save change"); }
+    finally { setUpdating(false); }
+  }
+
+  const matched = job.skills.filter((s) => resumeSkills.has(s));
+  const missing = job.skills.filter((s) => !resumeSkills.has(s));
+  const skillPct =
+    job.skills.length > 0
+      ? Math.round((100 * matched.length) / job.skills.length)
+      : null;
+
+  // Detail contains resume-dependent eligibility evidence. Refresh it when
+  // the list or resume changes, and ignore responses from an older request.
+  useEffect(() => {
+    if (!needsDetail) return;
+    let cancelled = false;
+    setDetail(null);
+    setDetailError(null);
+    void api.jobDetail(job.id).then(
+      (result) => { if (!cancelled) setDetail(result); },
+      (error: unknown) => {
+        if (!cancelled) setDetailError(error instanceof Error ? error.message : "couldn't load details");
+      },
+    );
+    return () => { cancelled = true; };
+  }, [needsDetail, job, resumeSkills, resumeLoaded]);
+
+  function toggleDetail() {
+    setExpanded((current) => !current);
+  }
+
+  // Opening a link does not imply an application. Only the optional
+  // auto-remove setting dismisses it; the anchor still opens a new tab.
+  function handleOpen() {
+    if (autoRemove) onDismiss(job.id);
+  }
+
+  const expLabel = experienceLabel(job.experience_years);
+
+  return (
+    <article className="rounded-lg border border-gray-200 bg-white px-4 py-3.5 hover:border-gray-300 transition-colors">
+      <p className="text-xs text-gray-500 mb-1.5">{job.source_group === "reader" ? sourceLabel(job.source) : "Career page"}{job.reader_sources?.length && job.source_group !== "reader" ? ` · Also read on ${job.reader_sources.map(sourceLabel).join(", ")}` : ""}</p>
+      {["missing", "suspected_truncated"].includes(job.description_status) && <p className="text-xs text-amber-800 bg-amber-50 rounded p-2 mb-2">Reader description {job.description_status === "missing" ? "is missing" : "may be incomplete"}. Review the original posting or run a repair from Collections.</p>}
+      <div className="flex gap-4">
+        <div className="min-w-0 flex-1">
+          <a
+            href={job.url}
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={handleOpen}
+            className="text-lg font-semibold text-amber-800 hover:underline break-words"
+          >
+            {job.title}
+          </a>
+
+          <p className="text-sm text-gray-700 mt-0.5">
+            <span className="font-medium">{job.display_company}</span>
+            {job.location && <> · {job.location}</>}
+            <> · via {sourceLabel(job.source)}</>
+            {job.category && <> · {job.category}</>}
+          </p>
+
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-1.5 text-xs text-gray-500">
+            {expLabel && <span>{expLabel}</span>}
+            {job.description_available === false && <span className="text-amber-800">Description unavailable — verify source</span>}
+            {job.preferred_experience_years >= 0 && <span>{job.preferred_experience_years}+ year(s) preferred</span>}
+            {job.is_remote && (
+              <span className="rounded bg-sky-50 text-sky-700 px-1.5 py-0.5">Remote</span>
+            )}
+            {job.is_ncr && (
+              <span className="rounded bg-amber-50 text-amber-800 px-1.5 py-0.5">NCR</span>
+            )}
+            <span title="Last observed by a collector; verify the posting is still open before applying">Seen {job.last_seen}</span>
+            <span title={job.status_evidence}>{job.posting_status === "open" ? "Open in feed / marked open" : `Posting ${job.posting_status}`}</span>
+            {job.tracking_status !== "none" && <strong>{job.tracking_status === "saved" ? "Saved" : "Applied"}</strong>}
+          </div>
+
+          {resumeLoaded && skillPct !== null && (
+            <p className="text-xs text-gray-600 mt-1.5">
+              Skills {matched.length}/{job.skills.length} ({skillPct}%)
+              {matched.length > 0 && (
+                <span className="text-gray-500"> · have: {matched.join(", ")}</span>
+              )}
+              {missing.length > 0 && (
+                <span className="text-gray-400"> · missing: {missing.join(", ")}</span>
+              )}
+            </p>
+          )}
+
+          <div className="flex flex-wrap items-start gap-3 mt-2.5">
+            {resumeLoaded && explanation && (
+              <details className="text-xs text-gray-700" onToggle={e => setWhyOpen(e.currentTarget.open)}>
+                <summary className="cursor-pointer underline">Why this ranking?</summary>
+                <div className="mt-2 space-y-2 max-w-xl">
+                  <p>{explanation.note}</p>
+                  <p>Requirements relevance: {explanation.requirements_relevance.toFixed(0)} · Weighted skills: {explanation.weighted_skill_pct?.toFixed(0) ?? "unknown"}
+                    {explanation.project_responsibility_relevance !== null && <> · Project/work relevance: {explanation.project_responsibility_relevance.toFixed(0)}</>}</p>
+                  <p>Matched required skills: {explanation.matched_required.join(", ") || "none identified"}</p>
+                  <p>Required skill gaps: {explanation.missing_required.join(", ") || "none identified"}</p>
+                  <p>Matched preferred skills: {explanation.matched_preferred.join(", ") || "none identified"}</p>
+                  {explanation.relevance_gate_applied && <p>Score capped because neither target role nor sufficient skill overlap was identified.</p>}
+                  <h3 className="font-semibold">Eligibility checks — separate from relevance</h3>
+                  {!detail && <p>{detailError ?? "Loading eligibility evidence…"}</p>}
+                  {explanation.eligibility_checks.map(check => <p key={check.label}><strong>{check.label}: {check.status}</strong><br />{check.evidence}</p>)}
+                </div>
+              </details>
+            )}
+            <button
+              onClick={toggleDetail}
+              className="text-xs text-gray-600 hover:text-gray-900 underline"
+            >
+              {expanded ? "Hide details" : "Details"}
+            </button>
+            <button
+              onClick={() => onDismiss(job.id)}
+              className="text-xs text-gray-500 hover:text-red-700"
+            >
+              Remove
+            </button>
+            {!exportOnly && <><button disabled={updating} className="text-xs underline disabled:opacity-50" onClick={() => void update({ tracking_status: job.tracking_status === "saved" ? "none" : "saved" })}>{job.tracking_status === "saved" ? "Unsave" : "Save"}</button>
+            <button disabled={updating} className="text-xs underline disabled:opacity-50" onClick={() => void update({ tracking_status: job.tracking_status === "applied" ? "none" : "applied" })}>{job.tracking_status === "applied" ? "Clear applied" : "Mark applied"}</button>
+            <button disabled={updating} title="Use after confirming closure on the original posting" className="text-xs underline disabled:opacity-50" onClick={() => void update({ posting_status: "closed" })}>Mark closed</button></>}
+          </div>
+          {actionError && <p role="alert" className="text-xs text-red-700 mt-2">{actionError}</p>}
+
+          {expanded && (
+            <div className="mt-3 border-t border-gray-100 pt-3">
+              {detailError && <p className="text-xs text-red-600">{detailError}</p>}
+              {!detail && !detailError && (
+                <p className="text-xs text-gray-400">Loading…</p>
+              )}
+              {detail && (
+                <>
+                  <h3 className="text-sm font-semibold mb-2">Eligibility evidence</h3>
+                  <p className="text-xs text-gray-500 mb-2">{detail.eligibility.note}</p>
+                  {([ ["Education", detail.eligibility.education_evidence], ["Graduation year", detail.eligibility.graduation_evidence], ["Mandatory skills", detail.eligibility.mandatory_skill_evidence] ] as [string, string[]][]).map(([label, lines]) => (
+                    <div key={label} className="text-xs mb-2"><strong>{label}</strong>{lines.length ? <ul>{lines.map((line, i) => <li key={i}>{line}</li>)}</ul> : <p className="text-gray-500">Not identified — verify the posting.</p>}</div>
+                  ))}
+                  {resumeLoaded && detail.eligibility.missing_mandatory_skills.length > 0 && <p className="text-xs text-amber-800 mb-2">Missing recognized mandatory skills: {detail.eligibility.missing_mandatory_skills.join(", ")}</p>}
+                  {detail.experience_lines.length > 0 ? (
+                    <ul className="text-xs text-gray-700 space-y-1 mb-2">
+                      {detail.experience_lines.slice(0, 12).map((line, i) => (
+                        <li key={i} className="leading-relaxed">
+                          • {line}
+                        </li>
+                      ))}
+                    </ul>
+                  ) : (
+                    <p className="text-xs text-gray-400 mb-2">
+                      No numbers or “experience” mentions found.
+                    </p>
+                  )}
+                  {detail.description && (
+                    <details>
+                      <summary className="text-xs text-gray-600 cursor-pointer hover:text-gray-900">
+                        Full description
+                      </summary>
+                      <p className="text-xs text-gray-700 whitespace-pre-wrap mt-2 leading-relaxed">
+                        {detail.description}
+                      </p>
+                    </details>
+                  )}
+                </>
+              )}
+            </div>
+          )}
+        </div>
+
+        {job.match_pct !== null && (
+          <div className="shrink-0 text-right" title="Ranking score based on resume text and skills. It is not an eligibility or hiring probability.">
+            <div className="text-2xl font-semibold tabular-nums">
+              {job.match_pct.toFixed(0)}
+            </div>
+            <div className="text-[10px] uppercase tracking-wide text-gray-400">
+              Relevance score
+            </div>
+          </div>
+        )}
+      </div>
+    </article>
+  );
+}

@@ -1,0 +1,114 @@
+const $ = id => document.getElementById(id);
+let token = '', selected = null, currentFile = null, initialized = false, polling = false, jobsPage = 1;
+const defaults = {linkedin:'https://www.linkedin.com/jobs/search/?keywords=data%20analyst&location=India',internshala:'https://internshala.com/internships/work-from-home-internships/',internshala_jobs:'https://internshala.com/jobs/work-from-home/salary-6/',naukri:'https://www.naukri.com/analyst-internship-jobs?k=analyst%20internship&qproductJobSource=2&qinternshipFlag=true&naukriCampus=true&experience=0&nignbevent_src=jobsearchDeskGNB',instahyre:'https://www.instahyre.com/candidate/opportunities/?company_size=0&job_type=0&search=true&years=0'};
+defaults.linkedin_posts = 'https://www.linkedin.com/search/results/content/?keywords=%23fresherhiring&origin=GLOBAL_SEARCH_HEADER&sortBy=%5B%22date_posted%22%5D';
+defaults.wellfound = 'https://wellfound.com/jobs';
+defaults.wellfound_india = 'https://wellfound.com/location/india';
+const sourceLabel = source => ({internshala:'Internshala',naukri:'Naukri',instahyre:'Instahyre',wellfound:'Wellfound',linkedin:'LinkedIn',linkedin_posts:'LinkedIn posts'}[source] || 'LinkedIn');
+function detectSource() {
+  try {
+    const host = new URL($('search-url').value.trim()).hostname;
+    if(/^(www\.)?internshala\.com$/.test(host)) $('source').value = /^\/(jobs|fresher-jobs)(\/|$)/.test(new URL($('search-url').value.trim()).pathname) ? 'internshala_jobs' : 'internshala';
+    else if(/^(www\.)?naukri\.com$/.test(host)) $('source').value = 'naukri';
+    else if(/^(www\.)?instahyre\.com$/.test(host)) $('source').value = 'instahyre';
+    else if(/^(www\.)?wellfound\.com$/.test(host)) $('source').value = new URL($('search-url').value.trim()).pathname.replace(/\/$/,'') === '/location/india' ? 'wellfound_india' : 'wellfound';
+    else if(/^(www\.)?linkedin\.com$/.test(host)) $('source').value = /^\/search\/results\/content\/?$/.test(new URL($('search-url').value.trim()).pathname) ? 'linkedin_posts' : 'linkedin';
+    defaults[$('source').value] = $('search-url').value.trim();
+  } catch (_) { /* The API validates incomplete or unsupported URLs on submit. */ }
+}
+const number = n => Number(n || 0).toLocaleString('en-IN');
+const date = value => value ? new Date(value).toLocaleString('en-IN', {timeZone:'Asia/Kolkata',day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'}) : '—';
+const notice = message => { $('notice').textContent = message || ''; $('notice').hidden = !message; };
+const text = (tag, value, cls) => { const el = document.createElement(tag); el.textContent = value || ''; if(cls) el.className = cls; return el; };
+async function api(path, body) {
+  const response = await fetch(path, body === undefined ? {} : {method:'POST',headers:{'Content-Type':'application/json','X-Reader-Token':token},body:JSON.stringify(body)});
+  const value = await response.json();
+  if(!response.ok) throw new Error(value.error || 'Request failed');
+  return value;
+}
+async function refresh() {
+  if(polling) return;
+  polling = true;
+  try {
+    const params = new URLSearchParams({page:String(jobsPage),q:$('job-query').value,quality:$('job-quality').value});
+    if(selected) params.set('file',selected);
+    const data = await api('/api/state?' + params);
+    token = data.token; currentFile = data.file;
+    if(!initialized) {
+      $('search-url').value = data.settings.url || '';
+      $('limit').value = data.settings.limit || 1000;
+      $('delay').value = data.settings.delay || 3;
+      $('workers').value = String(data.settings.workers || 1);
+      detectSource();
+      initialized = true;
+    }
+    for(const key of ['saved','attempted','errors','pending','target','skipped','complete_candidates','incomplete','retried','pages_advanced']) $(key).textContent = number(data[key]);
+    $('status').textContent = data.status; $('status').className = 'status ' + data.status;
+    const percent = data.target ? Math.min(100, data.saved / data.target * 100) : 0;
+    $('progress').value = percent; $('percent').textContent = percent.toFixed(1) + '% collected';
+    $('updated').textContent = data.updated_at ? 'Updated ' + date(data.updated_at) : 'Waiting for a run';
+    $('run-message').textContent = data.message || (data.running ? 'Collecting job descriptions. Progress is saved automatically.' : 'Ready to collect. Your saved jobs stay on this computer.');
+    $('output-name').textContent = data.file || 'No result selected';
+    $('run-source').textContent = sourceLabel(data.source);
+    $('saved-label').textContent = data.source === 'linkedin_posts' ? 'POSTS SAVED' : 'JOBS SAVED';
+    $('saved-heading').textContent = data.source === 'linkedin_posts' ? 'Saved posts' : 'Saved jobs';
+    $('download').href = data.file ? '/api/download?file=' + encodeURIComponent(data.file) : '#';
+    $('download').classList.toggle('disabled', !data.file); $('download').setAttribute('aria-disabled', String(!data.file));
+    $('start').disabled = data.running; $('stop').disabled = !data.running || data.status === 'stopping';
+    $('follow').hidden = !selected;
+    jobsPage = data.jobs_page || 1;
+    $('jobs-page-label').textContent = `Page ${jobsPage} of ${data.jobs_pages || 1} · ${number(data.jobs_matching)} matches`;
+    $('jobs-prev').disabled = jobsPage <= 1; $('jobs-next').disabled = jobsPage >= (data.jobs_pages || 1);
+    $('paging-diagnostics').textContent = data.pagination ? JSON.stringify(data.pagination,null,2) : 'No page advance attempted.';
+    $('jobs').replaceChildren();
+    if(!data.jobs.length) $('jobs').append(text('p','Saved jobs will appear here.','empty'));
+    for(const job of data.jobs) {
+      const row = text('div','','job-row');
+      row.append(text('span',(job.company || 'JR').slice(0,2).toUpperCase(),'job-icon'));
+      const info = text('div','','job-text'); info.append(text('strong',job.title),text('small',job.company),text('small',job.description_status === 'complete_candidate' ? 'Complete candidate' : 'Needs review')); row.append(info);
+      const view = text('button','View description','text-button'); view.type = 'button';
+      view.addEventListener('click',()=>showJob(data.file,job.job_id)); row.append(view); $('jobs').append(row);
+    }
+    $('history').replaceChildren();
+    for(const run of data.history) {
+      const row = document.createElement('tr'); if(run.file === data.file) row.className = 'selected';
+      row.append(text('td',run.file),text('td',sourceLabel(run.source)),text('td',number(run.count)),text('td',number(run.errors)),text('td',run.status,'history-status'),text('td',date(run.updated_at)));
+      const cell = document.createElement('td'), view = text('button','Inspect ↗','text-button'); view.type = 'button';
+      view.addEventListener('click',()=>{ selected = run.file; jobsPage = 1; refresh(); }); cell.append(view); row.append(cell); $('history').append(row);
+    }
+    if(!data.history.length) { const row=document.createElement('tr'),cell=text('td','No saved runs yet.'); cell.colSpan=7; row.append(cell); $('history').append(row); }
+  } catch(error) { notice(error.message); }
+  finally { polling = false; }
+}
+async function showJob(file,id) {
+  try {
+    const job = await api('/api/job?file=' + encodeURIComponent(file) + '&id=' + encodeURIComponent(id));
+    $('detail-title').textContent = job.title; $('detail-company').textContent = job.company;
+    $('detail-meta').textContent = job.location_and_posting_info || '';
+    $('detail-description').textContent = job.description || '';
+    $('detail-quality').textContent = 'Description: ' + (job.description_status || 'legacy / unassessed') + ' · ' + number((job.description || '').length) + ' characters';
+    const link = new URL(job.link);
+    $('detail-link').href = link.protocol === 'https:' && /^(www\.)?(linkedin|internshala|naukri|instahyre|wellfound)\.com$/.test(link.hostname) ? link.href : '#';
+    $('detail-link').textContent = job.source === 'linkedin_posts' ? 'Open LinkedIn post ↗' : 'Open ' + sourceLabel(link.hostname.replace(/^www\./,'').replace(/\.com$/,'')) + ' listing ↗';
+    $('job-dialog').showModal();
+  } catch(error) { notice(error.message); }
+}
+$('setup').addEventListener('submit',async event=>{
+  event.preventDefault(); notice(''); $('start').disabled = true;
+  try {
+    await api('/api/start',{url:$('search-url').value.trim(),limit:Number($('limit').value),delay:Number($('delay').value),fresh:!$('resume').checked,retry_incomplete:$('retry-incomplete').checked,workers:Number($('workers').value)});
+    selected = null; jobsPage = 1; await refresh();
+  } catch(error) { notice(error.message); $('start').disabled = false; }
+});
+$('stop').addEventListener('click',async()=>{ try { notice(''); await api('/api/stop',{}); await refresh(); } catch(error) { notice(error.message); } });
+$('follow').addEventListener('click',()=>{ selected=null; jobsPage=1; refresh(); });
+$('close-dialog').addEventListener('click',()=>$('job-dialog').close());
+$('download').addEventListener('click',event=>{if(!currentFile) event.preventDefault();});
+$('source').addEventListener('change',()=>{ $('search-url').value = defaults[$('source').value]; });
+$('search-url').addEventListener('input',detectSource);
+$('jobs-prev').addEventListener('click',()=>{jobsPage=Math.max(1,jobsPage-1);refresh();});
+$('jobs-next').addEventListener('click',()=>{jobsPage++;refresh();});
+let filterTimer;
+$('job-query').addEventListener('input',()=>{clearTimeout(filterTimer);filterTimer=setTimeout(()=>{jobsPage=1;refresh();},250);});
+$('job-quality').addEventListener('change',()=>{jobsPage=1;refresh();});
+refresh(); setInterval(refresh,2000);

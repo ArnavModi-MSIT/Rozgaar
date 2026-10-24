@@ -1,0 +1,10 @@
+@echo off
+setlocal
+cd /d "%~dp0"
+if not exist "runtime\python\Scripts\python.exe" (
+    echo Python environment missing. See README.md for setup.
+    pause
+    exit /b 1
+)
+"runtime\python\Scripts\python.exe" start.py %*
+if errorlevel 1 pause

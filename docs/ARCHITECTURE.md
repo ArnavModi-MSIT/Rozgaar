@@ -1,0 +1,31 @@
+# Architecture
+
+RaamBaad is a local, single-user application. The launcher serves the React build and FastAPI on `127.0.0.1:8000`. Startup does not collect jobs. Shared filesystem locations are defined in `raambaad/paths.py`.
+
+## Career pipeline
+
+`backend/core/collector.py` registers source adapters from `backend/fetchers/`. `backend/collector.py` coordinates bounded collection and SQLite persistence. Adapters return normalized postings; some also return explicit partial-source results. Coverage varies by adapter and employer. Missing data must not be interpreted as a successful empty source.
+
+Career SQLite lives in `runtime/career/`. Collection uses a process lock. Matching combines local skill/experience heuristics with optional sentence-transformer embeddings. Relevance scores are separate from eligibility decisions.
+
+`backend/core/career_exports.py` saves durable JSON snapshots with exact batch membership. Downloading and removing are separate operations. Removing a batch hides its exact jobs and preserves the snapshot. `description_quality.py` adds conservative text-quality labels and exact normalized-text groups; it does not deduplicate requisitions or guarantee completeness. `scripts/career/repair_export.py` creates a separate reviewed file without changing the original snapshot or database.
+
+## URL-reader pipeline
+
+`url_reader/engine.py` coordinates site adapters in `url_reader/sources/`. Browser navigation, parallel detail workers and pagination live in `url_reader/browser/`. Checkpoints, duplicate history and locking live in `url_reader/storage/`.
+
+The reader connects through Playwright/CDP to a dedicated debug-enabled Chrome profile. Sign-in and verification are manual. Captured Wellfound searches use the existing filtered tab and validate its visible filter scope. The supervisor bounds stalls and preserves checkpoint progress; cleanup targets reader-owned tabs.
+
+Reader JSON/history/profile files live under `runtime/reader/`. They are not imported into the career database. Legacy import compatibility routes do not enable synchronization.
+
+## API and frontend
+
+`backend/api/main.py` exposes job, resume and tracker routes. `backend/api/platform.py` controls the two pipelines and career exports. React components keep career collection, JSON export and URL-reader controls separate. The service is intended for loopback use, not shared hosting.
+
+Runtime source fingerprints let the launcher detect stale local servers. The launcher builds changed frontend source when needed. A running process must be restarted to load Python changes.
+
+## Validation and boundaries
+
+Unit/API tests use synthetic data and temporary stores. Browser fixtures intercept network requests and do not collect real account data. Live collection and model download are explicit actions outside offline checks.
+
+Do not commit SQLite stores, exports, resumes, browser profiles, model weights, logs or local backups. Source inventories in `docs/catalog/COMPANY_SOURCES.json` describe configuration, not verified live coverage. Audit output belongs under `runtime/artifacts/`.

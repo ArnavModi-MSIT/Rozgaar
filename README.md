@@ -1,476 +1,92 @@
-# Job Intel
+# RaamBaad
 
-## Daily-use update — October 16
+A localhost workspace for collecting job listings and exporting JSON batches for manual shortlisting. Built with Python, FastAPI, React, SQLite and Playwright.
 
-Workday multi-location jobs now use their detail country metadata before India filtering. Existing `N Locations` placeholders are hidden until resolved; recollection refreshes saved locations before the foreign-country gate. This fixes Fractal US jobs being kept as unknown locations, while preserving user history.
+## Features
 
-- **Saved / Applied / Notes:** track opportunities locally, keep private notes and first marked dates. Opening a posting does not mark an application.
-- **Undo / Removed:** undo single or bulk removals, or restore older removals from Removed. Restored jobs still follow discovery filters.
-- **Posting status:** new observations show open in the feed; older records start unknown. After reviewing the original posting, use Mark closed to hide it from discovery; reopen it from Closed. Fetch failures or missing listings never close jobs automatically. Saved/applied jobs and notes survive retention cleanup.
-- **Source health:** searchable company/source counts, missing descriptions and failure/partial reasons. Company histories start on your next collection. Successful older adapters show unverified company coverage where no board outcome exists.
-- **Matcher checks:** eligibility evidence loads when expanded. Compare BM25, MiniLM section matching and the hybrid on your own relevance labels using the evaluator below.
-- **Repeatable setup:** pinned Windows/Python dependencies and GitHub checks for offline tests plus the React build.
+- **Career pages:** employer and ATS adapters, role/location filters, optional local resume matching, and JSON batches of 50, 100, 250 or 500 jobs.
+- **URL reader:** separate browser-based readers for LinkedIn, Internshala, Naukri, Instahyre and Wellfound, with checkpoints and bounded stall recovery.
+- **Review workflow:** download a batch, then optionally hide its exact members. Saved jobs, notes and application tracking stay local.
+- **Description evidence:** flag missing text, department placeholders, known boilerplate and possible truncation; group repeated text without merging separate requisitions.
 
-Close the old API console and double-click **Open Job Intel.cmd**. Existing databases migrate automatically; no fresh collection is needed for tracking. Use **Start Job Intel.cmd** when you want new collection and company-health observations.
+Collection starts only when requested in the website. The two pipelines have separate stores. Applications, sign-in and verification remain manual.
 
-### Evaluate matching locally
+## Setup (Windows)
 
-```powershell
-python scripts/evaluate_matcher.py examples/matcher_synthetic.json --k 5
-python scripts/test_offline.py
-```
+Requires Python **3.10**, Node.js **22** with npm, and Google Chrome. Dependencies and optional model weights require internet access during setup. Windows is the supported development environment; other platforms have not been verified.
 
-The included 18-job sample is synthetic and only checks the evaluation path. For a useful accuracy comparison, copy the example into ignored `db/`, use your own resume text and at least 30 representative jobs, and grade relevance 0 (poor), 1 (partial), or 2 (good). Keep a separate holdout set. Relevance and eligibility are separate: a senior data job can be relevant while failing your experience filter. `--bm25-only` runs without a model; `--output db/matcher-report.json` optionally saves a local report. See [matching evaluation](docs/MATCHER_EVALUATION.md).
-
-## Personal-use fixes (October 16)
-
-- Experience fields such as `Experience: 1+ years` are now recognized; zero-based ranges stay eligible under the existing filter. Common requirement headings are recognized too.
-- Global custom-skill edits preserve manual resume corrections, including an intentionally empty corrected set.
-- Cleanup uses the last observation, and duplicate checks use the full description plus posting URL. Distinct requisition URLs remain separate; confirmed duplicates preserve dismissals and refresh observation dates.
-- Embedding caches validate the model/parser identity and vector shape. Cache writes are atomic; a cache-write failure does not reject the loaded resume.
-- Unchanged experience/skill parsing and the current job snapshot's fingerprint are reused to reduce repeated scoring work.
-
-Close an older running API console, then use **Open Job Intel.cmd** to launch the updated app without scraping. The first resume load after this update rebuilds incompatible section embeddings once. Existing saved job descriptions are re-evaluated automatically; recovering jobs skipped by the old dedup rule requires a later collection. Saved resumes and dismissals are retained. See [improvement.md](improvement.md) for the remaining optional work.
-
-The [October 15 source audit](docs/COMPANY_BATCH_OCT15.md) checks 106 requested
-employers: **63 connected and 43 skipped**, with links and reasons for each.
-[CONNECTED_COMPANIES.md](CONNECTED_COMPANIES.md) is the alphabetized names-only
-inventory of **228 configured companies**. Some sources returned partial results
-or only received listing/sample-description checks; the audit distinguishes them.
-New postings enter SQLite on the next collection run.
-Upstox uses its official published India IDs matched to full Darwinbox descriptions: all 17 jobs verified October 16, including Product Intern (CX).
-PromptQL (Hasura) is connected through its public Gem board. Of 5 current entries, 1 is an India vacancy with a full description; US-only roles and the general talent-community form are excluded.
-C5i reads all three India city sections and deduplicates overlapping roles: 12 unique jobs with full descriptions verified October 16.
-MathCo was connected on October 16 through its public PeopleStrong vacancy API: 29 India jobs and 29 full descriptions verified; US listings are excluded and source experience is retained for the existing filters.
-
-The [additional 20-company audit](docs/COMPANY_BATCH_20.md) records seventeen
-newly connected employers, live coverage counts, and three pending sources.
-
-## Local folder layout
-
-On this Windows workspace, the outer folder contains only the two CMD launchers, `app/`, and `.venv/`. Application files and documentation are inside `app/`. Use **Open Job Intel.cmd** for saved jobs only, or **Start Job Intel.cmd** for the site plus collection. The launchers also support a normal flat Git clone.
-
-For terminal commands in the organized workspace, first run `cd app`, then activate `..\.venv\Scripts\Activate.ps1`. Without activation: `..\.venv\Scripts\python.exe run.py` or `..\.venv\Scripts\python.exe stats.py`. Keep `.venv` at its original location; Windows entrypoints may contain absolute paths. `..\.venv\Scripts\python.exe start.py --check` checks paths without starting services. If a launcher reports an older backend, close that backend's console with Ctrl+C, then launch again.
-
-## Project overview
-
-A local job discovery prototype for students and early career applicants in India. It collects public job listings from supported career sites, stores them in SQLite, and ranks them against an uploaded resume.
-
-## What works
-
-- Platform-specific collectors for career sites and job boards, with a shared job format.
-- Location filtering, duplicate detection, last-observed dates, job classification, skill extraction, and experience extraction.
-- Collection and the API exclude locations confidently outside India, including US state names such as `California` and clear city-only cases such as `San Francisco`. Unresolved locations stay visible for review; older foreign rows remain in SQLite but are hidden by the API.
-- PDF, DOCX, and TXT resume upload (5 MB limit). Matching combines `all-MiniLM-L6-v2` semantic similarity with explicit skill overlap. Resume skills can be corrected in the React sidebar.
-- React interface backed by FastAPI, using the same local database and matching code as the collector.
-- Unstop is no longer collected. Previously saved Unstop jobs and internships remain in local SQLite history but are hidden from API results.
-- A Bank of America collector requests up to 1,000 postings each from the general and student India searches, then reads public job descriptions. It marks a truncated response as partial. The student search can legitimately return zero jobs; `stats.py --health` shows partial results if a request fails.
-- Google Careers collects the combined India search for Early and Intern & Apprentice roles, follows result pages, and deduplicates job IDs. It stores the card's level and minimum qualifications as the description; incomplete searches appear as partial in `stats.py --health`.
-- Mastercard now collects from its India-filtered Workday `CorporateCareers` feed as well as the existing Phenom careers feed. Shared requisition IDs avoid duplicate jobs; Workday supplies full descriptions and can refresh matching older Phenom rows. `stats.py --health` shows the Workday source separately.
-- Atlassian job cards open its official details pages instead of iCIMS application dialogs. Previously saved Atlassian links are corrected in the API, and a collection run refreshes saved location and description data.
-
-This is a prototype. Relevance scores rank jobs; they are not validated probabilities of being hired or being eligible. The last-observed date does not confirm that a listing is still open. Job sources can change or become unavailable. Application form automation is not implemented.
-
-Barclays collects all pages of its public India search using the verified `?p=` page query and reads each official job description. It deduplicates posting IDs and reports partial results when pages, reported totals, or descriptions are incomplete.
-
-Amazon collects the complete India search with `industry_experience=less_than_1_year` and no keyword restriction. It follows the JSON endpoint's reported total, retaining descriptions and qualifications. Failed pages, repeated pages, deadlines, or the 1,000-page safety limit produce partial source results. The app applies its existing filters after collection.
-
-Microsoft uses India Intern and Entry searches with remote jobs included and relocation excluded. The PCSX endpoint treats a comma-separated seniority value literally, so two searches implement the selected levels and overlapping posting IDs are deduplicated. Earlier saved Microsoft rows remain in SQLite.
-
-American Express uses the India location facet `300000000228786` from its branded careers URL through the existing Oracle endpoint. Pagination and full-description collection remain active.
-
-Flipkart collects the public TurboHire feed linked from its official career navigation, with full descriptions, source experience, and skills. An anonymous API token is obtained in memory without an account. The static `/jobslist` page has truncated cards and nonfunctional Show More code, so its displayed count is not used. Missing records or descriptions produce partial results.
-
-Meta Careers collects the logged-out search for Mumbai, Gurgaon, Bangalore, Hyderabad, and New Delhi offices. It discovers current public GraphQL search operations from the delivered frontend assets, requests all results, verifies the reported count, and reads descriptions, responsibilities, and qualifications from job-page structured data. Missing totals or descriptions produce partial results; unavailable search operations fail the source.
-
-Uber collects the public `countries=India` search API, follows its page counts, deduplicates posting IDs, and stores included full descriptions. Missing pages, count mismatches, descriptions, or deadline interruptions produce partial results.
-
-## Requirements
-
-- Windows x64 with Python 3.10.11 (tested and pinned; other Python/OS versions are unverified)
-- Node.js and npm for the React interface
-- Internet access for collecting jobs and initial dependency/model installation
-
-No API key or `.env` file is needed for the current collectors. The database and model cache are created locally and are excluded from Git.
-
-## Run locally
-
-After the one-time Python setup below, double-click **`Start Job Intel.cmd`** on Windows. It installs React dependencies if needed, builds the UI if its source changed, starts FastAPI at `http://127.0.0.1:8000`, opens the browser, and runs `run.py` in another console to refresh jobs. The API and collector consoles show errors; close the API console to stop the server. Each launch starts a new collection run, so wait for an earlier run to finish before launching again. If `JOB_INTEL_OFFLINE=1`, it opens saved jobs without collection. Node.js/npm must be installed for the first build.
-
-In PowerShell, from the repository root:
+From the repository root in PowerShell:
 
 ```powershell
-py -3.10 -m venv .venv
-.\.venv\Scripts\Activate.ps1
-python -m pip install -r requirements.txt
-python run.py
-```
-
-`python run.py` fetches listings and processes new rows. The first run may take several minutes. To see source counts from the most recent run:
-
-```powershell
-python stats.py
-```
-
-For a per-platform health report based on recent collection history:
-
-```powershell
-python stats.py --health
-```
-
-It distinguishes failed or partial fetches from genuinely empty results, labels unconfigured Workable as such, and flags large drops against earlier successful runs. The baseline appears after three earlier successful nonzero runs for a platform. It does not verify whether individual saved jobs are still open.
-
-If a source is `partial` or `failed`, its error line identifies the board or request to investigate. A 429 means that source rate limited the run; retrying immediately will not help. Postman remains disconnected after its old board returned 404. PhonePe is connected through its verified SmartRecruiters board.
-
-## Local and offline use
-
-All parsing, matching, storage, and UI code runs on your computer. No paid API, hosted database, account, telemetry service, or cloud inference is required. Collecting new jobs contacts public career sites. The first dependency install and model download need internet; opening employer links also needs internet.
-
-To prepare the model explicitly while online:
-
-```powershell
-python scripts/download_model.py
-```
-
-This saves `all-MiniLM-L6-v2` under `models/`, which is excluded from Git. After dependencies and the React build are installed, you can run the API and use saved jobs without internet. In PowerShell, set strict offline mode before starting the API:
-
-```powershell
-$env:JOB_INTEL_OFFLINE = '1'
-python -m uvicorn api.main:app --host 127.0.0.1 --port 8000
-```
-
-Strict offline mode gives a clear error if the local model is missing and prevents `python run.py` from collecting jobs. `python run.py --process-only` can enrich saved rows offline. Remove the variable when you want to fetch new postings. The API should stay bound to `127.0.0.1` because it has no authentication. The React build in `ui-react/dist` is served by FastAPI, so Node is not needed to run the UI after it has been built.
-
-Run the React interface and FastAPI in two terminals after installing the Python requirements:
-
-```powershell
-python -m uvicorn api.main:app --reload --host 127.0.0.1 --port 8000
-```
-
-```powershell
-cd ui-react
+py -3.10 -m venv runtime/python
+& '.\runtime\python\Scripts\python.exe' -m pip install -r requirements.txt
+Push-Location frontend
 npm ci
-npm run dev
+npm run build
+Pop-Location
 ```
 
-Open `http://localhost:5173`. Alternatively, run `npm run build` in `ui-react`, then serve the built interface from `http://127.0.0.1:8000` with the FastAPI command above.
+Then double-click **Start RaamBaad.cmd**, or run:
 
-## Reuse your resume
+```powershell
+& '.\runtime\python\Scripts\python.exe' start.py
+```
 
-1. Upload a PDF, DOCX or TXT with **Save for next time on this PC** selected.
-2. After restarting Job Intel, click **Use previous resume** in the sidebar. It reuses the saved text and compatible embeddings, then scores the current jobs.
-3. **Unload resume** clears the active ranking while keeping the saved copy. **Delete saved copy** removes the local text/embedding file; an already loaded resume stays active until unloaded.
+Open http://127.0.0.1:8000 and keep the launcher console open. Ctrl+C stops the platform and its owned collectors.
 
-Uploading the identical file also reuses saved parsing. A changed resume is parsed again, and changed resume sections or model fingerprints rebuild the resume vector. Editing skills or adding jobs reuses the unchanged resume vector. Job embeddings already use the incremental cache. Scores are recalculated against the current pool, so reusing a resume does not freeze old results. The optional saved copy stays on this PC; uncheck the save option to upload without replacing it.
+Resume matching uses `sentence-transformers/all-MiniLM-L6-v2` locally. To download its weights explicitly:
 
-Restart an already running backend once after this update; the Windows launcher will use the rebuilt UI. No scraper rerun is needed just to enable resume reuse.
+```powershell
+& '.\runtime\python\Scripts\python.exe' -m scripts.career.download_model
+```
 
-## How it works
+## Usage
 
-1. [`config.py`](config.py) lists companies and search filters. [`fetchers/`](fetchers/) contains separate adapters for ATS APIs and HTML career pages.
-2. [`run.py`](run.py) runs the collectors, keeps India or unknown-location listings, deduplicates them, and saves them in `db/jobs.db`.
-3. [`core/`](core/) classifies jobs and extracts skills and experience requirements. Resume text is extracted with PyMuPDF, `python-docx`, or UTF-8 decoding.
-4. [`core/matcher.py`](core/matcher.py) embeds resume and job text, compares them with cosine similarity, then blends that score with recognized skill overlap. The React sidebar lets users correct the current resume's skills; overrides are saved by file hash in SQLite.
+**Career pages:** start collection from the website, filter the list, select the JSON batch size, and download. **Remove downloaded batch** hides precisely that batch; undo restores it. Download alone does not hide jobs. Export snapshots preserve the descriptions and state at the time they were created.
 
-For the complete data flow, schema, API behavior, and code change points, see [ARCHITECTURE.md](ARCHITECTURE.md). Proposed work is tracked in [improvement.md](improvement.md).
+**URL reader:** use **Open Reader Chrome.cmd** to open a dedicated Chrome profile. Sign in manually, then start a reader from the website. For Wellfound searches whose URL stays `/jobs`, keep exactly one filtered search open in that browser and choose filtered-tab mode. Do not change its filters during collection or resume.
 
-The app is intended for local, single-user use. The FastAPI server has no authentication and should be bound to localhost. Respect each source site's access rules when running collectors.
+Site changes, expired listings, access restrictions and incomplete source responses can cause missing data. A nonempty description, match score or successful collection does not establish source completeness, eligibility or current availability. Review official postings before applying. Use sources in accordance with their terms and your account permissions; stop collection when a site restricts access.
 
-## Repository data
+To attempt a repair of an older export into a **separate** reviewed JSON:
 
-`db/jobs.db` stores collected listings and local actions such as dismissals. `db/job_embeddings_cache.pt` stores generated job embeddings. When selected, `db/saved_resume.json` stores one parsed resume, filename, automatic skills and resume embeddings locally. The original PDF/DOCX is not retained. All these runtime files are excluded from Git, along with virtual environments, React dependencies and build output. A fresh clone starts with an empty database until the collector runs.
+```powershell
+& '.\runtime\python\Scripts\python.exe' -m scripts.career.repair_export --filename career-pages-YOUR-BATCH.json
+```
 
-Airbnb careers are included through its public Greenhouse board, with descriptions and the existing India location and app filters.
+Use the exact stored filename. `--latest` and `--input path/to/export.json` are also supported. Repairs leave the database and original snapshot unchanged; failed descriptions remain explicit unknowns.
 
-LinkedIn and Internshala collectors and sidebar links have been removed. The API hides all saved rows with their current or historical source labels; SQLite history is preserved.
+## Project layout
 
-Deloitte collects the official Deloitte India category `/go/Deloitte-India/718244/`, following all pages of 25 listings (up to 120 pages) and fetching descriptions with four workers. Missing pages, totals, descriptions, or deadline interruptions produce partial source health. Existing India, seniority, and resume filters apply after collection. This source does not cover the separate Deloitte USI portal.
+| Directory | Purpose |
+|---|---|
+| `backend/api/` | Local API routes |
+| `backend/core/` | Career storage, matching, exports and orchestration |
+| `backend/fetchers/` | Employer and ATS adapters |
+| `backend/config/` | Sources, matching rules and display names |
+| `frontend/src/` | React interface |
+| `url_reader/` | Browser adapters, checkpoint/history storage and watchdog |
+| `raambaad/` | Shared paths and localhost launcher |
+| `scripts/` | Checks, audits and maintenance tools |
+| `tests/` | Synthetic unit/API tests and intercepted browser fixtures |
+| `examples/` | Synthetic matcher input |
+| `docs/` | Architecture, code map and reader guide |
 
-Graviton Research Capital LLP is collected through the `gravitonresearchcapital` Greenhouse board linked by its official careers page. The live board is used instead of the site-hosted snapshot. Descriptions are included, existing India filters apply, and a valid empty jobs list is a successful fetch.
+Private state lives under ignored `runtime/`: career SQLite/resume/cache, reader JSON/history/browser profile, model weights and the Python environment. Never publish this directory or a browser profile. Local historical backups may also exist under ignored `.archive/`.
 
-Tower Research Capital uses its official `towerresearchcapital` Greenhouse board, including descriptions. A dedicated wrapper adds country names to its known city-only location labels, preserving mixed India/overseas postings for the existing India filter. Unknown locations remain available for review. Empty boards are valid; failed requests raise source errors.
+## Development checks
 
-PhonePe uses SmartRecruiters tenant `PHONEPELIMITED`, verified against the 89 PUBLIC postings linked by the official careers feed. The existing adapter reads listing pages and descriptions. India ISO country code `in` is normalized to `India` to prevent confusion with the US state abbreviation.
+```powershell
+& '.\runtime\python\Scripts\python.exe' -m scripts.check
+& '.\runtime\python\Scripts\python.exe' -m playwright install chromium
+& '.\runtime\python\Scripts\python.exe' -m scripts.check --browser
+& '.\runtime\python\Scripts\python.exe' -m scripts.release_check
+```
 
-Swiggy collects the public NextHire `reqlist/get` response used by its careers frontend, with the same careers payload. All returned postings are read in one request, deduplicated by reqId, with included descriptions and source minimum experience. Links use the frontend job-detail context. Invalid responses fail the source; malformed listings or missing descriptions produce partial results; valid empty lists succeed. The API supplies no independent total, so coverage is verified against its returned list rather than a separate vacancy count.
+Browser fixtures intercept requests and use synthetic data; they do not prove that third-party sites currently work. Live source checks are separate, explicit actions. After UI changes, run `npm ci` and `npm run build` inside `frontend/`.
 
-ZS Associates uses the public `/api/jobs` endpoint with the requested Bengaluru, Gurgaon, Noida and Pune filters. The adapter follows totalCount pagination, deduplicates IDs, includes descriptions, and uses first-party `/all/jobs/{slug}` links. Failed initial requests raise errors; interrupted pages, missing totals or descriptions produce partial results.
+See [Architecture](docs/ARCHITECTURE.md), [Code map](docs/CODE_MAP.md), [URL reader](docs/URL_READER.md), [Contributing](CONTRIBUTING.md) and [Security](SECURITY.md).
 
-Rippling collects every page of its public careers search index, discovering the frontend search configuration in memory without storing keys. It deduplicates India postings by jobId, merges locations and reads public job-page descriptions. Missing pages, totals or descriptions produce partial results; configuration changes fail visibly. D. E. Shaw India reads regularJobs embedded in the official careers page, excluding exploratory applications and inactive entries; descriptions include responsibilities and qualifications. Quadeye reads the first-party Zoho-backed job-openings response used by its careers frontend, including descriptions, country fields and specific job links; no recruiter metadata is stored. The latter two feeds expose no independent total. Existing India and app filters apply. LinkedIn remains removed.
+## License
 
-See [SOURCE_VERIFICATION.md](SOURCE_VERIFICATION.md) for the dated live checks, source counts, and current access/description limitations.
-
-Rubrik Engineering and Information Technology & Services department pages are covered by the existing complete Greenhouse board. No extra collector is needed. Rubrik city-only locations gain the India country label when the posting's office metadata explicitly names India; the source city is preserved. Verified department India counts: Engineering 8, IT & Services 3.
-
-### Additional company feeds (2026-10-02)
-
-Arcesium uses its official `arcesiumllc` Greenhouse board; confirmed India city labels are normalized without changing foreign locations. Intuit uses the India country facet at `https://jobs.intuit.com/location/india-jobs/27595/1269750/2`, paginates all result pages, and fetches descriptions with four workers. Interrupted pagination or missing descriptions produces a partial result. Walmart Workday `IN ` locations and `(IND)` titles are normalized as India; `(USA)` titles identify US roles. Ambiguous multiple-location entries use public detail country metadata before filtering. Salesforce, Walmart and Palo Alto Networks now request full descriptions for India or unknown locations. Adobe remains a Phenom feed with description teasers; ServiceNow uses SmartRecruiters and Snowflake uses Ashby.
-
-### PayPal, BlackRock and fintech source checks (2026-10-02)
-
-PayPal has a dedicated public Workday collector (`fetchers/paypal.py`) for the `paypal/jobs` board. It discovers India location facets from the live response, paginates the scoped listings and reads full descriptions. Its requisition IDs use `R` followed by digits, without Mastercard's dash. BlackRock (`fetchers/blackrock.py`) reads all pages of its official India country facet at `https://careers.blackrock.com/location/india-jobs/45831/1269750/2` and full `.ats-description` sections; country normalization follows the country facet rather than guessing from cities. Both sources report incomplete pages or descriptions as partial.
-
-Groww remains on Greenhouse; CRED and Meesho remain on Lever with full descriptions. Confirmed city labels on those two Lever boards are normalized to India, while foreign or unknown labels remain unchanged. Morgan Stanley remains on Eightfold with department summaries rather than full descriptions. Expedia remains on its official paginated HTML feed with team summaries; failed listing requests now raise a source failure if no jobs were collected, or return partial status if earlier pages succeeded. HTTP 403 responses were observed during verification, so Expedia is currently intermittent.
-
-### Additional India company sources (2026-10-02)
-
-- Greenhouse: AlphaGrep (`alphagrepsecurities`), NK Securities Research (`nksecuritiesresearch`), WorldQuant, IMC, Optiver (`optiverus`), MongoDB and Datadog. These newly added boards retain only confirmed India listings; source-specific city-only labels for AlphaGrep, WorldQuant and MongoDB are normalized before country filtering. Unresolved locations such as AlphaGrep's multiple-location submissions are omitted rather than classified as India. Existing Greenhouse board behavior is unchanged.
-- Ashby: Confluent (`confluent`), scoped to India. Its branded site returned HTTP 429 during discovery; this is the current public Ashby board, not a guarantee of coverage of every hiring channel.
-- `fetchers/jibe.py` supplies shared India pagination and full-description normalization for `amd.py` and `booking.py`. The public listing APIs are `careers.amd.com/api/jobs` and `jobs.booking.com/api/jobs`; country metadata takes precedence over building-specific location names. Missing pages, counts or descriptions make collection partial.
-- `target.py` collects all pages of `indiajobs.target.com/search-jobs` with `?p=`, then reads full descriptions. Its India site omits card city labels, so location is India.
-- `tesco.py` reads the official India search linked by Tesco Bengaluru, follows `jobOffset` pagination, checks the displayed total, and reads description fields with four workers. It includes Tesco India roles beyond technology; normal role filters still apply.
-- `mediatek.py` uses the public `job.getJobs` tRPC query on `yourcareers.mediatek.com`. It checks all global result pages against the reported total, retaining Noida, Bangalore/Bengaluru and Mumbai offices. It reads the displayed city from `properties.location.code` (the API's `label` is a numeric identifier). Descriptions and model inference remain local after collection.
-- `millennium.py` uses the public legacy Eightfold `/api/apply/v2/jobs` India search on `career.mlp.com`. The PCSX API is not enabled for that tenant. Listings contain department summaries, not full descriptions; count or page interruptions are partial.
-- `juspay.py` monitors Juspay's official `/careers` page. Its explicit no-openings state is a successful empty collection; unavailable pages or unrecognized markup are failures. New detail markup is treated as partial pending location verification.
-
-All source counts are live snapshots. None of these collectors applies to jobs or requires account credentials. Use `python run.py` to write new jobs to SQLite. Existing local database history is preserved.
-
-
-## Requested company audit (2026-10-02)
-
-See [COMPANY_SOURCE_AUDIT.md](COMPANY_SOURCE_AUDIT.md) for all 75 companies and live results; [COMPANY_SOURCES.json](COMPANY_SOURCES.json) defines the audit manifest. Run `python scripts/audit_company_sources.py` to refresh JSON without writing jobs to SQLite.
-
-New India-scoped Workday collectors discover country/location facets for Broadcom, CrowdStrike, Cohesity and Postman, paginate and fetch descriptions. New Greenhouse boards cover Roku, Glean, Okta, Pure Storage, GitLab, Squarepoint and QRT. Dedicated collectors cover Netflix, Bloomberg, HRT, Automattic and Zerodha. LinkedIn employer-only guest search is explicitly partial with missing descriptions and no reliable total; the general LinkedIn job-board source remains removed. Swiggy and ZS location normalization now preserves recognized India locations.
-
-Three companies have no verified working collector: Indeed employer, Citadel Securities and Zomato. Empty feeds, inaccessible feeds and partial results remain distinct. Automattic remote eligibility needs individual review; Zerodha nonempty schema must be verified when vacancies appear.
-
-
-### Zepto Darwinbox (2026-10-02)
-
-`fetchers/zepto.py` reads the public Darwinbox careers page with normal browser headers, then POSTs read-only listing queries to `/ms/candidateapi/job/alljobs`. It paginates against `job_counts`, normalizes source IDs and locations, decodes the full `jd`, and returns partial status for missing descriptions, malformed rows or interrupted pages. The verified live result is one Bengaluru operations job. Existing role/experience filters may exclude it. No login or application submission is used.
-
-
-## UnitedHealth Group / Optum (2026-10-02)
-
-`fetchers/unitedhealthgroup.py` collects the supplied official India keyword search through the public TalentBrew `/search-jobs/results` AJAX endpoint. Ordinary pagination links returned unrelated results, so the collector validates the requested page number and India keyword on every AJAX page, compares source totals, deduplicates IDs, and retrieves full descriptions from JobPosting structured data (longest ATS description fallback).
-
-The live check scanned 253 search matches and returned 249 recognized India jobs, all with descriptions. Four foreign keyword matches were excluded. India location normalization requires an explicit country or a recognized Indian state; unresolved locations are excluded. This is additional to the original 75-company audit manifest. Interrupted pagination or missing descriptions returns partial status. Existing role/experience/UI filters determine which collected jobs are displayed.
-
-
-## Description-based experience filtering (2026-10-04)
-
-The default UI filter hides jobs whose description states a minimum of 1+ years. It retains ranges starting at zero (such as 0-2 years) and unknown requirements. Senior/lead/manager titles no longer hide jobs or offer bulk removal. Titles are not evidence that a job accepts freshers. Experience extraction uses descriptions only, and the API re-derives the value for existing rows without rewriting SQLite. Unknown does not mean fresher eligible; preferred-only requirements remain unknown. The regex parser can miss ambiguous requirements and alternate qualification tracks, so review the original description.
-
-
-## KLA India Workday (2026-10-04)
-
-KLA is registered in `WORKDAY_INDIA` with tenant `kla`, server `wd1` and site `Search`. The shared collector discovers the board-specific India country facet, paginates and retrieves full descriptions. The supplied country value is `c4f78be1a8f14da0ab49ce1162348a5e`; hardcoding the generic `locationCountry` facet fails on this board, so facet discovery is required. Live verification returned 57 India jobs with 57 descriptions and status `ok`. Existing role and description-based experience filters apply after collection.
-
-
-## Long qualification requirements (2026-10-05)
-
-Experience extraction recognizes Basic/Required/Minimum Qualifications separately from Preferred Qualifications. Long year-to-experience clauses within required sections are supported; preferred sections cannot provide a hard minimum. The Amazon Risk Manager II example resolves to 4 years required, not its 3-year preference. Amazon truncates narrative background separately while retaining qualification sections. Existing saved descriptions are re-evaluated by the API; previously truncated descriptions require recollection to recover missing text. The parser remains heuristic for alternative qualification tracks.
-
-
-### Experience section headings (2026-10-05)
-
-The experience parser also recognizes explicit `Experience:` sections. Bosch Data Provisioning Expert (744000149775909) resolves to 5 required years; a separate preference for global-team collaboration does not override that minimum. An explicitly preferred numeric requirement remains unknown rather than a mandatory minimum.
-
-
-## Windows launchers
-
-- `Start Job Intel.cmd`: opens the site and launches `python run.py` to collect jobs (collection is skipped in offline mode).
-- `Open Job Intel.cmd`: opens the site using saved jobs, without running the scraper. It calls `start.py --no-scrape`.
-
-Both launchers build the UI if needed and start or reuse the localhost API. Double-click the desired `.cmd` file.
-
-
-## Eligibility evidence and new jobs (2026-10-05)
-
-Job details now expose an `eligibility` object from `core/eligibility.py`: description-based minimum experience, education and graduation-year evidence, explicitly mandatory skill evidence and missing recognized skills relative to the current resume. These are heuristic hints for review, not eligibility approval. Missing evidence stays unknown; preferred sections are excluded from mandatory skill extraction. No personal academic profile is inferred.
-
-Job summaries include `first_seen_ms` (UTC milliseconds). React offers New since last visit, Refresh jobs and Mark current jobs reviewed. A localStorage checkpoint is recorded only after a successful initial load; the prior checkpoint stays fixed for that visit. First-time users see all saved jobs as new. Mark reviewed resets the boundary without dismissing jobs. State is browser-local; disabled storage loses the checkpoint between visits. Counts include all loaded jobs before other filters.
-
-## Student opportunity discovery
-
-The UI includes a collapsible directory of official student pages for the 30 companies and a title-based intern/apprentice/student checkbox. Amazon adds India `intern` and `apprentice` searches without the industry-experience facet; its collector deduplicates overlaps. Directory links are not vacancy records or proof of eligibility. See [STUDENT_PROGRAMS.md](STUDENT_PROGRAMS.md) for verified pages and separate-portal coverage gaps.
-
-Morgan Stanley student programs use a separate `morgan_stanley_students` collector, reading the public `careerservice/resultset.json` endpoint with `opportunity=sg&lang=en`. The frontend paginates the complete returned array locally; the adapter verifies `totalResults`, selects explicitly India-based rows, retains descriptions and qualifications, and uses the program number as the stable ID. Missing totals, rows or descriptions mark the result partial; malformed or failed requests raise an error. The existing Eightfold India collector remains active.
-
-### Additional student sources
-
-The student directory contains 30 searchable company entries. `workday_students` uses `config.WORKDAY_STUDENTS` with the existing Workday India adapter. Visa's separate `Visa_Early_Careers` board collects all India roles. Walmart verifies complete India listing pagination before selecting `STUDENT_TITLE_RE` matches and fetching their descriptions; its original Global Tech search remains connected. Selection does not prove eligibility. Industrial trainee and co-op titles are included; generic graduate full-time roles are not student-title matches. IDs remain company plus requisition ID, with no new database schema. `STUDENT_PROGRAMS.md` and `STUDENT_SOURCE_AUDIT.json` record coverage and manual-only gaps. The API does not scrape program pages on UI access.
-
-### Qualcomm India internships
-
-`qualcomm_students` follows the supplied India `Intern` search with remote and relocation disabled and distance sorting. It verifies the count and paginates the public PCSX listing endpoint, then reads full `JobPosting` structured descriptions from first-party detail pages. Checked 2026-10-05: 2 roles, Interim Engineering Intern_2027_HW and Interim Engineering Intern_2027_SW. The earlier title count missed these underscore-separated names; the UI now normalizes underscores before student-title matching. The original general Qualcomm collector stays active. Matching saved Qualcomm IDs receive updated descriptions and reset derived enrichment fields while preserving first-seen time and dismissals. Missing descriptions or interrupted listing requests are partial; valid empty searches are successful. Program-year text is not proof of graduation eligibility.
-
-### Netomi India searches
-
-Netomi is registered in `config.LEVER` and collected through the existing `standard` adapter. Its public Lever board supplies both requested searches: `Remote - India` and `Gurugram`. Only those exact source locations are selected; Gurugram is normalized to `Gurugram, India`. Generic Remote and foreign locations are excluded. Descriptions combine the main text, qualification/responsibility lists and additional text, using the existing 6,000-character cap. Lever posting IDs deduplicate the board without fetching each search separately. Checked 2026-10-06: 5 Remote - India and 6 Gurugram postings. Local experience and resume filters still apply; these counts are not eligibility counts.
-
-### Portcast India coverage
-
-Portcast is registered in `config.LEVER`. Its Lever records can have a foreign primary `categories.location` while `categories.allLocations` lists supported Indian cities. The adapter selects explicit India locations or confirmed Delhi/Bangalore/Bengaluru/Chennai/Hyderabad/Kolkata/Mumbai labels from both fields, normalizes city-only labels to India, and excludes postings without a supported Indian location. Descriptions and qualifications use the existing Lever parser and 6,000-character cap. Checked 2026-10-06: 9 of 11 postings list Indian locations, including Data Analyst Intern whose primary location is Singapore. Normal experience and resume filters still apply; listing an Indian location does not establish applicant eligibility.
-
-### Foreign country recognition
-
-The shared location parser recognizes Morocco and additional explicit foreign-country labels observed in the BCG Phenom feed (including Egypt, Indonesia, Kenya, Azerbaijan, Hungary, South Africa, Colombia, Chile, Belgium, Malaysia, Czechia, Thailand, Norway, Vietnam, Peru, Greece, Türkiye and Republic of Korea). This corrects BCG requisition 56429, Delivery AI Data Engineering Intern in Casablanca, Morocco, which previously passed as Unknown. The same parser gates collection and existing API rows, so an API restart hides affected saved foreign jobs without deleting history or requiring recollection. India-containing multi-location postings and genuinely unknown locations remain visible under the existing policy. The parser remains heuristic, not an exhaustive geographic resolver.
-
-## Resume ranking explanations
-
-Upload a resume to rank jobs using separately embedded requirements and responsibilities, projects/work evidence, and skills weighted by required versus preferred context. Open **Why this ranking?** on a card for component scores, required skill gaps and separate eligibility checks. Education, unclear student eligibility and unclear work experience remain unknown for manual review; only explicit graduation-year statements are compared. Scores are heuristic relevance, not hiring probability. Existing location, experience and minimum-score filters still apply. Restart the backend after updating, rebuild React with `npm ci` and `npm run build`, and load your saved resume (or upload once). The old embedding cache is automatically invalidated; no scraper rerun is required.
-
-To evaluate ranking on your own labeled sample, run `python scripts/evaluate_matcher.py C:\path\to\private-labels.json`. The JSON format is documented in that script; keep personal resume text and labeled job data outside the public repository. It reports precision@10 and NDCG@10.
-
-### Required and preferred experience visibility
-
-The default experience filter hides postings when either the required minimum or the preferred experience lower bound is 1+ years. Preferred years are parsed separately by `extract_preferred_experience`, exposed as `preferred_experience_years` (-1 for unknown), and displayed as preferred rather than mandatory. The same rule applies to the experience bulk-removal count and action. Switching the filter off reveals these saved jobs; filtering does not delete SQLite rows. API loading recomputes both fields from saved descriptions, so restart the backend and refresh after updating; collection is unnecessary.
-
-### Complete descriptions and experience clauses
-
-Greenhouse and SuccessFactors preserve complete normalized descriptions. Escaped HTML is decoded before stripping tags, preventing markup from consuming the old text budget. Existing rows collected by `standard` or `successfactors` refresh changed nonempty descriptions during later runs, reset derived enrichment for reprocessing, and retain dismissal and first-seen state. Empty fetch results never replace a saved description. Existing truncated rows need a successful source refresh to recover missing text.
-
-Experience parsing checks a year/experience clause when the legacy nearby-word scan finds no minimum, so a preceding certification preference such as “a plus” cannot erase the next bullet's numeric work requirement. Preferred sections remain excluded from mandatory minimums and are exposed separately.
-
-## Repo review update (2026-10-07)
-
-Experience checks now retain decimal years and the strongest independent requirement, while keeping preferred years separate. Refreshed collection results update existing descriptions and scores refresh automatically when saved content changes. Collection runs cannot overlap on the same database. For the verification scope and remaining limitations, see [REPO_REVIEW.md](REPO_REVIEW.md). The first resume upload after this update may rebuild versioned embedding cache entries.
-
-### Runtime matcher check — 2026-10-07
-
-The experience visibility check also considers explicit numeric experience ranges or `N+ years` in job titles, while preserving description-based required/preferred distinctions. Seniority words alone remain insufficient. This covers saved rows whose source description is empty but whose title explicitly says, for example, 8–12 years. The API exposes `description_available`; cards warn when the description is unavailable, and score explanations disclose title-only semantic comparison. Detail eligibility and ranking explanations use the same numeric experience evidence.
-
-
-UBS: `fetchers/ubs.py` creates an anonymous BrassRing session, searches India,
-checks the reported total and unique IDs, and retrieves each active job's full
-detail sections, including skills and experience. Country and job identity are
-verified; city comes from detail fields. Pagination and missing details report
-partial results. Session tokens are obtained at runtime and never saved.
-Existing saved descriptions refresh while retaining dismissals.
-
-UBS also includes the supplied second board (`siteid=5131`, `LinkID=15232`).
-Live verification returned four India CA Intern postings with four full descriptions.
-Both boards are collected independently; shared requisition IDs are deduplicated,
-and a failed board makes the combined collection partial. The original board
-reported 29 jobs in the prior check; the second board adds four distinct IDs.
-
-ION Group is configured on the shared Lever adapter (`ion`). Its public API
-returned 87 global postings on October 8, 2026: 13 had explicit `country=IN`
-(12 Noida and one India). Only those India records are collected. Full intro,
-qualification lists and additional text are retained; usual role and experience
-filters apply afterward. The supplied `lever-via` referral parameter is not
-needed to read postings.
-
-PwC India (`fetchers/pwc.py`) reads the exact experienced-jobs page's embedded
-`jsondata` list, selecting explicit `iso=IND` records. Each listing links to
-Workday; the collector verifies the requisition ID and India country on full
-detail responses. Missing descriptions report partial collection. Existing text
-refreshes without clearing dismissals. The live page exposed 635 India jobs
-(636 global embedded records) on October 8, 2026, rather than the user-observed
-1,660; the broader Workday board's 3,863 global total is not India coverage.
-
-Live PwC validation completed: 635 unique India postings, 635 full descriptions,
-collection status `ok`. This validation did not modify the saved job database.
-
-LSEG Graduate Careers is configured in `WORKDAY_INDIA` (tenant `lseg`,
-server `wd3`, site `Graduate_Careers`). The shared adapter discovers the
-India country facet and fetches full Workday descriptions. October 8, 2026
-verification returned one India posting with full description: Business Graduate
-Associate (Data & Analytics), Bengaluru. Future postings remain monitored
-through the same board; normal role and experience filters apply.
-
-LSEG main Careers is also configured in `WORKDAY_INDIA` (tenant `lseg`,
-server `wd3`, site `Careers`) alongside Graduate Careers. October 8, 2026
-verification returned 214 India postings and 214 complete descriptions, status
-`ok`. The shared adapter discovers the India facet, follows all listing pages
-and retrieves full details. Shared requisition IDs use the same `lseg` company
-key, avoiding duplicate saved jobs. Normal role and experience filters apply.
-
-Electronic Arts (`fetchers/ea.py`) uses the supplied Avature India search
-(`8171=[10590]`, `8171_format=5683`, `listFilterMode=1`, 20 records per page).
-The collector verifies total unique role IDs, retains India scope across offsets,
-and fetches complete detail fields without a character cap. Missing details or
-interrupted pagination report partial results. October 10, 2026 live validation
-returned 11 India roles and 11 descriptions, including six internship postings.
-Saved descriptions refresh while retaining dismissals; role and numeric
-experience filters apply after collection.
-
-Swiss Re (`fetchers/swissre.py`) reads the supplied `country=IN` search with
-Bangalore, Hyderabad and Mumbai city selections. Cards are present in
-server-rendered HTML; slider controls change visibility rather than fetch pages.
-The collector checks reported total and unique IDs and reads full detail text
-from `ArticleSection .richtext`, retaining paragraph boundaries. October 16,
-2026 validation returned 26 India jobs and 26 descriptions, status `ok`.
-Multi-location cards are parsed from accessible link text with explicit
-city/state/country codes. This avoids duplicate mobile/desktop labels and
-`+ 1 more` controls; only locations explicitly marked `IN` are retained. A
-single primary label is a fallback, with controls removed. Foreign or unknown
-country labels are still rejected. Count mismatches and missing descriptions
-report partial results; saved text refreshes without clearing dismissals.
-
-HRT (`fetchers/hrt.py`) remains configured, but its careers HTML and WordPress
-AJAX endpoint returned HTTP 403 during October 16 checks. Its public REST
-page returned builder shortcodes without a usable vacancy feed. No working
-alternative was verified. The collector now distinguishes HTTP rejection and
-access-challenge HTML from a missing page configuration and a valid empty
-response. It reports failed access honestly; no challenge bypass is attempted.
-Other collectors continue when this individual platform fails.
-
-GE Appliances is configured in `WORKDAY_INDIA` (tenant `haier`, server `wd3`,
-site `GE_Appliances`, company key `geappliances`). The shared adapter discovers
-the India country facet, follows listing pagination and retrieves full details.
-October 10, 2026 validation returned seven India jobs and seven full descriptions,
-status `ok`, including Co-op/Intern and Intern - Dimensional Management. Normal
-role and experience filters apply; multi-location cards retain their source label.
-
-Bristol Myers Squibb is configured in `WORKDAY_INDIA` (tenant
-`bristolmyerssquibb`, server `wd5`, site `BMS`, company key `bms`). The shared
-adapter discovers exactly the supplied India facet: `locationHierarchy2` value
-`7b0045a3289810548a41236822339065`. October 11, 2026 verification returned
-51 unique India postings with 51 full descriptions, status `ok`. Full listing
-pagination and existing role/experience filters apply; source multi-location
-labels are retained under the verified India scope.
-
-SmartRecruiters India filtering (October 11, 2026): collection now retains only
-explicit `location.country=IN` records before enrichment and storage, across
-Bosch, PhonePe, Freshworks and ServiceNow. The previous Bosch option only
-limited description fetching, so foreign ISO-code locations entered storage as
-Unknown. A source-specific location check now guards save-time and API reads
-of legacy SmartRecruiters rows, including remote suffixes. Unknown country
-codes are excluded for this structured source; generic-source policy is unchanged.
-The local repair dismissed 26 active foreign Bosch jobs, retaining saved history
-and a local dismissal-state backup. The database and backup are not published.
-
-Experience parsing (October 11, 2026): numeric ranges permit a plus on the
-upper endpoint (`2-3+ years` still means a two-year lower bound). Clauses such
-as `years in a Data Analyst role` and `years as an ... position` establish
-experience without an explicit experience keyword. Association remains bounded
-to role/position language to exclude degree durations and company history;
-required and preferred years remain separate. The reported Portcast Data Analyst
-role now yields two required years. The local repair updated 534 saved
-experience values for affected wording and preserved all dismissals; previous
-values are backed up locally and are not published.
-
-Databricks India filtering (October 11, 2026): its Greenhouse board now belongs
-to `INDIA_SCOPED_BOARDS`; only locations parsed as India enter collection.
-Save-time and API-read checks also reject unknown country labels for Databricks,
-including city-only Madrid, EMEA and USCA. Other sources retain their existing
-unknown-location policy. Live verification found 96 India postings out of 892
-global jobs and excluded the reported Madrid role `8878720002` (office: Remote
-- Spain). The local repair dismissed 24 undismissed foreign/unknown Databricks
-rows while retaining history and local dismissal-state backups.
-
-Experience threshold update (October 14, 2026): the default visibility filter
-and experience bulk-removal action now use a lower-bound threshold of one year.
-Ranges beginning at zero, including 0-2 years, remain visible; 1+ years,
-1-3 years and higher minima are hidden. Unknown requirements remain visible
-for review. Required/preferred parsing and prior dismissals are preserved.
-
-
-## October 14 employer expansion
-
-[The additional 20-company audit](docs/COMPANY_BATCH_20_OCT14.md) records active
-feeds, live counts and compensation evidence. Twenty new employers are connected;
-validation returned 665 India postings with full descriptions. Ciena is partial
-(5 of 6 records); Amagi and Typeface currently have no India listings. Counts
-include all seniority levels before filtering. Five companies lack independently
-verified fresher-specific 8 LPA+ pay evidence; the audit identifies them.
-
-NetApp uses a new first-party TalentBrew adapter. BrowserStack uses a global
-Workday listing followed by authoritative detail-country checks, avoiding the
-loss of Mumbai jobs when only an India Remote location facet is available. F5
-uses the requisition ID in its second bullet field. New Greenhouse/Lever/Workable
-boards enforce India scope; Workable failures remain distinct from valid empty
-results and full descriptions are retained. Saved descriptions refresh on
-recollection without clearing dismissals.
+[MIT](LICENSE). Third-party dependencies retain their own licenses.

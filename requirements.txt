@@ -1,3 +1,4 @@
 # Tested Windows x64 / Python 3.10 environment, including offline API tests.
-# Direct dependencies are listed in scripts/lock_dependencies.py.
+# Direct dependencies are listed in scripts/career/lock_dependencies.py.
 -r requirements-lock.txt
+-r requirements-reader.txt

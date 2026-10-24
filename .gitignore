@@ -1,46 +1,36 @@
-# Local configuration and secrets
+/runtime/
+/.archive/
+/work/
+/frontend/node_modules/
+/frontend/dist/
+**/__pycache__/
+**/*.py[cod]
+**/*.tsbuildinfo
 .env
 .env.*
 !.env.example
-
-# Personal data — each person's own saved/dismissed jobs, not shared
-db/*.db
-db/*.db-journal
-db/*.db-wal
-db/*.db-shm
-db/*.pt
-db/saved_resume.*
-db/*.json
-db/*.txt
-db/*.log
-db/*.png
-db/verification/
-models/
-
-# Generated at runtime, not source
-debug_log.txt
-*_debug.png
-*.zip
-
-# Python
-__pycache__/
-*.pyc
-.venv/
-venv/
+*.sqlite3
+*.sqlite3-*
+*.db
+*.db-*
+*.sqlite
+*.sqlite-*
+*.log
+*.bak
+*.backup
+*.pem
+*.key
+*.pfx
+*.pdf
+*.docx
+.browser-profile/
 .pytest_cache/
-.mypy_cache/
-
-# React dependencies and build output
-ui-react/node_modules/
-ui-react/dist/
-ui-react/*.tsbuildinfo
-
-# Clean source export for a new public repository
-public-release/
-
-# OS noise
-.DS_Store
+.coverage
+htmlcov/
+/exports/
+/backups/
+career-pages-*.json
+.vscode/
+.idea/
 Thumbs.db
-
-# Local collector process lock
-db/.collection.lock
+.DS_Store
