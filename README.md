@@ -1,6 +1,6 @@
 # Rozgaar
 
-A localhost workspace for collecting job listings and exporting JSON batches for manual shortlisting. Built with Python, FastAPI, React, SQLite and Playwright.
+Rozgaar is a localhost workspace for collecting job listings and exporting JSON batches for manual shortlisting. Built with Python, FastAPI, React, SQLite and Playwright.
 
 ## Features
 
@@ -15,9 +15,11 @@ Collection starts only when requested in the website. The two pipelines have sep
 
 Requires Python **3.10**, Node.js **22** with npm, and Google Chrome. Dependencies and optional model weights require internet access during setup. Windows is the supported development environment; other platforms have not been verified.
 
-From the repository root in PowerShell:
+Clone Rozgaar and set up the project in PowerShell:
 
 ```powershell
+git clone https://github.com/ArnavModi-MSIT/Rozgaar.git
+Set-Location Rozgaar
 py -3.10 -m venv runtime/python
 & '.\runtime\python\Scripts\python.exe' -m pip install -r requirements.txt
 Push-Location frontend
