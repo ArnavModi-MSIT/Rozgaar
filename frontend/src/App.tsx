@@ -1,4 +1,5 @@
 import CareerExportPanel from "./components/CareerExportPanel";
+import { exceedsExperienceLimit } from "./experience";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { api } from "./api";
 import JobCard from "./components/JobCard";
@@ -11,8 +12,6 @@ import type { Filters, Job, ResumeState, JobStatePatch } from "./types";
 
 // Once a resume is loaded, hide jobs scoring below this threshold.
 const MIN_MATCH = 20;
-// Keep ranges starting at zero and unknowns; hide lower bounds of 1+ years.
-const EXPERIENCE_THRESHOLD = 1;
 const PAGE_SIZE = 40;
 
 const DEFAULT_FILTERS: Filters = {
@@ -21,6 +20,7 @@ const DEFAULT_FILTERS: Filters = {
   showNcr: false,
   showIndia: false,
   hideHighExperience: true,
+  maxExperienceYears: 1,
 };
 
 export default function App() {
@@ -128,7 +128,7 @@ export default function App() {
 
       if (
         filters.hideHighExperience &&
-        Math.max(j.experience_years, j.preferred_experience_years ?? -1) >= EXPERIENCE_THRESHOLD
+        exceedsExperienceLimit(j, filters.maxExperienceYears)
       ) {
         // Unknown (-1) is deliberately kept — "couldn't determine" is not
         // evidence a job needs too much experience.
@@ -156,10 +156,10 @@ export default function App() {
         (j) => j.match_pct !== null && j.match_pct < MIN_MATCH,
       ).length,
       highExperience: jobs.filter(
-        (j) => Math.max(j.experience_years, j.preferred_experience_years ?? -1) >= EXPERIENCE_THRESHOLD,
+        (j) => exceedsExperienceLimit(j, filters.maxExperienceYears),
       ).length,
     }),
-    [jobs],
+    [jobs, filters.maxExperienceYears],
   );
 
   // Optimistic: the card disappears immediately and the POST settles in the
@@ -179,7 +179,7 @@ export default function App() {
     async (which: "match" | "experience") => {
       const targets = jobs.filter((j) => {
         if (which === "match") return j.match_pct !== null && j.match_pct < MIN_MATCH;
-        return Math.max(j.experience_years, j.preferred_experience_years ?? -1) >= EXPERIENCE_THRESHOLD;
+        return exceedsExperienceLimit(j, filters.maxExperienceYears);
       });
       const ids = new Set(targets.map((j) => j.id));
       if (ids.size === 0) return;
@@ -192,7 +192,7 @@ export default function App() {
         void refresh();
       }
     },
-    [jobs, refresh],
+    [jobs, refresh, filters.maxExperienceYears],
   );
 
   const updateJob = useCallback(async (id: string, patch: JobStatePatch) => {

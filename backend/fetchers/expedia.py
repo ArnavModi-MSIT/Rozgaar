@@ -51,11 +51,17 @@ SESSION.headers.update({
 })
 
 
+class ListingUnavailable(RuntimeError):
+    pass
+
+
 def _get(page):
     params = {"mypage": page}
     for attempt in range(RETRIES):
         try:
             r = SESSION.get(PAGE_URL, params=params, timeout=TIMEOUT)
+            if 400 <= r.status_code < 500:
+                raise ListingUnavailable(f"listing request rejected on page {page} (HTTP {r.status_code})")
             if r.status_code >= 500:
                 raise requests.HTTPError(f"{r.status_code} server error")
             r.raise_for_status()
@@ -112,11 +118,19 @@ def fetch_all(deadline=None):
         if deadline is not None and time.monotonic() >= deadline:
             errors.append("collection deadline reached")
             break
-        html = _get(page)
+        try:
+            html = _get(page)
+        except ListingUnavailable as exc:
+            errors.append(str(exc))
+            break
         if not html:
             errors.append(f"listing request failed on page {page}")
             break
         soup = BeautifulSoup(html, "html.parser")
+        title = soup.title.get_text().lower() if soup.title else ''
+        if any(text in title for text in ('just a moment','attention required','access denied')):
+            errors.append(f'access challenge on page {page}')
+            break
         cards = soup.find_all("li", class_="Results__list__item")
         if not cards:
             break

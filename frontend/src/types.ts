@@ -135,4 +135,5 @@ export interface Filters {
   showNcr: boolean;
   showIndia: boolean;
   hideHighExperience: boolean;
+  maxExperienceYears: number;
 }

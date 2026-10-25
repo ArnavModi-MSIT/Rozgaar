@@ -12,9 +12,29 @@ def collect(deadline=None):
     if not isinstance(data,dict) or data.get("success") is not True or not isinstance(data.get("data"),list):
         raise RuntimeError("Zerodha careers feed unavailable")
     jobs=[]
+    errors=[]
+    seen=set()
     for row in data["data"]:
-        sid=row.get("id") or row.get("_id")
+        if not isinstance(row,dict):
+            errors.append("malformed listing")
+            continue
+        sid=row.get("id") or row.get("_id") or row.get("name")
         title=row.get("title") or row.get("job_title")
-        if not sid or not title:raise RuntimeError("Zerodha job schema changed")
-        jobs.append({"company":"zerodha","source_id":str(sid),"title":title,"location":row.get("location", ""),"description":strip_html(row.get("description",""),max_chars=None)[:10000],"url":row.get("url") or "https://careers.zerodha.com/"})
-    return CollectionResult(jobs,status="partial" if jobs else "ok",error="Nonempty job schema requires live verification" if jobs else "")
+        if not isinstance(sid,(str,int)) or not str(sid).strip() or not isinstance(title,str) or not title.strip():
+            errors.append("listing ID or title unavailable")
+            continue
+        sid=str(sid)
+        if sid in seen:
+            continue
+        seen.add(sid)
+        description=strip_html(row.get("description") or "",max_chars=None)
+        if not description:
+            errors.append("description unavailable: "+sid)
+        # The current official frontend renders jobs as accordion cards keyed
+        # by `name`; it does not publish individual detail URLs.
+        jobs.append({"company":"zerodha","source_id":sid,"title":title.strip(),"location":row.get("location") or "","description":description,"url":row.get("url") or "https://careers.zerodha.com/"})
+    if data["data"] and not jobs:
+        raise RuntimeError("Zerodha job schema changed: no usable listing IDs/titles")
+    if isinstance(data.get("count"),int) and data["count"]!=len(data["data"]):
+        errors.append(f"received {len(data['data'])} of {data['count']} listings")
+    return CollectionResult(jobs,status="partial" if errors else "ok",error="; ".join(errors[:5]))

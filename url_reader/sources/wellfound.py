@@ -2,6 +2,7 @@
 import argparse
 import json
 import re
+import time
 from datetime import datetime, timezone
 from html.parser import HTMLParser
 from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
@@ -33,6 +34,7 @@ def search_url(value):
 
 
 def job_links(page):
+    """Keep each posting ID, including multiple job rows in one company card."""
     values = page.locator(RESULT_ITEM).evaluate_all("els => els.filter(el => el.getClientRects().length).map(el => el.href)")
     unique = {}
     for value in values:
@@ -80,6 +82,18 @@ def next_results(page):
         controls = controls.or_(page.get_by_role("button", name=re.compile(r"^(?:Next(?: page)?|Load more(?: jobs)?|Show more(?: jobs)?)$", re.I)))
     result = advance(page, [controls], job_links, timeout=40, results_timeout=20, prefer_click=live)
     verify_search_state(page)
+    if live and result.status == "missing_control":
+        # Infinite-scroll responses may arrive after the first one-second wait.
+        deadline = time.monotonic() + 10
+        while time.monotonic() < deadline:
+            reader.check_cancel(vars(page).get("_reader_stop_event"))
+            reader.interruptible_wait(page, 250)
+            reader.check_access(page)
+            verify_search_state(page)
+            current = set(job_links(page))
+            if current - before:
+                return PaginationResult("advanced", page.url, len(current), method="scroll")
+        result.status = "scroll_idle"
     if result.status == "missing_control":
         for text in page.locator("h4").all_inner_texts():
             count = re.fullmatch(r"\s*Page\s+(\d+)\s+of\s+(\d+)\s*", text, re.I)

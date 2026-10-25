@@ -1,6 +1,7 @@
 """Capture and reuse a rendered Wellfound search without copying browser profiles."""
 import hashlib
 import json
+import re
 from pathlib import Path
 import subprocess
 import sys
@@ -11,27 +12,27 @@ CAPTURE_JS = r'''() => {
     if (!heading) return null;
     const count = [...document.querySelectorAll('h2,h3,h4,div,p,span')].find(el => visible(el) && /^\d[\d,]*\s+results?$/i.test(el.innerText.trim()));
     if (!count) throw new Error('The filtered Wellfound search has not finished rendering its result count.');
-    const top = heading.getBoundingClientRect().bottom, bottom = count.getBoundingClientRect().top;
-    const left = Math.min(heading.getBoundingClientRect().left, count.getBoundingClientRect().left) - 1;
-    if (bottom <= top) throw new Error('The Wellfound search controls could not be scoped safely.');
-    const within = el => visible(el) && el.getBoundingClientRect().left >= left && el.getBoundingClientRect().top >= top && el.getBoundingClientRect().bottom <= bottom + 1;
+    // DOM order stays stable when the filter bar sticks to the viewport.
+    // Geometry does not: controls can overlap the result count while scrolling.
+    if (!(heading.compareDocumentPosition(count) & Node.DOCUMENT_POSITION_FOLLOWING)) throw new Error('The Wellfound search controls could not be scoped safely.');
+    const scope = document.createRange(); scope.setStartAfter(heading); scope.setEndBefore(count);
+    const within = el => visible(el) && !el.contains(heading) && !el.contains(count) && scope.intersectsNode(el);
     const text = [], walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
     let node;
     while ((node=walker.nextNode())) {
-        if (!node.textContent.trim() || node.parentElement.closest('script,style') || !visible(node.parentElement)) continue;
-        const range=document.createRange(); range.selectNodeContents(node);
-        const rect=range.getBoundingClientRect();
-        if (rect.height && rect.left >= left && rect.top >= top && rect.bottom <= bottom + 1) text.push(node.textContent.trim().replace(/\s+/g,' '));
+        if (!node.textContent.trim() || node.parentElement.closest('script,style') || !visible(node.parentElement) || !scope.intersectsNode(node)) continue;
+        text.push(node.textContent.trim().replace(/\s+/g,' '));
     }
-    const inputs=[...document.querySelectorAll('input,select,textarea')].filter(within).map(el=>({
-        label:el.getAttribute('aria-label') || el.getAttribute('placeholder') || el.getAttribute('role') || el.tagName.toLowerCase(),
-        value:el.value, checked:['checkbox','radio'].includes(el.type) ? el.checked : null
+    const inputs=[...document.querySelectorAll('input,select,textarea,button,[role="combobox"],[role="textbox"],[contenteditable="true"]')].filter(within).map(el=>({
+        label:el.getAttribute('aria-label') || el.getAttribute('placeholder') || el.getAttribute('aria-labelledby') || el.getAttribute('data-test') || el.getAttribute('role') || el.tagName.toLowerCase(),
+        value:['INPUT','SELECT','TEXTAREA'].includes(el.tagName) ? el.value : el.innerText.trim().replace(/\s+/g,' '),
+        checked:['checkbox','radio'].includes(el.type) ? el.checked : null
     }));
     const tabs=[...document.querySelectorAll('[role="tab"],[aria-selected],[aria-current]')].filter(within).map(el=>({
         text:el.innerText.trim(), selected:el.getAttribute('aria-selected'), current:el.getAttribute('aria-current')
     }));
     const header_text=[...text, ...inputs.filter(el=>typeof el.value==='string' && el.value.trim()).map(el=>el.label+': '+el.value.trim())].join(' | ');
-    if (!header_text || !inputs.length) throw new Error('Wellfound filter controls could not be captured.');
+    if (!header_text || !inputs.length) throw new Error('Wellfound filter controls could not be captured. No supported visible search inputs, buttons or comboboxes were found.');
     return {header_text, inputs, tabs, result_count:Number(count.innerText.replace(/[^0-9]/g,''))};
 }'''
 
@@ -44,7 +45,11 @@ def capture(page):
     value = page.evaluate(CAPTURE_JS)
     if value is None:
         return None
-    identity = {key: value[key] for key in ("header_text", "inputs", "tabs")}
+    # Saved/Hidden counters are account activity, not search filters.
+    def stable_text(text):
+        return re.sub(r'\b(Saved|Hidden)\s*(?:\|\s*)?\d[\d,]*\b', r'\1', text, flags=re.I)
+    identity = {"header_text": stable_text(value["header_text"]), "inputs": value["inputs"],
+                "tabs": [{**tab, "text": stable_text(tab["text"])} for tab in value["tabs"]]}
     value.update(mode="open_filtered_tab", url=wellfound.search_url(page.url),
                  fingerprint=hashlib.sha256(json.dumps(identity, sort_keys=True, ensure_ascii=False).encode()).hexdigest())
     return value
@@ -113,6 +118,38 @@ def inspect_child(cdp):
     return {"tabs": tabs, "errors": errors}
 
 
+def diagnose_search(cdp):
+    """Read visible search-control markup only; never navigate or start collection."""
+    import url_reader.engine as reader
+    from playwright.sync_api import sync_playwright
+    rows = []
+    with sync_playwright() as playwright:
+        browser = playwright.chromium.connect_over_cdp(cdp, timeout=10000)
+        for context in browser.contexts[:1]:
+            for page in context.pages:
+                if reader.source_for_url(page.url) != 'wellfound' or reader.canonical_job_url(page.url):
+                    continue
+                reader.check_access(page)
+                rows.append(page.evaluate(r'''() => {
+                    const visible = el => !!el.getClientRects().length && getComputedStyle(el).visibility !== 'hidden';
+                    const heading = [...document.querySelectorAll('h1')].find(el=>/^Search for jobs$/i.test(el.innerText.trim()));
+                    const count = [...document.querySelectorAll('h2,h3,h4,div,p,span')].find(el=>visible(el) && /^\d[\d,]*\s+results?$/i.test(el.innerText.trim()));
+                    const range = document.createRange();
+                    if (heading && count) {range.setStartAfter(heading); range.setEndBefore(count);}
+                    const inside = el => heading && count && range.intersectsNode(el) && !el.contains(heading) && !el.contains(count);
+                    const text = [], walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
+                    let node;
+                    while ((node=walker.nextNode())) {
+                        if (heading && count && range.intersectsNode(node) && node.textContent.trim() && visible(node.parentElement) && !node.parentElement.closest('script,style')) text.push(node.textContent.trim());
+                    }
+                    return {url:location.href, heading:heading?.outerHTML, count:count?.outerHTML,
+                        controls:[...document.querySelectorAll('input,select,textarea,button,[role="combobox"],[role="textbox"],[contenteditable="true"]')]
+                          .filter(el=>visible(el) && inside(el)).slice(0,35).map(el=>el.outerHTML.slice(0,1000)),
+                        scope_text:text.join(' | ').slice(0,2500)};
+                }'''))
+    return rows
+
+
 def diagnose_job(cdp, url):
     """Read bounded job-layout diagnostics without touching the user's search tab."""
     import url_reader.engine as reader
@@ -142,7 +179,9 @@ def diagnose_job(cdp, url):
 
 if __name__ == "__main__":
     try:
-        if len(sys.argv) == 4 and sys.argv[1] == "--diagnose-job":
+        if len(sys.argv) == 3 and sys.argv[1] == "--diagnose-search":
+            result = diagnose_search(sys.argv[2])
+        elif len(sys.argv) == 4 and sys.argv[1] == "--diagnose-job":
             result = diagnose_job(sys.argv[2], sys.argv[3])
         elif len(sys.argv) == 3 and sys.argv[1] == "--inspect":
             result = inspect_child(sys.argv[2])

@@ -239,16 +239,29 @@ export default function Sidebar({
         />
 
         <div className="mt-3 pt-3 border-t border-gray-100">
+          <label htmlFor="max-experience" className="block text-xs font-medium text-gray-600 mb-1">
+            Maximum experience
+          </label>
+          <select
+            id="max-experience"
+            value={filters.maxExperienceYears}
+            onChange={(e) => onFilterChange({ maxExperienceYears: Number(e.target.value) })}
+            className="w-full rounded-md border border-gray-300 px-2.5 py-1.5 text-sm mb-2"
+          >
+            {[0, 1, 2, 3, 5].map((years) => (
+              <option key={years} value={years}>{years === 0 ? "Fresher / 0 years" : `Up to ${years} year${years === 1 ? "" : "s"}`}</option>
+            ))}
+          </select>
           <Check
-            label="Hide 1+ years required or preferred"
-            hint="Based on the description; unknown requirements are kept"
+            label={`Hide roles asking for more than ${filters.maxExperienceYears} year${filters.maxExperienceYears === 1 ? "" : "s"}`}
+            hint="Checks required or preferred minimum experience. Unknown requirements are kept. Hiding does not remove jobs."
             checked={filters.hideHighExperience}
             onChange={(v) => onFilterChange({ hideHighExperience: v })}
           />
         </div>
       </div>
 
-      {!exportOnly && <><div>
+      {!exportOnly && <div>
         <h2 className="text-sm font-semibold tracking-wide uppercase text-gray-500 mb-2">
           Behaviour
         </h2>
@@ -258,14 +271,14 @@ export default function Sidebar({
           checked={autoRemove}
           onChange={onAutoRemoveChange}
         />
-      </div>
+      </div>}
 
       <div>
         <h2 className="text-sm font-semibold tracking-wide uppercase text-gray-500 mb-2">
           Bulk remove
         </h2>
         <div className="space-y-1.5">
-          {resume.loaded && counts.belowThreshold > 0 && (
+          {!exportOnly && resume.loaded && counts.belowThreshold > 0 && (
             <button
               onClick={() => onBulkDismiss("match")}
               className="w-full text-left rounded-md border border-gray-200 px-2.5 py-1.5 text-xs hover:bg-gray-50"
@@ -273,19 +286,18 @@ export default function Sidebar({
               Remove {counts.belowThreshold} below {minMatch}% match
             </button>
           )}
-          {counts.highExperience > 0 && (
             <button
               onClick={() => onBulkDismiss("experience")}
-              className="w-full text-left rounded-md border border-gray-200 px-2.5 py-1.5 text-xs hover:bg-gray-50"
+              disabled={counts.highExperience === 0}
+              className="w-full text-left rounded-md border border-gray-200 px-2.5 py-1.5 text-xs hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              Remove {counts.highExperience} with 1+ years required or preferred
+              Remove {counts.highExperience} asking for more than {filters.maxExperienceYears} year{filters.maxExperienceYears === 1 ? "" : "s"}
             </button>
-          )}
         </div>
         <p className="text-xs text-gray-400 mt-2">
-          Recover removed jobs with Undo or the Removed view.
+          Applies to all loaded career jobs, including those hidden by filters. Unknown requirements are kept. Use Undo to restore the removed jobs.
         </p>
-      </div></>}
+      </div>
     </aside>
   );
 }

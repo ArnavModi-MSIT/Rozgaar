@@ -1,6 +1,7 @@
 """Regressions for complete source text and responsive collection writes."""
 
 from contextlib import nullcontext
+from itertools import product
 import sqlite3
 import unittest
 from unittest.mock import patch
@@ -62,14 +63,14 @@ class _ImmediatePool:
 
 
 class CollectionTransactionTests(unittest.TestCase):
-    def test_workday_backfills_existing_description_and_preserves_user_state(self):
-        for incoming in ("Required qualifications: Python and SQL.", ""):
-            with self.subTest(incoming=incoming):
+    def test_recollection_backfills_description_and_preserves_user_state(self):
+        for incoming, platform_name in product(("Required qualifications: Python and SQL.", ""), ("workday", "swiggy", "zerodha")):
+            with self.subTest(incoming=incoming, platform=platform_name):
                 conn = sqlite3.connect(":memory:")
                 init_db(conn)
                 job = dict(company="nvidia", source_id="JR-test", title="SWQA Engineer",
                            location="Pune, India", url="https://example.com/job/JR-test", description="")
-                save_job(conn, "nvidia:JR-test", job, "workday")
+                save_job(conn, "nvidia:JR-test", job, platform_name)
                 previous = "" if incoming else "Previously verified full description."
                 conn.execute("UPDATE jobs SET description=?, dismissed=1, notes='review later', tracking_status='saved', first_seen=123, skills='sql', category='Data Analyst', experience_years=-1", (previous,))
                 conn.commit()
@@ -77,7 +78,7 @@ class CollectionTransactionTests(unittest.TestCase):
                 def inspect(deadline):
                     captured.append(conn.execute("SELECT description, dismissed, notes, tracking_status, first_seen, skills, category, experience_years FROM jobs").fetchone())
                     return []
-                self.run_fixture([("workday", lambda deadline: [dict(job, description=incoming)]), ("inspect", inspect)], conn)
+                self.run_fixture([(platform_name, lambda deadline: [dict(job, description=incoming)]), ("inspect", inspect)], conn)
                 derived = (None, None, None) if incoming else ("sql", "Data Analyst", -1)
                 self.assertEqual(captured, [(incoming or previous, 1, "review later", "saved", 123, *derived)])
                 conn.close()

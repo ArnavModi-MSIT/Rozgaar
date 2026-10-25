@@ -46,6 +46,8 @@ Resume matching uses `sentence-transformers/all-MiniLM-L6-v2` locally. To downlo
 
 **Career pages:** start collection from the website, filter the list, select the JSON batch size, and download. **Remove downloaded batch** hides precisely that batch; undo restores it. Download alone does not hide jobs. Export snapshots preserve the descriptions and state at the time they were created.
 
+In the sidebar, **Maximum experience** defaults to **Up to 1 year**. Required or preferred minimums above the selected limit can be hidden or bulk removed; unknown requirements stay in the list. Bulk removal applies to all loaded career jobs, including those hidden by other filters. Use **Undo** to restore the last removed batch. Selecting one year keeps jobs asking for exactly one year.
+
 **URL reader:** use **Open Reader Chrome.cmd** to open a dedicated Chrome profile. Sign in manually, then start a reader from the website. For Wellfound searches whose URL stays `/jobs`, keep exactly one filtered search open in that browser and choose filtered-tab mode. Do not change its filters during collection or resume.
 
 Site changes, expired listings, access restrictions and incomplete source responses can cause missing data. A nonempty description, match score or successful collection does not establish source completeness, eligibility or current availability. Review official postings before applying. Use sources in accordance with their terms and your account permissions; stop collection when a site restricts access.
@@ -86,6 +88,8 @@ Private state lives under ignored `runtime/`: career SQLite/resume/cache, reader
 ```
 
 Browser fixtures intercept requests and use synthetic data; they do not prove that third-party sites currently work. Live source checks are separate, explicit actions. After UI changes, run `npm ci` and `npm run build` inside `frontend/`.
+
+Run `npm test` inside `frontend/` for experience-boundary and sidebar regression checks.
 
 See [Architecture](docs/ARCHITECTURE.md), [Code map](docs/CODE_MAP.md), [URL reader](docs/URL_READER.md), [Contributing](CONTRIBUTING.md) and [Security](SECURITY.md).
 
