@@ -16,6 +16,7 @@ from requests.adapters import HTTPAdapter
 from backend.fetchers.http_client import DEFAULT_TIMEOUT, get_json
 from backend.fetchers.result import CollectionResult
 from backend.core.location import parse_country
+from backend.config.career_expansion import INDIA_BOARDS
 
 INDIA_SCOPED_BOARDS = {"databricks", "roku", "gleanwork", "okta", "purestorage", "gitlab", "squarepointcapital", "quberesearchandtechnologies","alphagrepsecurities", "nksecuritiesresearch", "worldquant", "imc", "optiverus", "mongodb", "datadog"}
 INDIA_SCOPED_BOARDS.update({"appian", "couchbaseinc", "inmobi", "typeface", "commvault", "sigmoid", "fanaticsinc", "fanaticscommerce", "fanaticsfbg", "fanaticscollectibles"})
@@ -110,7 +111,37 @@ def _greenhouse_location(slug, job):
             location = location.strip() + ", India"
     if "india" not in location.lower() and slug in {"squarepointcapital", "quberesearchandtechnologies", "razorpaysoftwareprivatelimited"} and re.search(r"\b(bangalore|bengaluru|mumbai|gurgaon|gurugram|hyderabad|delhi|chennai|pune)\b", location, re.I):
         location += ", India"
+    if slug in INDIA_BOARDS:
+        if slug == "samsara" and re.fullmatch(r"Bengaluru - BLR\d+", location):
+            location = "Bengaluru, India"
+        offices = [office.get("location") or office.get("name") or "" for office in job.get("offices") or []]
+        return _expansion_location(location, offices)
     return location
+
+
+def _expansion_location(location, alternatives=(), country=None):
+    """Retain positive India evidence; generic remote/unknown is not eligibility."""
+    selected = []
+    for value in [location, *alternatives]:
+        if not isinstance(value, str) or not value.strip():
+            continue
+        value = value.strip()
+        parsed = parse_country(value)
+        # A country supplied by the ATS outranks ambiguous city/remote labels.
+        if value == location and country:
+            if str(country).strip().lower() in {"in", "ind", "india"}:
+                if parsed != "India":
+                    value += ", India"
+            else:
+                continue
+        elif parsed != "India":
+            # Only anchored city labels, never substring matches like Indiana.
+            if parsed != "Unknown" or not re.fullmatch(r"(?:remote\s*[-–/]\s*)?(?:bengaluru|bangalore|gurugram|gurgaon|hyderabad|mumbai|chennai|pune|noida|new delhi|delhi)(?:\s*[,/-]\s*(?:karnataka|telangana|maharashtra|tamil nadu|haryana|uttar pradesh|ncr))?", value, re.I):
+                continue
+            value += ", India"
+        if value not in selected:
+            selected.append(value)
+    return "; ".join(selected)
 
 
 def fetch_greenhouse(slug):
@@ -129,7 +160,7 @@ def fetch_greenhouse(slug):
             "description": strip_html(j.get("content", ""), max_chars=None),
         }
         for j in data.get("jobs", [])
-        if slug not in INDIA_SCOPED_BOARDS or parse_country(_greenhouse_location(slug, j)) == "India"
+        if slug not in INDIA_SCOPED_BOARDS | INDIA_BOARDS or parse_country(_greenhouse_location(slug, j)) == "India"
     ]
 
 
@@ -153,6 +184,9 @@ def _portcast_india_locations(job):
 
 
 def _lever_location(slug, job):
+    if slug in INDIA_BOARDS:
+        categories = job.get("categories") or {}
+        return _expansion_location(categories.get("location") or "", categories.get("allLocations") or [], job.get("country"))
     if slug == "ion" and (job.get("country") or "").upper() == "IN":
         location = (job.get("categories") or {}).get("location") or "India"
         return location if re.search(r"\bindia\b",location,re.I) else location+", India"
@@ -181,6 +215,8 @@ def fetch_lever(slug):
         raise RuntimeError(f"lever board {slug}: expected postings list")
     jobs = []
     for j in data:
+        if slug in INDIA_BOARDS and not _lever_location(slug, j):
+            continue
         if slug in {"ion", "coupa"} and (j.get("country") or "").upper() != "IN":
             continue
         if slug == "portcast" and not _portcast_india_locations(j):
@@ -221,6 +257,10 @@ def _ashby_location(j):
 
 def _scoped_ashby_location(slug, job):
     location = _ashby_location(job)
+    if slug in INDIA_BOARDS:
+        address = ((job.get("address") or {}).get("postalAddress") or {})
+        alternatives = [item.get("location") or "" for item in job.get("secondaryLocations") or [] if isinstance(item, dict)]
+        return _expansion_location(location, alternatives, address.get("addressCountry"))
     if slug == "uipath":
         country = ((job.get("address") or {}).get("postalAddress") or {}).get("addressCountry")
         return location + ", India" if country in {"IN", "India"} else "Unknown"
@@ -243,7 +283,7 @@ def fetch_ashby(slug):
             ),
         }
         for j in data.get("jobs", [])
-        if slug not in {"confluent", "uipath"} or parse_country(_scoped_ashby_location(slug, j)) == "India"
+        if slug not in {"confluent", "uipath"} | INDIA_BOARDS or parse_country(_scoped_ashby_location(slug, j)) == "India"
     ]
 
 

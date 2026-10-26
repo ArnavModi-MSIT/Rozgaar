@@ -34,3 +34,13 @@ Original checkpoints remain immutable when the UI clarifies status messages. Fiv
 Read-only inspection of the dedicated browser's visible search controls is available with `runtime/python/Scripts/python.exe -m url_reader.browser.wellfound_session --diagnose-search http://127.0.0.1:9222`. It does not navigate, change filters or start collection.
 
 `runtime/python/Scripts/python.exe -m scripts.check --browser` runs unit/API tests and all intercepted browser fixtures. Fixture imports and supervised children use explicit package paths; test data never enters the real stores.
+
+## Indeed
+
+When an Indeed detail page blocks access, collection stops and leaves that tab open in the dedicated reader Chrome for manual verification. The watchdog also preserves this handed-off tab. Pending links remain in the checkpoint. If verification restores access, resume with one detail reader; if access remains denied, stop using the reader for that source. Verification and access restrictions are never bypassed.
+
+Paste an HTTPS `in.indeed.com/jobs?...` URL, or use **Indeed: Dwarka / Delhi search** in the URL-reader panel. The preset retains the supplied Dwarka/Delhi location, salary, radius and opaque `sc` filter. Blank and repeated filters are preserved. `start`/`pp` pagination cursors and selected-job/tracking parameters are reset when beginning a search; they are not treated as filters.
+
+Indeed has its own `indeed_*.json` checkpoints and `indeed` seen-history namespace. Card `data-jk` values and job/redirect links share the same strict 16-character job identity. Pagination uses the site's actual Next URL/control, preserving search filters. Full text comes from the scoped description or identity-matched public JobPosting data. Wrong-job redirects and empty descriptions are rejected. Login, HTTP 403/429 and verification pages stop collection for manual action. No Apply or Save action is automated.
+
+`runtime/python/Scripts/python.exe -m tests.reader.indeed_browser_smoke` tests these paths with intercepted requests and synthetic data. It is included in `scripts.check --browser`; fixtures do not prove live access.

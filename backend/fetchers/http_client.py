@@ -25,6 +25,9 @@ of becoming a fifth divergent copy.
 
 import logging
 import time
+import math
+from datetime import datetime, timezone
+from email.utils import parsedate_to_datetime
 
 import requests
 
@@ -34,6 +37,23 @@ DEFAULT_TIMEOUT = 15
 DEFAULT_RETRIES = 3
 DEFAULT_BACKOFF = (1, 2, 4)
 MAX_RETRY_AFTER_WAIT = 30  # cap in case a server sends an absurd Retry-After value
+
+
+def retry_after_delay(value, fallback):
+    """Parse Retry-After seconds or an HTTP date; callers choose a wait bound."""
+    if value is None:
+        return fallback
+    try:
+        seconds = float(value)
+        return max(0, seconds) if math.isfinite(seconds) else fallback
+    except (TypeError, ValueError):
+        try:
+            target = parsedate_to_datetime(value)
+            if target.tzinfo is None:
+                target = target.replace(tzinfo=timezone.utc)
+            return max(0, (target-datetime.now(timezone.utc)).total_seconds())
+        except (TypeError, ValueError, OverflowError):
+            return fallback
 
 
 def _request(session, method, url, parse, retries=DEFAULT_RETRIES, backoff=DEFAULT_BACKOFF,

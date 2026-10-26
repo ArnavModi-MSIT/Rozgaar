@@ -11,6 +11,11 @@ import backend.config as config
 from backend.fetchers import career_html, tredence, myntra, makemytrip, ubs, pwc, ea, swissre, netapp, employer_portals
 from backend.fetchers import qualcomm_students, morgan_stanley_students, unitedhealthgroup, zepto, hrt, bloomberg, linkedin_company, netflix, workday_india, automattic, zerodha, amd, booking, target, tesco, juspay, mediatek, millennium, ainterviews, amazon, apple, atlassian, bank_of_america, barclays, blackrock, deloitte, deshaw, deutsche_bank, eightfold, expedia, flipkart, goldman_sachs, google_careers, icims, indiamart, intuit, mastercard_workday, meta, oracle, paypal, phenom, quadeye, rippling, smartrecruiters, standard, successfactors, swiggy, tower_research, uber, workable, workday, zs
 from backend.fetchers.result import CollectionResult
+from backend.fetchers import ibm
+from backend.fetchers import infoedge
+from backend.fetchers import joshtechnologygroup
+from backend.fetchers import hsbc
+from backend.fetchers import publicissapient
 log = logging.getLogger("jobbot")
 
 # Ordered by historical yield: standard (Greenhouse/Lever/Ashby, incl. Paytm)
@@ -20,6 +25,11 @@ log = logging.getLogger("jobbot")
 # runs once/day), but keeping the fast/high-yield platforms first still
 # means partial logs are more useful if something fails partway through.
 PLATFORMS = [
+    ("hsbc", lambda deadline: hsbc.collect(deadline)),
+    ("publicissapient", lambda deadline: publicissapient.collect(deadline)),
+    ("joshtechnologygroup", lambda deadline: joshtechnologygroup.collect(deadline)),
+    ("infoedge", lambda deadline: infoedge.collect(deadline)),
+    ("ibm", lambda deadline: ibm.collect(deadline)),
     ("employer_portals", lambda deadline: employer_portals.collect(config.EMPLOYER_PORTALS, deadline)),
     ("netapp", lambda deadline: netapp.collect(deadline)),
     ("swissre", lambda deadline: swissre.collect(deadline)),

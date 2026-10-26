@@ -11,7 +11,7 @@ BROWSER_FIXTURES = (
     "browser_smoke", "internshala_browser_smoke", "reliability_browser_smoke",
     "dashboard_browser_smoke", "parallel_browser_smoke", "naukri_browser_smoke",
     "instahyre_browser_smoke", "linkedin_posts_browser_smoke", "wellfound_browser_smoke",
-    "wellfound_state_browser_smoke", "stall_browser_smoke",
+    "wellfound_state_browser_smoke", "indeed_browser_smoke", "stall_browser_smoke",
 )
 
 def main():

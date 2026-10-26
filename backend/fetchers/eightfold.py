@@ -29,7 +29,7 @@ from urllib.parse import urlparse
 import requests
 from .career_html import structured_job
 from .standard import strip_html
-from .http_client import get_text
+from .http_client import get_text, retry_after_delay, MAX_RETRY_AFTER_WAIT
 from .result import CollectionResult
 
 log = logging.getLogger("jobbot")
@@ -56,24 +56,37 @@ SESSION.headers.update({
 })
 
 
+class ListingUnavailable(RuntimeError):
+    """Public listing failure, without including response bodies or credentials."""
+
+
 def _get(host, params):
     url = f"https://{host}/api/pcsx/search"
     headers = {"Referer": f"https://{host}/careers"}
+    reason = 'request failed'
     for attempt in range(RETRIES):
         try:
             r = SESSION.get(url, params=params, headers=headers, timeout=TIMEOUT)
+            if r.status_code == 429:
+                wait = retry_after_delay(r.headers.get('Retry-After'), RETRY_BACKOFF[min(attempt, len(RETRY_BACKOFF)-1)])
+                reason = f'HTTP 429 rate limited; retry after {wait:g} seconds'
+                if attempt == RETRIES-1 or wait > MAX_RETRY_AFTER_WAIT:
+                    raise ListingUnavailable(reason)
+                time.sleep(wait)
+                continue
+            if 400 <= r.status_code < 500:
+                raise ListingUnavailable(f'HTTP {r.status_code} rejected public listing')
             if r.status_code >= 500:
                 raise requests.HTTPError(f"{r.status_code} server error")
             r.raise_for_status()
             return r.json()
-        except requests.HTTPError:
-            if r.status_code < 500:
-                return None  # 4xx — don't retry
-        except (requests.RequestException, ValueError):
-            pass
+        except requests.RequestException as exc:
+            reason = f'HTTP {r.status_code}' if isinstance(exc, requests.HTTPError) else type(exc).__name__
+        except ValueError:
+            reason = 'invalid JSON response'
         if attempt < RETRIES - 1:
             time.sleep(RETRY_BACKOFF[attempt])
-    return None
+    raise ListingUnavailable(reason+' after bounded retries')
 
 
 def _parse_position(p, cfg):
@@ -104,6 +117,7 @@ def fetch_eightfold(cfg, deadline=None):
     seen = set()
     start = 0
     total = None
+    errors = []
     for _ in range(MAX_PAGES):
         if deadline is not None and time.monotonic() >= deadline:
             break
@@ -117,7 +131,13 @@ def fetch_eightfold(cfg, deadline=None):
         for field in ("filter_seniority", "filter_include_remote", "filter_include_relocation"):
             if field in cfg:
                 params[field] = cfg[field]
-        data = _get(host, params)
+        try:
+            data = _get(host, params)
+        except ListingUnavailable as exc:
+            if not jobs:
+                raise
+            errors.append(str(exc))
+            break
         if not data:
             break
         d = data.get("data") or {}
@@ -169,7 +189,9 @@ def fetch_eightfold(cfg, deadline=None):
         with ThreadPoolExecutor(max_workers=2) as pool:
             jobs = list(pool.map(enrich, jobs))
     if cfg.get("fetch_details") and any(not job["description"] for job in jobs):
-        return CollectionResult(jobs, status="partial", error="Some public detail descriptions are unavailable.")
+        errors.append('Some public detail descriptions are unavailable.')
+    if errors:
+        return CollectionResult(jobs, status="partial", error='; '.join(errors))
     return jobs
 
 
@@ -204,6 +226,6 @@ def collect(configs, deadline=None):
                     errors.append(cfg["company"] + ": " + result.error)
             except Exception as e:
                 log.exception("eightfold fetch failed for %s: %s", cfg.get("company"), e)
-                errors.append(str(cfg.get("company")) + ": fetch failed")
+                errors.append(str(cfg.get("company")) + ": " + str(e))
     unique = {(job["company"], job["source_id"] or job["url"]): job for job in jobs}
     return CollectionResult(unique.values(), status="partial" if errors else "ok", error="; ".join(errors))

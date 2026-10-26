@@ -16,6 +16,28 @@ NEXT = "https://www.linkedin.com/jobs/view/456/"
 
 
 class StallRecoveryTests(unittest.TestCase):
+    def test_indeed_block_hands_tab_to_user_and_excludes_watchdog_cleanup(self):
+        with tempfile.TemporaryDirectory(dir=reader.BASE_DIR) as folder:
+            registry = Path(folder) / "targets"
+            page = Mock()
+            page.is_closed.return_value = False
+            page.context.new_cdp_session.return_value.send.return_value = {"targetInfo": {"targetId": "verify-tab"}}
+            context = Mock()
+            context.new_page.return_value = page
+            owned = reader.OwnedPages(registry)
+            detail = reader.DetailReader(context, owned)
+            with patch.object(reader, "read_job", side_effect=reader.AccessBlocked("Verification required")):
+                with self.assertRaisesRegex(reader.AccessBlocked, "left open"):
+                    detail.read("https://in.indeed.com/viewjob?jk=0123456789abcdef")
+            self.assertEqual(list(owned), [])
+            page.close.assert_not_called()
+            registry.write_text(registry.read_text() + "ordinary-tab\n", encoding="utf-8")
+            with patch.object(supervised_reader, "urlopen") as open_url:
+                open_url.return_value.__enter__.return_value.read.return_value = '[{"id":"verify-tab"},{"id":"ordinary-tab"}]'
+                supervised_reader.close_owned_targets("http://127.0.0.1:9222", registry)
+                self.assertEqual(open_url.call_count, 2)
+                self.assertTrue(open_url.call_args.args[0].endswith("/ordinary-tab"))
+
     def test_navigation_timeout_does_not_query_stuck_dom(self):
         page = Mock(url=JOB)
         page.goto.side_effect = reader.PlaywrightTimeoutError("navigation stalled")

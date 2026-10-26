@@ -43,7 +43,14 @@ def collect(deadline=None):
         params = {key: cfg[key] for key in ('domain', 'location', 'sort_by',
                   'filter_include_remote', 'filter_include_relocation', 'filter_seniority')}
         params.update(query='', start=start)
-        data = eightfold._get(cfg['host'], params)
+        try:
+            data = eightfold._get(cfg['host'], params)
+        except eightfold.ListingUnavailable as exc:
+            message = f'listing offset {start} unavailable: {exc}'
+            if start == 0:
+                raise RuntimeError('Qualcomm students: '+message) from exc
+            errors.append(message)
+            break
         listing = data.get('data') if isinstance(data, dict) else None
         if not isinstance(listing, dict) or not isinstance(listing.get('positions'), list):
             if start == 0:

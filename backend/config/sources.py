@@ -602,3 +602,7 @@ DISPLAY_NAMES.update({
     'whatfix': 'Whatfix',
     'wingify': 'Wingify',
 })
+
+# Keep the dated bulk expansion declarative and separate from older source notes.
+from .career_expansion import register as _register_expansion
+_register_expansion(globals())

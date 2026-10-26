@@ -12,6 +12,7 @@ import url_reader.sources.internshala as internshala
 import url_reader.sources.naukri as naukri
 import url_reader.sources.instahyre as instahyre
 import url_reader.sources.wellfound as wellfound
+import url_reader.sources.indeed as indeed
 import url_reader.sources.linkedin as linkedin
 import url_reader.sources.linkedin_posts as linkedin_posts
 from url_reader.storage.history import SeenPostings
@@ -101,7 +102,7 @@ def target_closed(exc):
 
 
 def adapter_for_url(url):
-    return {"internshala": internshala, "naukri": naukri, "instahyre": instahyre, "wellfound": wellfound, "linkedin_posts": linkedin_posts}.get(source_for_url(url))
+    return {"internshala": internshala, "naukri": naukri, "instahyre": instahyre, "wellfound": wellfound, "indeed": indeed, "linkedin_posts": linkedin_posts}.get(source_for_url(url))
 
 
 def search_url(value):
@@ -136,11 +137,13 @@ def check_access(page):
         raise RuntimeError("The reader's browser tab was closed.")
     path = urlsplit(page.url).path.lower()
     source = source_for_url(page.url)
-    site = {"internshala": "Internshala", "naukri": "Naukri", "instahyre": "Instahyre", "wellfound": "Wellfound", "linkedin": "LinkedIn", "linkedin_posts": "LinkedIn"}.get(source, "Website")
+    site = {"internshala": "Internshala", "naukri": "Naukri", "instahyre": "Instahyre", "wellfound": "Wellfound", "indeed": "Indeed", "linkedin": "LinkedIn", "linkedin_posts": "LinkedIn"}.get(source, "Website")
     if any(path == prefix or path.startswith(prefix + "/") for prefix in ("/checkpoint", "/login", "/uas/login", "/uas/authenticate", "/authwall", "/challenge", "/signup")):
         raise AccessBlocked(f"{site} requires login/verification. Complete it manually before running again.")
-    if source in {"internshala", "naukri", "instahyre", "wellfound"} and re.match(r"^\s*(?:just a moment|access denied|security check|verify you are human|attention required|captcha)(?:\s*[.!|:-]|\s*$)", page.title(), re.I):
+    if source in {"internshala", "naukri", "instahyre", "wellfound", "indeed"} and re.match(r"^\s*(?:just a moment|access denied|security check|verify you are human|attention required|additional verification required|captcha)(?:\s*[.!|:-]|\s*$)", page.title(), re.I):
         raise AccessBlocked(f"{site} requires browser verification or denied access. Complete verification manually before running again.")
+    if source == 'indeed' and (path.startswith(('/account/','/auth')) or page.locator('form#challenge-form:visible, #challenge-running:visible, #px-captcha:visible').count()):
+        raise AccessBlocked('Indeed requires login or verification. Complete it manually before running again.')
     if page.locator('input[name="session_key"]:visible, input#username:visible').count():
         raise AccessBlocked("LinkedIn is displaying a sign-in form. Log in manually before running again.")
 
@@ -275,6 +278,7 @@ class OwnedPages(list):
     def __init__(self, registry_path=None):
         super().__init__()
         self.registry_path = registry_path
+        self.targets = {}
 
     def append(self, page):
         super().append(page)
@@ -282,11 +286,20 @@ class OwnedPages(list):
             session = page.context.new_cdp_session(page)
             try:
                 target = session.send("Target.getTargetInfo")["targetInfo"]["targetId"]
+                self.targets[id(page)] = target
                 # One short append per tab; worker threads each own their CDP session.
                 with Path(self.registry_path).open("a", encoding="utf-8") as handle:
                     handle.write(target + "\n")
             finally:
                 session.detach()
+
+    def hand_off(self, page):
+        """Leave a blocked tab in Chrome for the user, including after watchdog cleanup."""
+        target = self.targets.get(id(page))
+        if self.registry_path and target:
+            with Path(self.registry_path).open("a", encoding="utf-8") as handle:
+                handle.write("!" + target + "\n")
+        self.remove(page)
 
 
 class DetailReader:
@@ -305,6 +318,12 @@ class DetailReader:
                     self.page._reader_stop_event = self.stop_event
                     self.owned_pages.append(self.page)
                 return read_job(self.page, url)
+            except AccessBlocked as exc:
+                if source_for_url(url) == "indeed" and self.page is not None:
+                    if isinstance(self.owned_pages, OwnedPages):
+                        self.owned_pages.hand_off(self.page)
+                        raise AccessBlocked(str(exc) + " The blocked detail tab was left open in reader Chrome. If access is permitted after manual verification, resume with one detail reader.") from exc
+                raise
             except (PlaywrightError, TransientReadError) as exc:
                 if error_category(exc) in {"timeout", "transient_navigation"}:
                     stale, self.page = self.page, None
@@ -550,7 +569,7 @@ def daily_output_path(search, fresh=False, scope_key=""):
     today = datetime.now(timezone(timedelta(hours=5, minutes=30))).strftime("%Y-%m-%d")
     key = hashlib.sha256((search + ("\n" + scope_key if scope_key else "")).encode("utf-8")).hexdigest()[:10]
     suffix = "_" + datetime.now().strftime("%H%M%S_%f") if fresh else ""
-    prefix = {"internshala": "internshala", "naukri": "naukri", "instahyre": "instahyre", "wellfound": "wellfound", "linkedin_posts": "linkedin_posts"}.get(source_for_url(search), "jobs")
+    prefix = {"internshala": "internshala", "naukri": "naukri", "instahyre": "instahyre", "wellfound": "wellfound", "indeed": "indeed", "linkedin_posts": "linkedin_posts"}.get(source_for_url(search), "jobs")
     return BASE_DIR / "data" / f"{prefix}_{today}_{key}{suffix}.json"
 
 

@@ -2,13 +2,15 @@ const $ = id => document.getElementById(id);
 let token = '', selected = null, currentFile = null, initialized = false, polling = false, jobsPage = 1;
 const defaults = {linkedin:'https://www.linkedin.com/jobs/search/?keywords=data%20analyst&location=India',internshala:'https://internshala.com/internships/work-from-home-internships/',internshala_jobs:'https://internshala.com/jobs/work-from-home/salary-6/',naukri:'https://www.naukri.com/analyst-internship-jobs?k=analyst%20internship&qproductJobSource=2&qinternshipFlag=true&naukriCampus=true&experience=0&nignbevent_src=jobsearchDeskGNB',instahyre:'https://www.instahyre.com/candidate/opportunities/?company_size=0&job_type=0&search=true&years=0'};
 defaults.linkedin_posts = 'https://www.linkedin.com/search/results/content/?keywords=%23fresherhiring&origin=GLOBAL_SEARCH_HEADER&sortBy=%5B%22date_posted%22%5D';
+defaults.indeed = 'https://in.indeed.com/jobs?q=&l=dwarka%2C+delhi%2C+delhi&salaryType=%E2%82%B92%2C40%2C000&radius=25&sc=0kf%3Aattr%28VDTG7%29%3B';
 defaults.wellfound = 'https://wellfound.com/jobs';
 defaults.wellfound_india = 'https://wellfound.com/location/india';
-const sourceLabel = source => ({internshala:'Internshala',naukri:'Naukri',instahyre:'Instahyre',wellfound:'Wellfound',linkedin:'LinkedIn',linkedin_posts:'LinkedIn posts'}[source] || 'LinkedIn');
+const sourceLabel = source => ({internshala:'Internshala',naukri:'Naukri',instahyre:'Instahyre',wellfound:'Wellfound',indeed:'Indeed',linkedin:'LinkedIn',linkedin_posts:'LinkedIn posts'}[source] || 'LinkedIn');
 function detectSource() {
   try {
     const host = new URL($('search-url').value.trim()).hostname;
     if(/^(www\.)?internshala\.com$/.test(host)) $('source').value = /^\/(jobs|fresher-jobs)(\/|$)/.test(new URL($('search-url').value.trim()).pathname) ? 'internshala_jobs' : 'internshala';
+    else if(/^(?:(?:www\.)?indeed|in\.indeed)\.com$/.test(host)) $('source').value = 'indeed';
     else if(/^(www\.)?naukri\.com$/.test(host)) $('source').value = 'naukri';
     else if(/^(www\.)?instahyre\.com$/.test(host)) $('source').value = 'instahyre';
     else if(/^(www\.)?wellfound\.com$/.test(host)) $('source').value = new URL($('search-url').value.trim()).pathname.replace(/\/$/,'') === '/location/india' ? 'wellfound_india' : 'wellfound';
@@ -88,8 +90,8 @@ async function showJob(file,id) {
     $('detail-description').textContent = job.description || '';
     $('detail-quality').textContent = 'Description: ' + (job.description_status || 'legacy / unassessed') + ' · ' + number((job.description || '').length) + ' characters';
     const link = new URL(job.link);
-    $('detail-link').href = link.protocol === 'https:' && /^(www\.)?(linkedin|internshala|naukri|instahyre|wellfound)\.com$/.test(link.hostname) ? link.href : '#';
-    $('detail-link').textContent = job.source === 'linkedin_posts' ? 'Open LinkedIn post ↗' : 'Open ' + sourceLabel(link.hostname.replace(/^www\./,'').replace(/\.com$/,'')) + ' listing ↗';
+    $('detail-link').href = link.protocol === 'https:' && /^(www\.)?(linkedin|internshala|naukri|instahyre|wellfound|indeed)\.com$/.test(link.hostname.replace(/^in\.indeed\.com$/, 'indeed.com')) ? link.href : '#';
+    $('detail-link').textContent = job.source === 'linkedin_posts' ? 'Open LinkedIn post ↗' : 'Open ' + sourceLabel(job.source || link.hostname.replace(/^(www\.|in\.)/,'').replace(/\.com$/,'')) + ' listing ↗';
     $('job-dialog').showModal();
   } catch(error) { notice(error.message); }
 }

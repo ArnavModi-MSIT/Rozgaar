@@ -30,6 +30,7 @@ import requests
 from bs4 import BeautifulSoup
 
 from .result import CollectionResult
+from .http_client import retry_after_delay, MAX_RETRY_AFTER_WAIT
 
 log = logging.getLogger("jobbot")
 
@@ -60,6 +61,12 @@ def _get(page):
     for attempt in range(RETRIES):
         try:
             r = SESSION.get(PAGE_URL, params=params, timeout=TIMEOUT)
+            if r.status_code == 429:
+                wait = retry_after_delay(r.headers.get('Retry-After'), RETRY_BACKOFF[min(attempt, len(RETRY_BACKOFF)-1)])
+                if attempt == RETRIES-1 or wait > MAX_RETRY_AFTER_WAIT:
+                    raise ListingUnavailable(f'listing rate limited on page {page} (HTTP 429); retry after {wait:g} seconds')
+                time.sleep(wait)
+                continue
             if 400 <= r.status_code < 500:
                 raise ListingUnavailable(f"listing request rejected on page {page} (HTTP {r.status_code})")
             if r.status_code >= 500:

@@ -2,6 +2,11 @@
 import re
 
 DISPLAY_NAMES = {
+    "hsbc": "HSBC",
+    "publicissapient": "Publicis Sapient",
+    "joshtechnologygroup": "Josh Technology Group",
+    "infoedge": "Info Edge",
+    "ibm": "IBM",
     "deshaw": "D. E. Shaw India",
     "quadeye": "Quadeye",
     "rippling": "Rippling",

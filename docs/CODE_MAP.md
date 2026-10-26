@@ -6,10 +6,18 @@
 |---|---|
 | Start localhost / check build freshness | `start.py`, `rozgaar/launcher.py` |
 | Change data, model or browser paths | `rozgaar/paths.py` |
-| Add or edit employer inventories | `backend/config/sources.py` |
+| Add or edit employer inventories | `backend/config/sources.py`, `backend/config/career_expansion.py` (26 October batch) |
+| View/regenerate configured career-page companies | `docs/catalog/CAREER_COMPANIES.md`, `python -m scripts.career.company_inventory` |
+| View added-source checks and unresolved companies | `docs/catalog/CAREER_EXPANSION_20261026.md`, `docs/catalog/CAREER_SOURCES_TO_FIND.md` |
 | Change role/location matching rules | `backend/config/matching.py` |
 | Change company display names | `backend/config/display.py` |
 | Add a career-site adapter | `backend/fetchers/`, register in `backend/core/collector.py` |
+| Change public listing retries/errors | `backend/fetchers/http_client.py`, `eightfold.py`, `qualcomm_students.py`, `expedia.py` (bounded rate-limit waits; preserve partial pages) |
+| Change IBM India pagination/full descriptions | `backend/fetchers/ibm.py` (public search API, stable document ordering) |
+| Change Info Edge/Zwayam collection | `backend/fetchers/infoedge.py`, `scripts/career/zwayam_http.ps1` (public HTTP/2 transport; PowerShell 7) |
+| Change HSBC India collection | `backend/fetchers/hsbc.py` (Eightfold apply-v2 search and full job descriptions) |
+| Change Publicis Sapient India collection | `backend/fetchers/publicissapient.py` (public pagination and full embedded detail sections) |
+| Change Josh Technology Group HTML collection | `backend/fetchers/joshtechnologygroup.py` (scoped list and full detail pages) |
 | Change career collection persistence | `backend/collector.py`, `backend/core/storage.py` |
 | Change JSON limits, snapshots or removal | `backend/core/career_exports.py`, `backend/api/platform.py` |
 | Label insufficient, possibly truncated or repeated descriptions | `backend/core/description_quality.py` |
@@ -18,7 +26,7 @@
 | Change the career JSON controls | `frontend/src/components/CareerExportPanel.tsx` |
 | Change experience limits and bulk removal | `frontend/src/experience.ts`, `frontend/src/components/Sidebar.tsx`, `frontend/src/App.tsx` |
 | Change the URL-reader controls | `frontend/src/components/UrlReaderPanel.tsx` |
-| Change browser-site extraction | `url_reader/sources/` |
+| Change browser-site extraction | `url_reader/sources/` (including `indeed.py`) |
 | Change pagination or concurrent readers | `url_reader/browser/` |
 | Change resume/checkpoint validation | `url_reader/storage/checkpoints.py`, `url_reader/engine.py` |
 | Change seen-posting history | `url_reader/storage/history.py` |

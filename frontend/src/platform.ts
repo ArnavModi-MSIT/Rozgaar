@@ -1,6 +1,6 @@
 export const sourceLabel = (source: string) => ({
   linkedin: "LinkedIn", internshala: "Internshala", naukri: "Naukri",
-  instahyre: "Instahyre", wellfound: "Wellfound", linkedin_posts: "LinkedIn posts",
+  instahyre: "Instahyre", wellfound: "Wellfound", indeed: "Indeed", linkedin_posts: "LinkedIn posts",
 }[source.replace(/^reader_/, "")] ?? source.replace(/_/g, " "));
 
 export interface PlatformState {

@@ -34,6 +34,7 @@ def close_owned_targets(cdp, registry):
         targets = Path(registry).read_text(encoding="utf-8").splitlines()
     except OSError:
         return
+    handed_off = {target[1:] for target in targets if target.startswith("!")}
     deadline = time.monotonic() + 5
     try:
         with urlopen(origin + "/json/list", timeout=2) as response:
@@ -41,7 +42,7 @@ def close_owned_targets(cdp, registry):
     except (OSError, ValueError, TypeError):
         return
     for target in dict.fromkeys(targets):
-        if target not in live or not re.fullmatch(r"[A-Za-z0-9_-]{1,100}", target):
+        if target in handed_off or target not in live or not re.fullmatch(r"[A-Za-z0-9_-]{1,100}", target):
             continue
         remaining = deadline - time.monotonic()
         if remaining <= 0:

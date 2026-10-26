@@ -5,6 +5,7 @@ import type { PlatformState, ReaderState, ReaderItem } from "../platform";
 interface Props { platform: PlatformState | null; onChange: () => Promise<void> }
 const button = "rounded-md border border-gray-300 px-3 py-2 text-sm bg-white hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed";
 const field = "w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm";
+const INDEED_SEARCH = "https://in.indeed.com/jobs?q=&l=dwarka%2C+delhi%2C+delhi&salaryType=%E2%82%B92%2C40%2C000&radius=25&sc=0kf%3Aattr%28VDTG7%29%3B";
 
 export default function UrlReader({ platform, onChange }: Props) {
   const [reader, setReader] = useState<ReaderState | null>(null);
@@ -79,9 +80,10 @@ export default function UrlReader({ platform, onChange }: Props) {
     {platform?.offline && <p className="rounded-md bg-amber-50 p-3 text-sm">Offline mode is enabled. Saved results are available; new collection is disabled.</p>}
     <section className="rounded-xl border border-gray-200 bg-white p-5">
       <div className="flex justify-between items-center gap-3"><h3 className="font-semibold">Browser job reader</h3><span role="status" className="text-xs rounded-full bg-stone-100 px-3 py-1">{reader?.status ?? "loading"}</span></div>
-      <p className="text-sm text-gray-500 mt-1">LinkedIn jobs / posts · Internshala jobs / internships · Naukri · Instahyre · Wellfound</p>
+      <p className="text-sm text-gray-500 mt-1">LinkedIn jobs / posts · Internshala jobs / internships · Naukri · Instahyre · Wellfound · Indeed</p>
       <form className="space-y-4 mt-4" onSubmit={e => { e.preventDefault(); setFile(""); setPage(1); void action("/reader/start", { url, limit, delay, workers, fresh: !resume, retry_incomplete: repair, wellfound_live: useOpenWellfound }); }}>
         <label className="block text-sm font-medium">Search URL<textarea aria-label="Search URL" required rows={3} className={field + " mt-1 font-normal"} value={url} onChange={e => setUrl(e.target.value)} placeholder="Paste the search URL from a supported website" /></label>
+        <button type="button" className="text-xs text-sky-700 underline" disabled={readerRunning} onClick={() => { setOpenWellfound(false); setUrl(INDEED_SEARCH); }}>Indeed: Dwarka / Delhi search</button>
         <p className="text-xs text-gray-500"><button type="button" className="text-sky-700 underline" disabled={readerRunning} onClick={() => { setOpenWellfound(true); setUrl("https://wellfound.com/jobs"); }}>Use filtered Wellfound tab</button> · <button type="button" className="text-sky-700 underline" disabled={readerRunning} onClick={() => { setOpenWellfound(false); setUrl("https://wellfound.com/location/india"); }}>Public India results</button> · <button type="button" className="text-sky-700 underline" disabled={readerRunning} onClick={() => { setOpenWellfound(false); setUrl("https://wellfound.com/jobs"); }}>Public highlights</button></p>
         {useOpenWellfound && <p className="rounded-md bg-sky-50 p-3 text-sm">Open exactly one signed-in Wellfound search in reader Chrome, set your filters there, then start here. The reader uses that open tab without reloading it. Do not change its filters or manually switch result pages while collecting. Resume from the same result batch. Captured filters get a separate JSON checkpoint.</p>}
         <div className="grid grid-cols-3 gap-3">

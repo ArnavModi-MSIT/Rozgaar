@@ -14,6 +14,8 @@ def source_for_url(url):
     if host == "linkedin.com" and (parts.path.rstrip("/") == "/search/results/content"
                                    or parts.path.startswith(("/feed/update/", "/posts/"))):
         return "linkedin_posts"
+    if host in {"indeed.com", "in.indeed.com", "secure.indeed.com"}:
+        return "indeed"
     return {"linkedin.com": "linkedin", "internshala.com": "internshala", "naukri.com": "naukri", "instahyre.com": "instahyre", "wellfound.com": "wellfound"}.get(host)
 
 
@@ -25,6 +27,10 @@ def posting_key(url):
         if parts.scheme != "https" or parts.username or parts.password or parts.port not in (None, 443):
             return None
         host = (parts.hostname or "").removeprefix("www.")
+        if host in {"indeed.com", "in.indeed.com"} and parts.path.rstrip('/') in {'/viewjob','/rc/clk','/pagead/clk'}:
+            identifiers = parse_qs(parts.query).get('jk', [])
+            if len(identifiers) == 1 and re.fullmatch(r'[0-9a-fA-F]{16}', identifiers[0]):
+                return 'indeed', identifiers[0].lower()
         if host == "linkedin.com":
             post = re.fullmatch(r"/feed/update/urn:li:(activity|share|ugcPost):([0-9]+)/?", unquote(parts.path))
             if not post:
@@ -67,6 +73,8 @@ def canonical_job_url(url):
     if key[0] == "linkedin":
         return f"https://www.linkedin.com/jobs/view/{key[1]}/"
     parts = urlsplit(url)
+    if key[0] == 'indeed':
+        return urlunsplit(('https', parts.hostname.removeprefix('www.'), '/viewjob', 'jk='+key[1], ''))
     if key[0] == "linkedin_posts":
         path = "/feed/update/urn:li:" + key[1] if parts.path.startswith("/feed/update/") else parts.path.rstrip("/")
         return urlunsplit(("https", "www.linkedin.com", path + "/", "", ""))

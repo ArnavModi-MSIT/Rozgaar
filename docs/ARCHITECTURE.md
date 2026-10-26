@@ -6,6 +6,10 @@ Rozgaar is a local, single-user application. The launcher serves the React build
 
 `backend/core/collector.py` registers source adapters from `backend/fetchers/`. `backend/collector.py` coordinates bounded collection and SQLite persistence. Adapters return normalized postings; some also return explicit partial-source results. Coverage varies by adapter and employer. Missing data must not be interpreted as a successful empty source.
 
+The 26 October employer batch lives in `backend/config/career_expansion.py` and is registered into existing inventories by `sources.py`. New standard boards require positive India evidence; generic remote/unknown locations are excluded. `python -m scripts.career.company_inventory` regenerates the complete Markdown inventory offline. Live listing/sample-description checks and salary limitations are recorded separately in `docs/catalog/CAREER_EXPANSION_20261026.md`.
+
+Info Edge's Zwayam adapter uses a single short-lived PowerShell 7 helper for public search/detail HTTP/2 calls. Python owns pagination, company/job identity checks, India filtering, full-text assembly and partial-result status. The helper accepts only fixed search/detail operations for company 15578; it never accepts arbitrary URLs or executes supplied code. It has no browser/account dependency and exits when collection completes. No job or applicant state is written by the helper.
+
 Career SQLite lives in `runtime/career/`. Collection uses a process lock. Matching combines local skill/experience heuristics with optional sentence-transformer embeddings. Relevance scores are separate from eligibility decisions.
 
 `backend/core/career_exports.py` saves durable JSON snapshots with exact batch membership. Downloading and removing are separate operations. Removing a batch hides its exact jobs and preserves the snapshot. `description_quality.py` adds conservative text-quality labels and exact normalized-text groups; it does not deduplicate requisitions or guarantee completeness. `scripts/career/repair_export.py` creates a separate reviewed file without changing the original snapshot or database.
