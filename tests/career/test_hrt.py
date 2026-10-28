@@ -37,3 +37,14 @@ class HrtTests(unittest.TestCase):
         with patch.object(hrt, 'get_text') as get:
             self.assertEqual(hrt.collect(time.monotonic()-1).status,'partial')
         get.assert_not_called()
+
+    def test_mumbai_url_and_filter_are_preserved(self):
+        html='<div class="hrt-card-wrapper" data-filters-settings="{}"></div>'
+        def row(id,location):
+            return {'ID':id,'description':'Listing summary','content':'<a class="hrt-card-title" href="https://www.hudsonrivertrading.com/hrt-job/security-engineer/">Security Engineer</a><div class="hrt-card-meta-desktop"><div class="hrt-card-info-list">'+location+'</div></div>'}
+        with patch.object(hrt,'get_text',return_value=html) as get,patch.object(hrt,'post_json',return_value=[row(1,'Mumbai'),row(2,'New York'),row(3,'Bengaluru, India')]) as post:
+            jobs=hrt.collect()
+        self.assertEqual(get.call_args.args[1], 'https://www.hudsonrivertrading.com/careers/?locations=mumbai%2C')
+        self.assertEqual(post.call_args.kwargs['data']['queryparams'],'locations=mumbai%2C')
+        self.assertEqual([j['source_id'] for j in jobs],['1'])
+        self.assertEqual(jobs[0]['location'],'Mumbai, India')

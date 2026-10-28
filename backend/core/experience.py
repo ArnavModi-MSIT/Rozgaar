@@ -204,7 +204,7 @@ def _long_requirement_years(text):
         if _PREFERRED_SIGNAL_RE.search(clause) and not _REQUIRED_SIGNAL_RE.search(clause):
             continue
         if re.search(r"\bexperience\b",tail,re.I) or re.match(
-            r"\s+(?:in|as)\s+(?:an?\s+)?[^;\n.!?]{0,160}\b(?:role|position)\b",tail,re.I):
+            r"\s+(?:in|as)\s+(?:an?\s+)?[^;\n.!?]{0,160}\b(?:roles?|positions?)\b",tail,re.I):
 
             values.append(_year_value(match.group(1)))
 
@@ -329,6 +329,32 @@ def experience_requirements(description, title=""):
     required = extract_min_experience(description)
     preferred = extract_preferred_experience(description)
     title_years = extract_title_experience(title)
+    # Some Oracle qualification fields combine education and experience without
+    # an Experience label. Require education context BEFORE a range/plus count;
+    # a single degree duration or a months range is not work-experience evidence.
+    text = _plain_experience_text(description)
+    qualification_preferred = False
+    for line in text.splitlines():
+        for heading in _SECTION_RE.finditer(line):
+            qualification_preferred = _preferred_section(heading.group(1).lower(), qualification_preferred)
+        for match in _YEAR_NUM_RE.finditer(line):
+            if not (match.group(2) or '+' in match.group()):
+                continue
+            prefix = line[:match.start()]
+            degree_context = re.search(r"\b(?:bachelor|master|graduate|degree|mba|bba|btech|mtech|intermediate)\b", prefix, re.I)
+            role_context = bool(title and re.fullmatch(re.escape(title.strip())+r'\s*[-:,(]*\s*', prefix.strip(), re.I))
+            if not (degree_context or role_context):
+                continue
+            # Avoid durations of the degree/course and employer-history claims.
+            if re.match(r'\s*(?:degree|course|program|programme|in business|old)\b', line[match.end():], re.I):
+                continue
+            value = _year_value(match.group(1))
+            if not 0 <= value <= 50:
+                continue
+            if qualification_preferred or (_PREFERRED_SIGNAL_RE.search(line) and not _REQUIRED_SIGNAL_RE.search(line)):
+                preferred = max(preferred, value) if preferred is not None else value
+            else:
+                required = max(required, value) if required is not None else value
     if title_years is not None:
         if _PREFERRED_SIGNAL_RE.search(title or ""):
             preferred = max(preferred, title_years) if preferred is not None else title_years

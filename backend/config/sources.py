@@ -54,7 +54,7 @@ GREENHOUSE = [
 ]
 
 
-LEVER = ["meesho", "cred", "paytm", "fampay", "zeta", "netomi", "portcast", "ion", "coupa"]
+LEVER = ["Sprinto", "meesho", "cred", "paytm", "fampay", "zeta", "netomi", "portcast", "ion", "coupa"]
 
 
 ASHBY = [
@@ -163,6 +163,8 @@ PHENOM = [
 
 
 WORKDAY = [
+    {"company": "ncrvoyix", "tenant": "ncr", "wd_server": "wd1", "site": "ext_apac",
+     "applied_facets": {"Location_Country": ["c4f78be1a8f14da0ab49ce1162348a5e"]}, "fetch_details": True},
     {"company": "fractal", "tenant": "fractal", "wd_server": "wd1", "site": "Careers", "fetch_details": True,
      # Verified Fractal location descriptors (Oct 16): keep India secondary
      # options without labeling its foreign offices as India.
@@ -515,6 +517,7 @@ EMPLOYER_PORTALS = [
     {'company': 'c5i', 'kind': 'c5i'},
     {'company': 'mathco', 'kind': 'peoplestrong', 'host': 'mathco-careers.peoplestrong.com'},
     {'company': 'acko', 'kind': 'kula', 'account': 'acko'},
+    {'company': 'rocketlane', 'kind': 'kula', 'account': 'rocketlane'},
     {'company': 'akamai', 'kind': 'oracle', 'base_url': 'https://fa-extu-saasfaprod1.fa.ocs.oraclecloud.com', 'site': 'CX_1'},
     {'company': 'anz', 'kind': 'successfactors', 'host': 'careers.anz.com'},
     {'company': 'bny', 'kind': 'oracle', 'base_url': 'https://eofe.fa.us2.oraclecloud.com', 'site': 'BNY-Careers'},
@@ -606,3 +609,10 @@ DISPLAY_NAMES.update({
 # Keep the dated bulk expansion declarative and separate from older source notes.
 from .career_expansion import register as _register_expansion
 _register_expansion(globals())
+
+
+# Retained for documentation; these sources are not registered collectors.
+DISABLED_CAREER_SOURCES = {
+    "hrt": {"name": "Hudson River Trading", "url": "https://www.hudsonrivertrading.com/careers/?locations=mumbai%2C", "reason": "Disabled 27 October 2026: HTTP 403 access challenge."},
+    "expedia": {"name": "Expedia Group", "url": "https://careers.expediagroup.com/jobs/?filter%5Bcountry%5D=India", "reason": "Disabled 27 October 2026: HTTP 403; earlier HTTP 429 rate limiting."},
+}

@@ -1,5 +1,41 @@
 # Source maintenance
 
+## 27 October 2026 - HRT and Expedia disabled
+
+At the user's request, removed HRT and Expedia from active platform registration and imports. HRT's HTTP 403 challenge and Expedia's HTTP 403/earlier 429 are recorded in `DISABLED_CAREER_SOURCES` and the generated inventory's Disabled sources section. They will not be requested in subsequent collections. The active inventory now contains 292 company/display-name entries; the two disabled sources are listed separately. Their adapters and regression tests remain available for future maintenance, while saved jobs, tracking/removal state, snapshots and run history are preserved. Earlier source-specific notes below are historical and do not imply either source is still active.
+
+## 27 October 2026 - Expedia India scope
+
+Changed Expedia to the supplied India-filtered search. Pagination now sends `filter[country]=India` on every `/calc-results/` request, and the Referer is the filtered search. An independent result guard accepts only India-prefixed location labels, including the site's `India - Bangalore` and `India - Haryāna - Gurgaon` format. Duplicate detection still tracks all returned cards so a foreign-only page cannot accidentally terminate pagination early.
+
+The public search result showed 11 India positions. Live requests from the collector environment to both the filtered search and first filtered pagination request returned HTTP 403, so no successful retrieval of those 11 is claimed. The existing blocked-source failure and bounded 429 retry policy remain in effect. Descriptions are still listing team metadata, not full job bodies. Fixtures verify the query and exclusion of a United States/Indiana card; downstream live pagination remains unverified while blocked. Existing jobs and snapshots are preserved.
+
+## 27 October 2026 - HRT Mumbai scope
+
+Changed HRT's source URL to the user-supplied `/careers/?locations=mumbai%2C`. The same location query is included in the existing listing request, with an independent Mumbai-only result guard. Mumbai labels are normalized to Mumbai, India. Other cities are excluded; no one-job cap is imposed on future valid Mumbai results.
+
+The supplied screenshot shows one Security Engineer posting. A live request to this exact filtered URL still returned HTTP 403 with a challenge, so the collector remains blocked before listing retrieval. No live posting or full-description success is claimed. The downstream request/filter behavior is covered by fixtures but remains unverified against the blocked live service. Listing descriptions remain explicitly marked as summaries. Existing saved jobs and exports are unchanged; the change does not bypass access controls.
+
+Validation: all 627 unit/API tests, Python compile and whitespace checks passed. The active career collection was not interrupted or restarted.
+
+## 27 October 2026 - Rocketlane India
+
+Registered Rocketlane in EMPLOYER_PORTALS using the existing Kula adapter with account `rocketlane`. The official board delivers the complete job array and full descriptions in its React Flight stream. The adapter decodes the delivered data without executing scripts, validates account identity, excludes confidential/unlisted jobs and requires India country metadata in office records. UTF-8 text references resolve by byte length; descriptions have no extraction length cap. No pagination or application requests are needed for this feed.
+
+Live read-only validation returned **31 unique India listings with 31 nonempty descriptions**, longest normalized body 8,681 characters. Foreign-only jobs are excluded; multinational jobs retain India offices. Separate IDs remain separate even with repeated titles. Inventory now contains 293 company/display-name entries. Existing role/experience filters apply; fresher eligibility and salary are not established. Verification did not import SQLite jobs or change snapshots; start career collection manually to import.
+
+Validation: all 624 unit/API tests, Python compile and whitespace checks passed; heuristic release scan reported no findings. Localhost was reloaded while idle.
+
+## 27 October 2026 - Teradata India
+
+Added `backend/fetchers/teradata.py`, registered as `teradata`. The current official careers site uses GR8 People. The public `/graphql` searchJobPostings query filters location by address India, returning public posting keys, titles, full descriptionHTML, primary/additional place names, totalCount and cursor pagination. No account or application requests are used.
+
+Live validation returned **85 unique India postings with 85 nonempty descriptions**, longest normalized body 9,262 characters, across five cursor pages. Returned place names must positively identify India. Full text is normalized without a length cap. Official `/jobs/{key}/{title-slug}` links were verified against a live detail page. Failed requests, GraphQL errors, invalid schemas, changing/mismatched totals, missing/repeated cursors, deadlines and empty descriptions remain explicit partial/failure evidence; prior pages are retained.
+
+Inventory now contains 292 company/display-name entries. This replaces the unresolved Workday lead. Existing role and experience filters apply. Verification did not import jobs into SQLite or rewrite exports; start career collection manually to import.
+
+Validation: all 624 unit/API tests, Python compile and whitespace checks passed. Heuristic release scan reported no findings.
+
 ## 25 October 2026
 
 These are dated checks, not guarantees of future availability or complete coverage.
@@ -80,3 +116,75 @@ Eightfold and Expedia now retry HTTP 429 at most three attempts. They honor Retr
 HRT still returned HTTP 403 with a challenge during this check. Expedia returned HTTP 403 (the supplied earlier run returned 429). Both sources remain unavailable to the collector; no recovered listings are claimed. Existing stored jobs remain intact. The changes improve transient recovery and diagnostics; they do not make access-denied sources available.
 
 Validation: 584 unit/API tests and Python compile checks passed; heuristic release scan reported no findings. The localhost app was reloaded after the active collection finished.
+
+## 26 October 2026 - Medtronic malformed rows and EXL experience
+
+Four legacy Medtronic rows in local storage had blank titles and a generic Workday homepage URL (three were reported in the reviewed export). Workday now rejects cards without a nonblank title and a `/job/` detail path, reporting malformed rows as partial-source evidence. The API excludes legacy blank-title rows from the career pool and subsequent exports without deleting them, changing tracking/removal state or rewriting old snapshots.
+
+EXL qualification bodies can state education followed by `5-8 years`, `8+ years` or `6-12 years` without the word experience. Experience requirements now recognize numeric ranges/plus counts after education context and exact role-title headings in the description. Plural `roles`/`positions` in clauses such as `8+ years in data engineering/ETL roles` are also recognized. Explicit preferences remain separate; months, degree/course durations and company-age statements do not become year requirements. The lower endpoint of a range is used. Existing rows are reparsed on API load, so no recollection or SQLite rewrite is required; unknown requirements remain visible.
+
+Validation: all 590 unit/API tests passed. A read-only scan found 113 stored EXL records containing the reported year patterns; none remained at one year or unknown after parsing. The reloaded localhost API returned zero blank-title Medtronic rows. Python compile and whitespace checks passed. Existing exported snapshots are unchanged; download a new JSON for corrected selection.
+
+## 27 October 2026 - Siemens Digital Industries Software
+
+Added `backend/fetchers/siemenssoftware.py`, separate from Siemens Healthineers. The public site uses DE Jobs search: POST `https://prod-search-api.jobsyn.org/api/v1/solr/search`, X-Origin `jobs.sw.siemens.com`, data `location=india`, page numbers and `num_items=10`. The public Nuxt site configuration supplies employer IDs 38591 and 38526. Supplying that employer configuration is essential: the unscoped service returns unrelated employers. Every saved row must match an allowed employer ID and `country_exact=India`.
+
+Full descriptions come from the site's documented-in-frontend public detail URL `https://microsites.dejobs.org/jobs-sw-siemens-com/data/{GUID}.json`, using `html_description`. Job GUID, requisition ID, title, employer and country are checked; expired detail records and unavailable text stay partial. Posting GUIDs are the stable storage IDs because different location listings can share a requisition number. Underscores in published title slugs are retained. Job links use the official `/{location}/{title}/{GUID}/job/` route. Search snippets are not substituted for missing full detail text.
+
+Pagination follows the reported page/end state, detects duplicate pages and changing totals, preserves partial rows and observes the collector deadline. No application, login or browser state is accessed. Inventory now contains 287 company/display-name entries. This is an India source, not a guarantee of fresher eligibility or an 8 LPA offer; existing role and experience filters apply. Live verification does not import jobs into SQLite; start career collection manually.
+
+Live validation: 61 of 61 unique India postings, all 61 with nonempty full descriptions; longest 11,199 characters. All 597 unit/API tests and compile/whitespace checks passed. Heuristic release scan reported no findings.
+
+## 27 October 2026 - Barracuda Bangalore
+
+Added `backend/fetchers/barracuda.py`, registered as `barracuda`. The supplied official careers page loads its full public JSON feed from the CareersRoom component's `data-panel-endpoint`, then filters in-browser. The collector discovers that same same-origin `/content/barracuda-corp/us/en/company/careers/...careers.json` endpoint and filters exactly `Bangalore, India`, preserving the supplied URL's location scope. There is no pagination: the single feed contains all 52 current global jobs.
+
+Live read-only validation retrieved **18 unique Bangalore listings, all 18 with nonempty descriptions**, longest 10,828 normalized characters. Full HTML description text is included directly in the feed. Only external posting IDs, nonblank titles, exact Bangalore locations, identity-matched public Jobvite detail links and description text enter the normalized records. Custom fields, application links and other metadata are not copied. No application, account or browser state is accessed. Duplicate/malformed rows and missing text produce partial results; invalid schemas cannot become a successful empty feed.
+
+Inventory now contains 288 company/display-name entries. Barracuda is removed from unresolved sources. Existing role and experience filters apply; these are not necessarily fresher openings. Verification did not import into SQLite or alter snapshots. Start career collection from the website to import.
+
+Validation: 603 unit/API tests, Python compile and whitespace checks passed; heuristic release scan reported no findings. Localhost was reloaded while both pipelines were idle.
+
+## 27 October 2026 - Axtria India and FDE India
+
+Added `backend/fetchers/axtria.py`, registered as `axtria`. The supplied official page exposes static cards under `#fde-career`, covering India, FDE India, US and global FDE tabs. The collector retains cards explicitly marked `data-india-job=true` or with an India location, excludes foreign/global cards, and deduplicates source IDs. Hyderabad-only cards gain India from the explicit India-tab marker. The page currently presents all cards at once; no pagination is needed.
+
+SuccessFactors details are read only from the employer's official linked host and company (`career10.successfactors.com`, `axtriaindiP`). The collector uses the exact published public/share-view links, without guessing tokens or using an account. The page title must identify the requisition and `.joqReqDescription .externalPosting` must contain a body. Form fields and application controls are excluded; text has no extraction length cap. LinkedIn-only cards are retained with empty descriptions, without visiting LinkedIn or accessing browser state.
+
+Live validation returned **17 unique India/FDE India listings, 10 with nonempty descriptions and 7 unavailable**; longest normalized retrieved body 4,543 characters. Two missing descriptions are LinkedIn-only. Five SuccessFactors pages remained unavailable, including the FDE India listing; their ordinary public views state the job cannot be viewed and may have been removed or closed. The exact published share links did not recover those bodies. Do not infer eligibility from missing text or mark those jobs rejected. The source correctly reports partial status and preserves incomplete cards.
+
+Inventory now contains 289 company/display-name entries. Existing experience/location filters apply; these listings are not verified fresher roles or salary offers. Live verification did not import SQLite data, alter exports or submit applications. Start career collection manually to import.
+
+Validation: 609 unit/API tests, Python compile and whitespace checks passed. Heuristic release scan reported no findings. Localhost was reloaded while both pipelines were idle.
+
+## 27 October 2026 - BMC Software India
+
+Added `backend/fetchers/bmcsoftware.py`, registered as `bmcsoftware`. The official Avature site is `jobs.bmc.com`, distinct from the previously rejected hospital Workday tenant. The supplied search preserves India location field `16484=[9406]`, format 5516, filter mode 1 and six records per page. The collector follows the actual Next link, validates that scope and increasing jobOffset, deduplicates numeric job IDs and checks the reported total. Malformed pages, changing totals, repeated pages, deadline stops and missing descriptions remain partial/failure evidence.
+
+Every listing needs a title, India location and a same-host `/Careers/JobDetail/.../{ID}` link. Details must have the same Job ID and Country India in Basic Information. Full text comes from the Description and Requirements content section, retaining qualifications without an extraction cap; navigation, forms and hidden fields are excluded. All collection is public HTTP; account and application operations are not used. Inventory now contains 290 company/display-name entries. Existing role/experience filters apply; configured jobs are not necessarily fresher roles. Live verification does not import SQLite jobs or change snapshots.
+
+Live validation: all 21 reported India postings retrieved as 21 unique IDs across four pages, all with nonempty descriptions; longest 7,363 normalized characters. All 615 unit/API tests, compile and whitespace checks passed; heuristic release scan reported no findings. Localhost was reloaded while idle.
+
+## 27 October 2026 - NCR Voyix APAC India
+
+Registered `ncrvoyix` in the existing Workday inventory (`backend/config/sources.py`): tenant `ncr`, server `wd1`, site `ext_apac`, India applied facet `Location_Country=c4f78be1a8f14da0ab49ce1162348a5e`, and full detail fetching enabled. The supplied APAC site resolves the previous `ext_non_us` board's missing India scope. Detail descriptions identify the company as NCR Voyix; this does not establish coverage of NCR Atleos or other employers.
+
+Live read-only validation returned **27 unique India jobs with 27 nonempty descriptions**, across offsets 0 and 20; longest normalized description 7,846 characters. Workday jobReqId is checked against each listing, and country metadata normalizes India locations. All existing malformed-card, pagination, deadline and partial-description safeguards apply. No separate adapter, application request, browser profile or account is needed. Inventory now contains 291 company/display-name entries. Existing role/experience filters apply; these are not necessarily fresher roles. Verification did not import into SQLite or change existing exports. Start career collection manually to import.
+
+Validation: 618 unit/API tests, Python compile and whitespace checks passed; heuristic release scan reported no findings. Localhost was reloaded while both pipelines were idle.
+
+## 27 October 2026 - Sprinto India
+
+Registered the case-sensitive `Sprinto` Lever account in LEVER with display name Sprinto. Lowercase `sprinto` returned 404; the supplied uppercase board and matching public postings API returned 36 jobs after an initial API timeout. The existing Lever adapter is used, with explicit positive India scoping for this account. Country and secondary-location metadata preserve India roles while excluding foreign-only and unknown generic remote jobs. Full text includes introduction, all headed lists and additional content without a cap.
+
+The live 36-record API response was processed by the adapter: **32 unique India listings, all 32 with nonempty descriptions**, longest 8,798 normalized characters. Four foreign-only roles were excluded. This check used the captured live API response to validate parsing without another network request. No job application, account, browser or SQLite mutation occurred. The collector uses existing bounded HTTP retries and reports failed requests rather than a successful empty board. Inventory now contains 294 company/display-name entries. Existing role/experience filters apply; junior eligibility and salary remain posting-specific. Start career collection manually to import.
+
+Validation: 626 unit/API tests, Python compile and whitespace checks passed; heuristic release scan reported no findings. Localhost was reloaded while idle.
+
+Validation: 628 unit/API tests, Python compile and whitespace checks passed. Localhost was reloaded after collection finished.
+
+Validation: 629 unit/API tests, Python compile and whitespace checks passed; heuristic release scan reported no findings. Localhost was reloaded while idle.
+
+## 28 October 2026: local transport setup
+
+Info Edge now also discovers PowerShell 7 in `runtime/tools/powershell/`, independent of launcher PATH. Standard and SmartRecruiters HTTP pools block at their worker capacity instead of discarding excess returned connections. A BlackRock HTTP 504 remains a remote request failure; exhausted description retries retain an explicit missing description and partial source status.

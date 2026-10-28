@@ -213,6 +213,11 @@ def fetch_workday(cfg, deadline=None):
             break
         for j in postings:
             ext_path = j.get("externalPath", "")
+            if (not isinstance(j.get('title'), str) or not j['title'].strip()
+                    or not isinstance(ext_path, str) or not ext_path.startswith('/job/')
+                    or '?' in ext_path or '#' in ext_path):
+                errors.append('listing missing title or job detail path')
+                continue
             bullets = j.get("bulletFields") or []
             req_id = bullets[0] if bullets else ext_path
             location = j.get("locationsText", "")

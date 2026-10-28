@@ -6,6 +6,16 @@ from backend.fetchers import zerodha, expedia
 
 
 class SourceSchemaUpdatesTests(unittest.TestCase):
+    def test_expedia_india_query_and_client_scope(self):
+        with patch.object(expedia.SESSION,'get',return_value=SimpleNamespace(status_code=200,text='HTML',raise_for_status=lambda:None)) as get:
+            self.assertEqual(expedia._get(2),'HTML')
+        self.assertEqual(get.call_args.kwargs['params'],{'mypage':2,'filter[country]':'India'})
+        def card(id,location):
+            return '<li class="Results__list__item"><a class="view-job-button" href="/job/R-'+id+'/"></a><h3 class="Results__list__title">Engineer</h3><h4 class="Results__list__location">'+location+'</h4></li>'
+        with patch.object(expedia,'_get',side_effect=[card('1','India - Bangalore')+card('2','United States - Indiana'),'<div></div>']),patch.object(expedia.time,'sleep'):
+            result=expedia.collect()
+        self.assertEqual([j['source_id'] for j in result],['R-1'])
+
     def test_zerodha_slug_and_nullable_location_retain_full_description(self):
         text = 'Video editing responsibilities. ' * 500 + 'Final qualification.'
         row = {'name':'video-editor','job_title':'Video Editor','location':None,'description':text}

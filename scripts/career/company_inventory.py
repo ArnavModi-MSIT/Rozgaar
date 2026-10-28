@@ -56,6 +56,11 @@ def render(date):
     for name, row in sorted(entries.items(), key=lambda item: item[0].casefold()):
         lines.append('| ' + name.replace('|', '\\|') + ' | ' + ', '.join('`'+key+'`' for key in sorted(row['keys']))
                      + ' | ' + ', '.join('`'+source+'`' for source in sorted(row['sources'])) + ' |')
+    lines.extend(['', '## Disabled sources', '',
+                  'Excluded from the active count and collection. Existing saved records and exports are retained.', '',
+                  '| Company | Source | Reason |', '|---|---|---|'])
+    for key, row in sorted(config.DISABLED_CAREER_SOURCES.items()):
+        lines.append(f"| {row['name']} | [{key}]({row['url']}) | {row['reason']} |")
     return '\n'.join(lines)+'\n'
 
 

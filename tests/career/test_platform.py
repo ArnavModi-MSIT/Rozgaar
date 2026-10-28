@@ -121,7 +121,7 @@ class PlatformTests(unittest.TestCase):
         self.assertEqual(self.client.get("/api/platform/state").json()["latest_export"]["remaining_count"], 3)
 
     def test_export_rejects_empty_duplicate_oversized_missing_and_hidden_ids(self):
-        ids = self.add_jobs(501)
+        ids = self.add_jobs(1001)
         self.assertEqual(self.export([]).status_code, 422)
         self.assertEqual(self.export(ids).status_code, 422)
         self.assertEqual(self.export([ids[0], ids[0]]).status_code, 409)
@@ -131,8 +131,8 @@ class PlatformTests(unittest.TestCase):
         self.assertFalse(self.rows("SELECT * FROM career_exports"))
 
     def test_adjustable_batch_sizes_preserve_order_metadata_and_exact_removal(self):
-        ids = self.add_jobs(501)
-        for limit in (50, 100, 250, 500):
+        ids = self.add_jobs(1001)
+        for limit in (50, 100, 250, 500, 1000):
             with self.subTest(limit=limit):
                 selected = list(reversed(ids[:limit]))
                 response = self.export(selected, limit=limit)
@@ -143,10 +143,10 @@ class PlatformTests(unittest.TestCase):
                 self.assertEqual([j["id"] for j in value["jobs"]], selected)
         result = self.remove(value["batch_id"]).json()
         self.assertEqual(result["ids"], selected)
-        self.assertEqual(result["removed"], 500)
-        self.assertEqual([r["id"] for r in self.rows("SELECT * FROM jobs WHERE dismissed=0")], ids[500:])
+        self.assertEqual(result["removed"], 1000)
+        self.assertEqual([r["id"] for r in self.rows("SELECT * FROM jobs WHERE dismissed=0")], ids[1000:])
         self.client.post("/api/restore", json={"ids": result["ids"]})
-        self.assertEqual(len(self.rows("SELECT * FROM jobs WHERE dismissed=0")), 501)
+        self.assertEqual(len(self.rows("SELECT * FROM jobs WHERE dismissed=0")), 1001)
 
     def test_selected_limit_allows_fewer_jobs_but_rejects_overflow_and_unsupported_size(self):
         ids = self.add_jobs(51)

@@ -25,6 +25,7 @@ could be added later if match quality on Expedia rows matters enough).
 
 import logging
 import time
+import re
 
 import requests
 from bs4 import BeautifulSoup
@@ -35,6 +36,7 @@ from .http_client import retry_after_delay, MAX_RETRY_AFTER_WAIT
 log = logging.getLogger("jobbot")
 
 BASE = "https://careers.expediagroup.com"
+SEARCH_URL = f"{BASE}/jobs/?filter%5Bcountry%5D=India"
 PAGE_URL = f"{BASE}/calc-results/"
 TIMEOUT = 15
 RETRIES = 3
@@ -48,7 +50,7 @@ SESSION.headers.update({
         "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
         "(KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36"
     ),
-    "Referer": f"{BASE}/jobs/",
+    "Referer": SEARCH_URL,
 })
 
 
@@ -57,7 +59,7 @@ class ListingUnavailable(RuntimeError):
 
 
 def _get(page):
-    params = {"mypage": page}
+    params = {"mypage": page, "filter[country]": "India"}
     for attempt in range(RETRIES):
         try:
             r = SESSION.get(PAGE_URL, params=params, timeout=TIMEOUT)
@@ -152,8 +154,10 @@ def fetch_all(deadline=None):
             if job["source_id"] in seen_ids:
                 continue
             seen_ids.add(job["source_id"])
-            jobs.append(job)
             new_on_page += 1
+            # Preserve the requested country even if pagination ignores it.
+            if re.match(r'^\s*India(?:\s*[-,;]|\s*$)',job['location'],re.I):
+                jobs.append(job)
         if new_on_page == 0:
             break
         page += 1

@@ -11,8 +11,8 @@ def utc_time(value):
 
 
 def create_export(conn, ids, summaries, filters, limit=100):
-    if limit not in (50, 100, 250, 500) or not 1 <= len(ids) <= limit or len(set(ids)) != len(ids):
-        raise ValueError("Choose distinct career jobs within the selected batch size (50, 100, 250 or 500).")
+    if limit not in (50, 100, 250, 500, 1000) or not 1 <= len(ids) <= limit or len(set(ids)) != len(ids):
+        raise ValueError("Choose distinct career jobs within the selected batch size (50, 100, 250, 500 or 1000).")
     slots = ",".join("?" for _ in ids)
     cursor = conn.execute(f"SELECT * FROM jobs WHERE id IN ({slots}) AND dismissed=0 AND source NOT GLOB 'reader_*'", ids)
     columns = [item[0] for item in cursor.description]

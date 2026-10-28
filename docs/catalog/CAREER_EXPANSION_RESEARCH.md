@@ -2,7 +2,7 @@
 
 Checked online and compared with configured sources: 26 October 2026.
 
-This is the initial research snapshot. **EXL, Acceldata, HPE, Arista, Celigo and FNZ are connected** in the [50-company expansion](CAREER_EXPANSION_20261026.md). **IBM, Info Edge, Josh Technology Group, Publicis Sapient and HSBC were subsequently connected** through their public career sources. The other two remain integration leads. HP and HPE are separate; Siemens Healthineers and Siemens Digital Industries Software/EDA are separate.
+This is the initial research snapshot. **EXL, Acceldata, HPE, Arista, Celigo and FNZ are connected** in the [50-company expansion](CAREER_EXPANSION_20261026.md). **IBM, Info Edge, Josh Technology Group, Publicis Sapient, HSBC Siemens Digital Industries Software and Barracuda were subsequently connected** through their public career sources. All employers in this initial research snapshot are now connected; current source checks are recorded separately. HP and HPE are separate; Siemens Healthineers and Siemens Digital Industries Software/EDA are separate.
 
 Amounts are historical campus **package/CTC examples in INR LPA**, not verified fixed base salaries or guaranteed off-campus offers. A campus placement is evidence of graduate hiring, not proof of a currently open role for the 2027 batch. Current eligibility must be checked per posting.
 

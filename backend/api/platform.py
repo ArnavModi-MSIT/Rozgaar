@@ -61,8 +61,8 @@ def sync(service=Depends(authorize)):
 
 
 class CareerExportRequest(BaseModel):
-    ids: list[str] = Field(min_length=1, max_length=500)
-    limit: Literal[50, 100, 250, 500] = 100
+    ids: list[str] = Field(min_length=1, max_length=1000)
+    limit: Literal[50, 100, 250, 500, 1000] = 100
     filters: dict[str, str | bool | int | float | None] = Field(default_factory=dict, max_length=20)
 
 

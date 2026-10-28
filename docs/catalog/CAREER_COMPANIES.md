@@ -1,8 +1,8 @@
 # Career-page company inventory
 
-Updated: 26 October 2026.
+Updated: 27 October 2026.
 
-**286 company/display-name entries** configured in the career-page pipeline. Multiple boards or student feeds for the same display name share one row; separate divisions may retain their own display names.
+**292 company/display-name entries** configured in the career-page pipeline. Multiple boards or student feeds for the same display name share one row; separate divisions may retain their own display names.
 
 This is a configuration inventory, not a live health check, a count of companies with current jobs, or a guarantee of complete descriptions. It excludes the separate URL-reader pipeline.
 
@@ -44,13 +44,16 @@ The older `COMPANY_SOURCES.json` is a curated 75-company audit input, not the fu
 | Atlassian | `atlassian` | `atlassian (dedicated adapter)` |
 | Autodesk | `autodesk` | `workday` |
 | Automattic | `automattic` | `automattic (dedicated adapter)` |
+| Axtria | `axtria` | `axtria (dedicated adapter)` |
 | Baker Hughes | `bakerhughes` | `workday_india` |
 | Bank Of America | `bank_of_america` | `bank_of_america (dedicated adapter)` |
 | Barclays | `barclays` | `barclays (dedicated adapter)` |
+| Barracuda | `barracuda` | `barracuda (dedicated adapter)` |
 | BitGo | `bitgo` | `greenhouse` |
 | BlackRock | `blackrock` | `blackrock (dedicated adapter)` |
 | Blackstone | `blackstone` | `workday_india` |
 | Bloomberg | `bloomberg` | `bloomberg (dedicated adapter)` |
+| BMC Software | `bmcsoftware` | `bmcsoftware (dedicated adapter)` |
 | BNY | `bny` | `employer_portals / oracle` |
 | Boeing | `boeing` | `workday_india` |
 | Booking.com | `booking` | `booking (dedicated adapter)` |
@@ -102,7 +105,6 @@ The older `COMPANY_SOURCES.json` is a curated 75-company audit input, not the fu
 | Ericsson | `ericsson` | `eightfold` |
 | Evalueserve | `evalueserve` | `employer_portals / darwinbox` |
 | EXL | `exl` | `oracle` |
-| Expedia Group | `expedia` | `expedia (dedicated adapter)` |
 | ExxonMobil | `exxonmobil` | `employer_portals / successfactors` |
 | F5 | `f5` | `workday_india` |
 | FactSet | `factset` | `workday_india` |
@@ -138,7 +140,6 @@ The older `COMPANY_SOURCES.json` is a curated 75-company audit input, not the fu
 | Honeywell | `honeywell` | `employer_portals / oracle` |
 | HP | `hp` | `workday` |
 | HSBC | `hsbc` | `hsbc (dedicated adapter)` |
-| Hudson River Trading | `hrt` | `hrt (dedicated adapter)` |
 | IBM | `ibm` | `ibm (dedicated adapter)` |
 | Icertis | `icertis` | `employer_portals / oracle` |
 | IMC | `imc` | `greenhouse` |
@@ -188,6 +189,7 @@ The older `COMPANY_SOURCES.json` is a curated 75-company audit input, not the fu
 | Nasdaq | `nasdaq` | `workday_india` |
 | NatWest Group | `natwest` | `workday_india` |
 | Navi | `navi` | `ashby` |
+| NCR Voyix | `ncrvoyix` | `workday` |
 | NetApp | `netapp` | `netapp (dedicated adapter)` |
 | Netflix | `netflix` | `netflix (dedicated adapter)` |
 | Netomi | `netomi` | `lever` |
@@ -232,6 +234,7 @@ The older `COMPANY_SOURCES.json` is a curated 75-company audit input, not the fu
 | Renesas Electronics | `RenesasElectronics` | `smartrecruiters` |
 | RingCentral | `ringcentral` | `workday_india` |
 | Rippling | `rippling` | `rippling (dedicated adapter)` |
+| Rocketlane | `rocketlane` | `employer_portals / kula` |
 | Roku | `roku` | `greenhouse` |
 | Rubrik | `rubrik` | `greenhouse` |
 | S&P Global | `spglobal` | `icims` |
@@ -242,6 +245,7 @@ The older `COMPANY_SOURCES.json` is a curated 75-company audit input, not the fu
 | Sarvam | `sarvam` | `ashby` |
 | ServiceNow | `servicenow` | `smartrecruiters` |
 | Shell | `shell` | `workday_india` |
+| Siemens Digital Industries Software | `siemenssoftware` | `siemenssoftware (dedicated adapter)` |
 | Siemens Healthineers | `siemenshealthineers` | `workday_india` |
 | Sigmoid Analytics | `sigmoid` | `greenhouse` |
 | Silicon Labs | `silabs` | `workday_india` |
@@ -251,6 +255,7 @@ The older `COMPANY_SOURCES.json` is a curated 75-company audit input, not the fu
 | Snowflake | `snowflake` | `ashby` |
 | Spinny | `spinny` | `employer_portals / darwinbox` |
 | Sprinklr | `sprinklr` | `workday` |
+| Sprinto | `Sprinto` | `lever` |
 | Squarepoint Capital | `squarepointcapital` | `greenhouse` |
 | Standard Chartered | `standardchartered` | `successfactors` |
 | Starburst | `starburst` | `greenhouse` |
@@ -261,6 +266,7 @@ The older `COMPANY_SOURCES.json` is a curated 75-company audit input, not the fu
 | Swiss Re | `swissre` | `swissre (dedicated adapter)` |
 | Target | `target` | `target (dedicated adapter)` |
 | Tekion | `tekion` | `ashby` |
+| Teradata | `teradata` | `teradata (dedicated adapter)` |
 | Tesco | `tesco` | `tesco (dedicated adapter)` |
 | Thales | `thales` | `workday_india` |
 | Thomson Reuters | `thomsonreuters` | `workday_india` |
@@ -300,3 +306,12 @@ The older `COMPANY_SOURCES.json` is a curated 75-company audit input, not the fu
 | ZoomInfo | `zoominfo` | `greenhouse` |
 | ZS Associates | `zs` | `zs (dedicated adapter)` |
 | Zscaler | `zscaler` | `greenhouse` |
+
+## Disabled sources
+
+Excluded from the active count and collection. Existing saved records and exports are retained.
+
+| Company | Source | Reason |
+|---|---|---|
+| Expedia Group | [expedia](https://careers.expediagroup.com/jobs/?filter%5Bcountry%5D=India) | Disabled 27 October 2026: HTTP 403; earlier HTTP 429 rate limiting. |
+| Hudson River Trading | [hrt](https://www.hudsonrivertrading.com/careers/?locations=mumbai%2C) | Disabled 27 October 2026: HTTP 403 access challenge. |

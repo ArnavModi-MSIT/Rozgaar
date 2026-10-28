@@ -39,7 +39,7 @@ SESSION = requests.Session()
 SESSION.headers["User-Agent"] = "jobbot/1.0"
 # collect() can make 16 Greenhouse/Lever/Ashby requests concurrently. Keep
 # that many pooled connections instead of triggering urllib3's pool-full logs.
-SESSION.mount("https://", HTTPAdapter(pool_connections=16, pool_maxsize=16))
+SESSION.mount("https://", HTTPAdapter(pool_connections=16, pool_maxsize=16, pool_block=True))
 
 _TAG_RE = re.compile(r"<[^>]+>")
 _BLOCK_BREAK_RE = re.compile(r"</(p|div|li|br|h[1-6])\s*/?>", re.I)
@@ -184,7 +184,7 @@ def _portcast_india_locations(job):
 
 
 def _lever_location(slug, job):
-    if slug in INDIA_BOARDS:
+    if slug in INDIA_BOARDS or slug == 'Sprinto':
         categories = job.get("categories") or {}
         return _expansion_location(categories.get("location") or "", categories.get("allLocations") or [], job.get("country"))
     if slug == "ion" and (job.get("country") or "").upper() == "IN":
@@ -215,7 +215,7 @@ def fetch_lever(slug):
         raise RuntimeError(f"lever board {slug}: expected postings list")
     jobs = []
     for j in data:
-        if slug in INDIA_BOARDS and not _lever_location(slug, j):
+        if (slug in INDIA_BOARDS or slug == 'Sprinto') and not _lever_location(slug, j):
             continue
         if slug in {"ion", "coupa"} and (j.get("country") or "").upper() != "IN":
             continue

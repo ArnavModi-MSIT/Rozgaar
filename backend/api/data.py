@@ -84,6 +84,7 @@ def _load_jobs_df():
                  EXISTS(SELECT 1 FROM career_export_items WHERE job_id=jobs.id) AS exported
                FROM jobs
                WHERE dismissed = 0
+                 AND TRIM(COALESCE(title, '')) <> ''
                  AND source NOT GLOB 'reader_*'
                  AND source NOT IN ('unstop', 'linkedin', 'internshala', 'internshala_jobs', 'internshala_internships')
                ORDER BY first_seen DESC""", conn

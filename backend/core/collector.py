@@ -9,11 +9,16 @@ from concurrent.futures import ThreadPoolExecutor
 
 import backend.config as config
 from backend.fetchers import career_html, tredence, myntra, makemytrip, ubs, pwc, ea, swissre, netapp, employer_portals
-from backend.fetchers import qualcomm_students, morgan_stanley_students, unitedhealthgroup, zepto, hrt, bloomberg, linkedin_company, netflix, workday_india, automattic, zerodha, amd, booking, target, tesco, juspay, mediatek, millennium, ainterviews, amazon, apple, atlassian, bank_of_america, barclays, blackrock, deloitte, deshaw, deutsche_bank, eightfold, expedia, flipkart, goldman_sachs, google_careers, icims, indiamart, intuit, mastercard_workday, meta, oracle, paypal, phenom, quadeye, rippling, smartrecruiters, standard, successfactors, swiggy, tower_research, uber, workable, workday, zs
+from backend.fetchers import qualcomm_students, morgan_stanley_students, unitedhealthgroup, zepto, bloomberg, linkedin_company, netflix, workday_india, automattic, zerodha, amd, booking, target, tesco, juspay, mediatek, millennium, ainterviews, amazon, apple, atlassian, bank_of_america, barclays, blackrock, deloitte, deshaw, deutsche_bank, eightfold, flipkart, goldman_sachs, google_careers, icims, indiamart, intuit, mastercard_workday, meta, oracle, paypal, phenom, quadeye, rippling, smartrecruiters, standard, successfactors, swiggy, tower_research, uber, workable, workday, zs
 from backend.fetchers.result import CollectionResult
 from backend.fetchers import ibm
 from backend.fetchers import infoedge
 from backend.fetchers import joshtechnologygroup
+from backend.fetchers import teradata
+from backend.fetchers import bmcsoftware
+from backend.fetchers import axtria
+from backend.fetchers import barracuda
+from backend.fetchers import siemenssoftware
 from backend.fetchers import hsbc
 from backend.fetchers import publicissapient
 log = logging.getLogger("jobbot")
@@ -25,6 +30,11 @@ log = logging.getLogger("jobbot")
 # runs once/day), but keeping the fast/high-yield platforms first still
 # means partial logs are more useful if something fails partway through.
 PLATFORMS = [
+    ("teradata", lambda deadline: teradata.collect(deadline)),
+    ("bmcsoftware", lambda deadline: bmcsoftware.collect(deadline)),
+    ("axtria", lambda deadline: axtria.collect(deadline)),
+    ("barracuda", lambda deadline: barracuda.collect(deadline)),
+    ("siemenssoftware", lambda deadline: siemenssoftware.collect(deadline)),
     ("hsbc", lambda deadline: hsbc.collect(deadline)),
     ("publicissapient", lambda deadline: publicissapient.collect(deadline)),
     ("joshtechnologygroup", lambda deadline: joshtechnologygroup.collect(deadline)),
@@ -50,7 +60,6 @@ PLATFORMS = [
     ("morgan_stanley_students", lambda deadline: morgan_stanley_students.collect(deadline)),
     ("unitedhealthgroup", lambda deadline: unitedhealthgroup.collect(deadline)),
     ("zepto", lambda deadline: zepto.collect(deadline)),
-    ("hrt", lambda deadline: hrt.collect(deadline)),
     ("bloomberg", lambda deadline: bloomberg.collect(deadline)),
     ("linkedin_company", lambda deadline: linkedin_company.collect(deadline)),
     ("workday_india", lambda deadline: workday_india.collect(config.WORKDAY_INDIA, deadline)),
@@ -87,7 +96,6 @@ PLATFORMS = [
     ("google_careers", lambda deadline: google_careers.collect(config.GOOGLE_CAREERS, deadline=deadline)),
     ("amazon", lambda deadline: amazon.collect(config.AMAZON, deadline=deadline)),
     ("atlassian", lambda deadline: atlassian.collect(deadline=deadline)),
-    ("expedia", lambda deadline: expedia.collect(deadline=deadline)),
     ("apple", lambda deadline: apple.collect(deadline=deadline)),
     ("goldman_sachs", lambda deadline: goldman_sachs.collect(deadline=deadline)),
     ("deutsche_bank", lambda deadline: deutsche_bank.collect(deadline=deadline)),

@@ -3,6 +3,14 @@ import re
 
 DISPLAY_NAMES = {
     "hsbc": "HSBC",
+    "barracuda": "Barracuda",
+    "axtria": "Axtria",
+    "ncrvoyix": "NCR Voyix",
+    "bmcsoftware": "BMC Software",
+    "teradata": "Teradata",
+    "rocketlane": "Rocketlane",
+    "Sprinto": "Sprinto",
+    "siemenssoftware": "Siemens Digital Industries Software",
     "publicissapient": "Publicis Sapient",
     "joshtechnologygroup": "Josh Technology Group",
     "infoedge": "Info Edge",

@@ -12,6 +12,7 @@ import time
 from concurrent.futures import ThreadPoolExecutor
 
 import requests
+from requests.adapters import HTTPAdapter
 
 from backend.fetchers.http_client import get_json
 from backend.fetchers.standard import strip_html
@@ -19,6 +20,9 @@ from backend.fetchers.standard import strip_html
 log = logging.getLogger("jobbot")
 SESSION = requests.Session()
 SESSION.headers["User-Agent"] = "jobbot/1.0"
+# Eight company workers each use up to five detail workers. Bound connections
+# at that concurrency and reuse them instead of discarding returned sockets.
+SESSION.mount("https://", HTTPAdapter(pool_connections=8, pool_maxsize=40, pool_block=True))
 
 BASE = "https://api.smartrecruiters.com/v1/companies"
 

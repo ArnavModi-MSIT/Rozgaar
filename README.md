@@ -4,7 +4,7 @@ Rozgaar is a localhost workspace for collecting job listings and exporting JSON 
 
 ## Features
 
-- **Career pages:** employer and ATS adapters, role/location filters, optional local resume matching, and JSON batches of 50, 100, 250 or 500 jobs.
+- **Career pages:** employer and ATS adapters, role/location filters, optional local resume matching, and JSON batches of 50, 100, 250, 500 or 1000 jobs.
 - **URL reader:** separate browser-based readers for LinkedIn, Internshala, Naukri, Instahyre, Wellfound and Indeed, with checkpoints and bounded stall recovery.
 - **Review workflow:** download a batch, then optionally hide its exact members. Saved jobs, notes and application tracking stay local.
 - **Description evidence:** flag missing text, department placeholders, known boilerplate and possible truncation; group repeated text without merging separate requisitions.
@@ -19,7 +19,7 @@ The [26 October expansion](docs/catalog/CAREER_EXPANSION_20261026.md) adds 50 em
 
 Requires Python **3.10**, Node.js **22** with npm, and Google Chrome. Dependencies and optional model weights require internet access during setup. Windows is the supported development environment; other platforms have not been verified.
 
-The Info Edge career source additionally requires **PowerShell 7** (`pwsh` on PATH, or the standard `Program Files/PowerShell/7` installation). It uses the native Windows HTTP/2 client for Zwayam's public API; no account or browser cookies are needed. If PowerShell 7 is missing, that source reports a failure independently of other collectors. See [Microsoft's installation guide](https://learn.microsoft.com/powershell/scripting/install/installing-powershell-on-windows).
+The Info Edge career source additionally requires **PowerShell 7** (`pwsh` on PATH, a full portable distribution in `runtime/tools/powershell/`, or the standard `Program Files/PowerShell/7` installation). It uses the native Windows HTTP/2 client for Zwayam's public API; no account or browser cookies are needed. If PowerShell 7 is missing, that source reports a failure independently of other collectors. See [Microsoft's installation guide](https://learn.microsoft.com/powershell/scripting/install/installing-powershell-on-windows).
 
 Clone Rozgaar and set up the project in PowerShell:
 

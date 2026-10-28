@@ -30,9 +30,9 @@ class PublicTransport:
     def __enter__(self):
         executable = shutil.which('pwsh')
         if not executable:
-            candidate = Path(os.environ.get('ProgramFiles', 'C:/Program Files'))/'PowerShell/7/pwsh.exe'
-            if candidate.is_file():
-                executable = str(candidate)
+            candidates = [ROOT/'runtime/tools/powershell/pwsh.exe',
+                Path(os.environ.get('ProgramFiles', 'C:/Program Files'))/'PowerShell/7/pwsh.exe']
+            executable = next((str(path) for path in candidates if path.is_file()), None)
         if not executable:
             raise RuntimeError('Info Edge requires PowerShell 7 (pwsh). See README.md; other career sources remain independent.')
         self.process = subprocess.Popen([executable, '-NoLogo', '-NoProfile', '-NonInteractive', '-File',
