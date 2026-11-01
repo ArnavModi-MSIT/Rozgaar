@@ -1,6 +1,6 @@
-# Rozgaar
+# Rojgaar
 
-Rozgaar is a localhost workspace for collecting job listings and exporting JSON batches for manual shortlisting. Built with Python, FastAPI, React, SQLite and Playwright.
+Rojgaar is a localhost workspace for collecting job listings and exporting JSON batches for manual shortlisting. Built with Python, FastAPI, React, SQLite and Playwright.
 
 ## Features
 
@@ -15,17 +15,19 @@ See the [career-page company inventory](docs/catalog/CAREER_COMPANIES.md) for al
 
 The [26 October expansion](docs/catalog/CAREER_EXPANSION_20261026.md) adds 50 employers with live India feed/description checks. Graduate pay remains unverified for many of them. [Unresolved source names](docs/catalog/CAREER_SOURCES_TO_FIND.md) are kept separately.
 
+The [30 October target check](docs/catalog/CAREER_EXPANSION_20261030.md) covers the supplied 100-company screening list: 27 new feeds (25 populated, two empty India monitors), one existing alias and 72 unresolved targets. Counts and source checks are separate from pay and fresher eligibility.
+
 ## Setup (Windows)
 
 Requires Python **3.10**, Node.js **22** with npm, and Google Chrome. Dependencies and optional model weights require internet access during setup. Windows is the supported development environment; other platforms have not been verified.
 
 The Info Edge career source additionally requires **PowerShell 7** (`pwsh` on PATH, a full portable distribution in `runtime/tools/powershell/`, or the standard `Program Files/PowerShell/7` installation). It uses the native Windows HTTP/2 client for Zwayam's public API; no account or browser cookies are needed. If PowerShell 7 is missing, that source reports a failure independently of other collectors. See [Microsoft's installation guide](https://learn.microsoft.com/powershell/scripting/install/installing-powershell-on-windows).
 
-Clone Rozgaar and set up the project in PowerShell:
+Clone Rojgaar and set up the project in PowerShell:
 
 ```powershell
 git clone https://github.com/ArnavModi-MSIT/Rozgaar.git
-Set-Location Rozgaar
+Set-Location Rojgaar
 py -3.10 -m venv runtime/python
 & '.\runtime\python\Scripts\python.exe' -m pip install -r requirements.txt
 Push-Location frontend
@@ -34,7 +36,7 @@ npm run build
 Pop-Location
 ```
 
-Then double-click **Start Rozgaar.cmd**, or run:
+Then double-click **Start Rojgaar.cmd**, or run:
 
 ```powershell
 & '.\runtime\python\Scripts\python.exe' start.py
@@ -76,7 +78,7 @@ Use the exact stored filename. `--latest` and `--input path/to/export.json` are 
 | `backend/config/` | Sources, matching rules and display names |
 | `frontend/src/` | React interface |
 | `url_reader/` | Browser adapters, checkpoint/history storage and watchdog |
-| `rozgaar/` | Shared paths and localhost launcher |
+| `rojgaar/` | Shared paths and localhost launcher |
 | `scripts/` | Checks, audits and maintenance tools |
 | `tests/` | Synthetic unit/API tests and intercepted browser fixtures |
 | `examples/` | Synthetic matcher input |

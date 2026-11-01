@@ -8,7 +8,7 @@ import json
 from pathlib import Path
 import re
 import subprocess
-from rozgaar.paths import ROOT
+from rojgaar.paths import ROOT
 
 PATTERNS = {
     'private_key': re.compile(rb'-----BEGIN (?:RSA |EC |OPENSSH )?PRIVATE KEY-----'),

@@ -1,6 +1,6 @@
 # Architecture
 
-Rozgaar is a local, single-user application. The launcher serves the React build and FastAPI on `127.0.0.1:8000`. Startup does not collect jobs. Shared filesystem locations are defined in `rozgaar/paths.py`.
+Rojgaar is a local, single-user application. The launcher serves the React build and FastAPI on `127.0.0.1:8000`. Startup does not collect jobs. Shared filesystem locations are defined in `rojgaar/paths.py`.
 
 ## Career pipeline
 
@@ -40,4 +40,6 @@ Do not commit SQLite stores, exports, resumes, browser profiles, model weights, 
 
 HTTP connection reuse is bounded at 16 connections per host for standard boards and 40 for SmartRecruiters (eight boards with five detail workers each). Info Edge can discover a full portable PowerShell distribution in ignored `runtime/tools/powershell/` when the launcher PATH lacks `pwsh`.
 
-HTTP connection reuse is bounded at 16 connections per host for standard boards and 40 for SmartRecruiters (eight boards with five detail workers each). Info Edge can discover a full portable PowerShell distribution in ignored `runtime/tools/powershell/` when the launcher PATH lacks `pwsh`.
+The 30 October target batch is declared separately in `backend/config/career_targets_20261030.py` and registered into the existing inventories. Its standard boards join the positive-India scope set. Medpace and Epsilon use `jibe.py` through `employer_portals`, validating country and employer/brand on every row and retaining full returned descriptions. Audit outcomes for all 100 targets live in `docs/catalog/CAREER_TARGETS_20261030.json`; unresolved names are not registered, and Course5 reuses the existing C5i source.
+
+United Airlines is an employer-portal adapter in `unitedairlines.py`, using the anonymous Phenom country-filtered search. It keeps all India categories, paginates to the live total, checks detail identity/country and preserves the full external description and qualifications. Only the standard normalized job fields are returned; public search/detail payloads also contain metadata that must not be copied into job exports. Interrupted listing/detail reads remain partial.

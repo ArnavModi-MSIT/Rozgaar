@@ -1,5 +1,7 @@
 # Priority career sources still to connect
 
+The newer [30 October 100-company check](CAREER_EXPANSION_20261030.md#unresolved-companies) records **72 unresolved names**, their discovered pages and individual blockers. Its [machine-readable manifest](CAREER_TARGETS_20261030.json) covers all 100 outcomes, including 27 connected feeds and the Course5/C5i alias. The older notes below remain valid for their specific sources.
+
 Updated: 26 October 2026. These companies are **not** counted among the 50 new working feeds. A normal official careers/search URL or one real India job-detail URL is sufficient to investigate further; no credentials are needed.
 
 | Company | What remains unresolved |
@@ -35,3 +37,7 @@ BMC Software is now connected through its official jobs.bmc.com India search. Se
 NCR Voyix is now connected through the supplied `ncr/ext_apac` Workday board with the India country facet. See [Source maintenance](../SOURCE_STATUS.md).
 
 Sprinto is now connected through its case-sensitive Lever board, with 32 India listings/descriptions verified on 27 October. See [Source maintenance](../SOURCE_STATUS.md).
+
+United Airlines is now connected using its public India-wide Phenom feed: 19 unique India postings with 19 nonempty descriptions verified on 30 October (13 Digital Technology, six other categories). See the target report for the exact scope.
+
+[Follow-up checks for 20 targets](CAREER_RETRY_20_20261030.md)

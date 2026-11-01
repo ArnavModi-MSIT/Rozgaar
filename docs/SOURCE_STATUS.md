@@ -188,3 +188,23 @@ Validation: 629 unit/API tests, Python compile and whitespace checks passed; heu
 ## 28 October 2026: local transport setup
 
 Info Edge now also discovers PowerShell 7 in `runtime/tools/powershell/`, independent of launcher PATH. Standard and SmartRecruiters HTTP pools block at their worker capacity instead of discarding excess returned connections. A BlackRock HTTP 504 remains a remote request failure; exhausted description retries retain an explicit missing description and partial source status.
+
+## 30 October 2026: 100-company target batch
+
+Read-only public checks established 24 new feeds: 22 populated and two empty India monitors (Boomi and Open Financial). They returned 757 India listings, including one Clear record with experience metadata but no source JD; Clear reports partial. Course5 reuses C5i. The 75 unconnected targets and their blockers are in [the target report](catalog/CAREER_EXPANSION_20261030.md) and [complete manifest](catalog/CAREER_TARGETS_20261030.json). All-role source availability does not prove fresher eligibility, data-role availability or INR 8 LPA compensation. New declarations are in `career_targets_20261030.py`; the previous expansion is unchanged. No database import or application was performed during validation.
+
+## 30 October 2026: Inquizity supplied URLs remain blocked
+
+The correct search page is `https://inquizity.com/careers-at-inquizity/`, with sample detail `https://inquizity.com/operations-consultant-vacancy-page/`. Both returned HTTP 406 and an explicit Mod_Security rejection to ordinary local HTTP GET requests; the public WordPress pages API was also rejected. Corrected links and blocker recorded in the 100-target manifest/report. No unverified active collector was added, and no restriction was bypassed. Department tabs must all be covered if this source is later enabled.
+
+## 30 October 2026: United Airlines India
+
+The supplied Digital Technology page works through its public Phenom widget and full job detail JSON. Verified 19 India-wide requisitions, of which 13 are Digital Technology. The collector retains all India categories, including Corporate analyst positions. All 19 returned nonempty full external descriptions and qualifications; longest normalized text 7,217 characters. `unitedairlines.py` verifies public employer/refNum, requisition, title, external visibility and India country; it ignores application links, internal HR and recruiter fields. Pagination follows the live total with no fixed 19-record cap. Empty/blocked/changed responses fail or report partial, preserving known jobs. The target batch now has 25 sources (23 populated, two empty), one existing alias and 74 unresolved names; inventory 317 entries.
+
+## 30 October: next 20 unresolved companies
+
+Retried 20 public careers pages; connected DataWeave with one India Technical Architect posting and a 5030-character description. No fresher eligibility inferred. The other 19 blockers are in [the follow-up report](catalog/CAREER_RETRY_20_20261030.md). Inventory now 318; target batch 26 feeds, 73 unresolved.
+
+## 30 October: Kissht Workline
+
+276 unique India postings and 276 nonempty stored text fields verified on the user-supplied app1596 portal. Partial status reflects brief/placeholder source descriptions. All rows returned in one anonymous listing response; no hard-coded 276 cap. Public detail pages only; candidate/account/application operations excluded. Inventory 319, target sources 27, unresolved 72.

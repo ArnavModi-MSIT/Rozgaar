@@ -14,6 +14,8 @@ log = logging.getLogger("jobbot")
 BASE = "https://careers.bankofamerica.com"
 SEARCHES = (("general", "jobssearchservlet"), ("students", "campusjobssearchservlet"))
 MAX_RESULTS_PER_SEARCH = 1000
+PAGE_SIZE = 100
+LISTING_TIMEOUT = 30
 
 
 def _description(html):
@@ -29,14 +31,27 @@ def collect(deadline=None):
             if deadline and time.monotonic() >= deadline:
                 errors.append(f"{label}: deadline reached")
                 continue
-            payload = get_json(session, f"{BASE}/services/{servlet}", params={
-                "start": 0, "rows": MAX_RESULTS_PER_SEARCH, "search": "jobsByLocation", "searchstring": "India",
-            })
-            if not isinstance(payload, dict) or not isinstance(payload.get("jobsList"), list) or not isinstance(payload.get("totalMatches"), int):
-                errors.append(f"{label}: invalid listing response")
-                continue
-            rows, total = payload["jobsList"], payload["totalMatches"]
-            if len(rows) < total:
+            rows, total, failed = [], None, False
+            while total is None or len(rows) < total:
+                if deadline and time.monotonic() >= deadline:
+                    errors.append(f"{label}: deadline reached")
+                    break
+                payload = get_json(session, f"{BASE}/services/{servlet}", timeout=LISTING_TIMEOUT, params={
+                    "start": len(rows), "rows": PAGE_SIZE, "search": "jobsByLocation", "searchstring": "India",
+                })
+                if payload is None:
+                    errors.append(f"{label}: listing request failed at offset {len(rows)}")
+                    failed = True
+                    break
+                if not isinstance(payload, dict) or not isinstance(payload.get("jobsList"), list) or not isinstance(payload.get("totalMatches"), int):
+                    errors.append(f"{label}: invalid listing response")
+                    failed = True
+                    break
+                total = min(payload["totalMatches"], MAX_RESULTS_PER_SEARCH)
+                if not payload["jobsList"]:
+                    break
+                rows.extend(payload["jobsList"])
+            if total is not None and len(rows) < total and not failed:
                 errors.append(f"{label}: received {len(rows)} of {total} listings")
             for row in rows:
                 if deadline and time.monotonic() >= deadline:

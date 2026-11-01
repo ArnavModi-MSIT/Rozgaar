@@ -13,4 +13,11 @@ class RoleYearsTests(unittest.TestCase):
  def test_unrelated_years_excluded(self):
   for text in ['At least 3 years in business.', '2 years in a degree program.', '5 years as an established company.']:
    self.assertIsNone(extract_min_experience(text),text)
+ def test_unitless_years_of_experience_label(self):
+  # IBM Careers: "Years of Experience:5 - 10" has no unit after the number.
+  ibm='Technical Solution Optimization: Experience applying technical expertise.\n\nYears of Experience:5 - 10\n\nABOUT BUSINESS UNIT'
+  self.assertEqual(extract_min_experience(ibm),5)
+  self.assertEqual(extract_min_experience('<p>Years of Experience: 3+</p>'),3)
+  self.assertEqual(extract_min_experience('Experience (years): 0-1'),0)
+  self.assertIsNone(extract_min_experience('Years of Experience: 6 months'))
 if __name__=='__main__': unittest.main()

@@ -609,6 +609,8 @@ DISPLAY_NAMES.update({
 # Keep the dated bulk expansion declarative and separate from older source notes.
 from .career_expansion import register as _register_expansion
 _register_expansion(globals())
+from .career_targets_20261030 import register as _register_targets
+_register_targets(globals())
 
 
 # Retained for documentation; these sources are not registered collectors.

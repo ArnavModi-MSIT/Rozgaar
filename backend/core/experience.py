@@ -172,10 +172,19 @@ def _bare_experience_years(text):
     return [_year_value(match.group(1))] if match else []
 
 
+# Labelled numbers with the unit in the label ("Years of Experience: 5 - 10"),
+# which the N-years pattern cannot see because no unit follows the number.
+_LABELLED_YEARS_RE = re.compile(
+    r"\b((?:total\s+)?(?:years?\s+of\s+experience|experience\s*\(\s*(?:in\s+)?years?\s*\)))"
+    r"(\s*[:\-]\s*)(\d+(?:\.\d+)?(?:[ \t]*\+)?(?:[ \t]*(?:-|to|–|—)[ \t]*\d+(?:\.\d+)?(?:[ \t]*\+)?)?)"
+    r"(?!\s*(?:years?|yrs?|months?)\b)(?![\d.])", re.I)
+
+
 def _plain_experience_text(text):
     text = unescape(text or "")
     text = re.sub(r"</?(?:p|div|li|h[1-6]|br)\b[^>]*>", "\n", text, flags=re.I)
-    return re.sub(r"<[^>]+>", " ", text)
+    text = re.sub(r"<[^>]+>", " ", text)
+    return _LABELLED_YEARS_RE.sub(lambda m: f"{m.group(1)}{m.group(2)}{m.group(3).strip()} years", text)
 
 
 def _preferred_section(name, previous):

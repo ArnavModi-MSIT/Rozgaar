@@ -23,7 +23,7 @@ class BankOfAmericaTests(unittest.TestCase):
     @patch("backend.fetchers.bank_of_america.get_json")
     def test_incomplete_response_is_partial(self, listing, _detail):
         rows = [{"jobRequisitionId": str(i), "postingTitle": "Analyst", "location": "India", "jcrURL": f"/en-us/job-detail/{i}/analyst"} for i in range(10)]
-        listing.side_effect = [{"jobsList": rows, "totalMatches": 20}, {"jobsList": [], "totalMatches": 0}]
+        listing.side_effect = [{"jobsList": rows, "totalMatches": 20}, {"jobsList": [], "totalMatches": 20}, {"jobsList": [], "totalMatches": 0}]
         result = bank_of_america.collect()
         self.assertEqual(result.status, "partial")
         self.assertEqual(len(result), 10)
@@ -33,13 +33,29 @@ class BankOfAmericaTests(unittest.TestCase):
     @patch("backend.fetchers.bank_of_america.get_json")
     def test_reads_all_141_results(self, listing, detail):
         rows = [{"jobRequisitionId": str(i), "postingTitle": "Analyst", "location": "India", "jcrURL": f"/en-us/job-detail/{i}/analyst"} for i in range(141)]
-        listing.side_effect = [{"jobsList": rows, "totalMatches": 141}, {"jobsList": [], "totalMatches": 0}]
+        listing.side_effect = [{"jobsList": rows[:100], "totalMatches": 141}, {"jobsList": rows[100:], "totalMatches": 141}, {"jobsList": [], "totalMatches": 0}]
         result = bank_of_america.collect()
         self.assertEqual(result.status, "ok")
         self.assertEqual(len(result), 141)
         self.assertEqual(detail.call_count, 141)
-        self.assertEqual(listing.call_count, 2)
-        self.assertEqual(listing.call_args_list[0].kwargs["params"]["rows"], bank_of_america.MAX_RESULTS_PER_SEARCH)
+        self.assertEqual(listing.call_count, 3)
+        self.assertEqual([c.kwargs["params"]["start"] for c in listing.call_args_list[:2]], [0, 100])
+        self.assertEqual(listing.call_args_list[0].kwargs["params"]["rows"], bank_of_america.PAGE_SIZE)
+
+    @patch("backend.fetchers.bank_of_america.get_text", return_value='<div class="job-description-body__internal job__external">Role text</div>')
+    @patch("backend.fetchers.bank_of_america.get_json")
+    def test_timeout_after_first_page_is_partial(self, listing, _detail):
+        rows = [{"jobRequisitionId": str(i), "postingTitle": "Analyst", "location": "India", "jcrURL": f"/en-us/job-detail/{i}/analyst"} for i in range(100)]
+        listing.side_effect = [{"jobsList": rows, "totalMatches": 150}, None, {"jobsList": [], "totalMatches": 0}]
+        result = bank_of_america.collect()
+        self.assertEqual(result.status, "partial")
+        self.assertEqual(len(result), 100)
+        self.assertIn("listing request failed at offset 100", result.error)
+
+    @patch("backend.fetchers.bank_of_america.get_json", return_value=None)
+    def test_total_timeout_reports_request_failure(self, _listing):
+        with self.assertRaisesRegex(RuntimeError, "listing request failed"):
+            bank_of_america.collect()
 
 
 if __name__ == "__main__":

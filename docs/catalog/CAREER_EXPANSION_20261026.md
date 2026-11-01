@@ -1,6 +1,6 @@
 # 50-company career-source expansion — 26 October 2026
 
-Added 50 employers to the career-page pipeline, increasing the configured company/display-name inventory from 231 to 281. These are public job feeds; no reader JSON, browser profile or career database was used in validation. Collection still starts manually from the website. Restart Rozgaar to load Python configuration changes.
+Added 50 employers to the career-page pipeline, increasing the configured company/display-name inventory from 231 to 281. These are public job feeds; no reader JSON, browser profile or career database was used in validation. Collection still starts manually from the website. Restart Rojgaar to load Python configuration changes.
 
 **Pay and eligibility:** this is a broad monitoring expansion, not 50 certified fresher employers paying at least INR 8 LPA. Four additions have primary institution salary examples from the preceding research; seven have secondary historical placement leads; the remaining 39 have no verified fresher pay figure in this pass. Most feeds include experienced roles and nontechnical roles. Use the existing title/location/experience controls; inspect each job description. No salary floor is inferred for a posting that omits pay.
 

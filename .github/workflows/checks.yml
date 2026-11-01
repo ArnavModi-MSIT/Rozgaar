@@ -1,4 +1,4 @@
-name: Rozgaar checks
+name: Rojgaar checks
 on: [push, pull_request]
 permissions:
   contents: read

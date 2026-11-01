@@ -6,7 +6,7 @@ from collections import defaultdict
 from datetime import datetime, timedelta, timezone
 
 import backend.config as config
-from rozgaar.paths import ROOT
+from rojgaar.paths import ROOT
 
 GROUPS = ('GREENHOUSE', 'LEVER', 'ASHBY', 'ORACLE', 'GOOGLE_CAREERS', 'PHENOM', 'WORKDAY',
           'EIGHTFOLD', 'SUCCESSFACTORS', 'ICIMS', 'SMARTRECRUITERS', 'WORKABLE', 'AINTERVIEWS',
@@ -49,9 +49,9 @@ def render(date):
     lines = ['# Career-page company inventory', '', f'Updated: {date}.', '',
              f'**{len(entries)} company/display-name entries** configured in the career-page pipeline. Multiple boards or student feeds for the same display name share one row; separate divisions may retain their own display names.', '',
              'This is a configuration inventory, not a live health check, a count of companies with current jobs, or a guarantee of complete descriptions. It excludes the separate URL-reader pipeline.', '',
-             'Compiled from `backend/config/sources.py`, `backend/config/career_expansion.py`, `backend/config/display.py`, and every registered collector in `backend/core/collector.py`.', '',
+             'Compiled from `backend/config/sources.py`, `backend/config/career_expansion.py`, `backend/config/career_targets_20261030.py`, `backend/config/display.py`, and every registered collector in `backend/core/collector.py`.', '',
              'Regenerate offline after source changes: `runtime/python/Scripts/python.exe -m scripts.career.company_inventory`. This command does not collect jobs or change the database.', '',
-             'The older `COMPANY_SOURCES.json` is a curated 75-company audit input, not the full inventory. Dated observations are in [Source maintenance](../SOURCE_STATUS.md); the [26 October expansion](CAREER_EXPANSION_20261026.md) records validation scope and salary uncertainty.', '',
+             'The older `COMPANY_SOURCES.json` is a curated 75-company audit input, not the full inventory. Dated observations are in [Source maintenance](../SOURCE_STATUS.md); the [26 October expansion](CAREER_EXPANSION_20261026.md) and [30 October target check](CAREER_EXPANSION_20261030.md) record validation scope, unresolved companies and salary uncertainty.', '',
              '| Company | Configuration key / board | Source / collector |', '|---|---|---|']
     for name, row in sorted(entries.items(), key=lambda item: item[0].casefold()):
         lines.append('| ' + name.replace('|', '\\|') + ' | ' + ', '.join('`'+key+'`' for key in sorted(row['keys']))

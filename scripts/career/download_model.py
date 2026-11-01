@@ -4,7 +4,7 @@ from pathlib import Path
 
 from sentence_transformers import SentenceTransformer
 
-from rozgaar.paths import MODEL_DIR
+from rojgaar.paths import MODEL_DIR
 
 
 def main():

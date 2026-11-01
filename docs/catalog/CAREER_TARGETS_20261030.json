@@ -1,0 +1,919 @@
+{
+  "checked": "2026-10-30",
+  "input_file": "100_new_companies_8LPA_fresher_targets.md",
+  "baseline": 292,
+  "scope": "Public career feeds only; read-only live checks; no database import, applications or account access.",
+  "salary_evidence": "D/E/P labels are supplied by the user file and were not independently verified here. They are not salary or eligibility guarantees.",
+  "targets": [
+    {
+      "number": 1,
+      "name": "Medpace",
+      "supplied_evidence": "D",
+      "status": "connected",
+      "key": "medpace",
+      "source": "employer_portals",
+      "url": "https://careers.medpace.com/jobs",
+      "listings": 53,
+      "nonempty_descriptions": 53,
+      "notes": ""
+    },
+    {
+      "number": 2,
+      "name": "YipitData",
+      "supplied_evidence": "D",
+      "status": "connected",
+      "key": "yipitdatajobs",
+      "source": "greenhouse",
+      "url": "https://job-boards.greenhouse.io/yipitdatajobs",
+      "listings": 10,
+      "nonempty_descriptions": 10,
+      "notes": ""
+    },
+    {
+      "number": 3,
+      "name": "Beghou Consulting",
+      "supplied_evidence": "D",
+      "status": "connected",
+      "key": "beghouconsulting",
+      "source": "lever",
+      "url": "https://jobs.lever.co/beghouconsulting",
+      "listings": 41,
+      "nonempty_descriptions": 41,
+      "notes": ""
+    },
+    {
+      "number": 4,
+      "name": "Delphi Consulting",
+      "supplied_evidence": "D",
+      "status": "connected",
+      "key": "delphiconsulting",
+      "source": "greenhouse",
+      "url": "https://job-boards.greenhouse.io/delphiconsulting",
+      "listings": 11,
+      "nonempty_descriptions": 11,
+      "notes": ""
+    },
+    {
+      "number": 5,
+      "name": "Inquizity",
+      "supplied_evidence": "D",
+      "status": "unresolved",
+      "url": "https://inquizity.com/careers-at-inquizity/",
+      "notes": "Correct careers and Operations Consultant detail links supplied by the user on 30 October. Both return HTTP 406 with an explicit Mod_Security rejection to the local HTTP client; the normal public WordPress pages API also returns 406. No automatic source registered. Needs permitted programmatic access or a supported public feed; no access restriction was bypassed.",
+      "sample_detail_url": "https://inquizity.com/operations-consultant-vacancy-page/"
+    },
+    {
+      "number": 6,
+      "name": "United Airlines",
+      "supplied_evidence": "D",
+      "status": "connected",
+      "url": "https://careers.united.com/us/en/c/digital-technology-jobs",
+      "notes": "India-wide public Phenom feed: 19 current postings, of which 13 are Digital Technology. Includes Corporate/other India categories to retain analyst roles. Full external descriptions and qualifications validated; no application endpoints or internal/recruiter fields exported.",
+      "key": "unitedairlines",
+      "source": "employer_portals",
+      "listings": 19,
+      "nonempty_descriptions": 19
+    },
+    {
+      "number": 7,
+      "name": "Nielsen",
+      "supplied_evidence": "D",
+      "status": "connected",
+      "key": "TheNielsenCompany",
+      "source": "smartrecruiters",
+      "url": "https://careers.smartrecruiters.com/TheNielsenCompany",
+      "listings": 47,
+      "nonempty_descriptions": 47,
+      "notes": ""
+    },
+    {
+      "number": 8,
+      "name": "Anveshan",
+      "supplied_evidence": "D",
+      "status": "unresolved",
+      "url": "https://www.anveshan.farm/pages/careers",
+      "notes": "Official page reachable; no validated supported listing/full-description feed established in this pass. Needs a current India job-detail link or a new adapter."
+    },
+    {
+      "number": 9,
+      "name": "Urban Harvest",
+      "supplied_evidence": "D",
+      "status": "unresolved",
+      "url": "https://urbanharvest.in/",
+      "notes": "Employer identity/careers feed not established; Urban Harvest is an ambiguous name."
+    },
+    {
+      "number": 10,
+      "name": "Loyalty Juggernaut",
+      "supplied_evidence": "D",
+      "status": "unresolved",
+      "url": "https://www.loyaltyjuggernaut.com/careers",
+      "notes": "Careers host did not resolve; need the intended employer's working official link."
+    },
+    {
+      "number": 11,
+      "name": "GoComet",
+      "supplied_evidence": "P",
+      "status": "unresolved",
+      "url": "https://www.gocomet.com/company/careers",
+      "notes": "Official page reachable; no validated supported listing/full-description feed established in this pass. Needs a current India job-detail link or a new adapter."
+    },
+    {
+      "number": 12,
+      "name": "Atlan",
+      "supplied_evidence": "P",
+      "status": "connected",
+      "key": "atlan",
+      "source": "ashby",
+      "url": "https://jobs.ashbyhq.com/atlan",
+      "listings": 5,
+      "nonempty_descriptions": 5,
+      "notes": ""
+    },
+    {
+      "number": 13,
+      "name": "Hevo Data",
+      "supplied_evidence": "P",
+      "status": "connected",
+      "key": "hevodata",
+      "source": "lever",
+      "url": "https://jobs.lever.co/hevodata",
+      "listings": 51,
+      "nonempty_descriptions": 51,
+      "notes": ""
+    },
+    {
+      "number": 14,
+      "name": "o9 Solutions",
+      "supplied_evidence": "P",
+      "status": "connected",
+      "key": "o9solutions",
+      "source": "workday_india",
+      "url": "https://o9solutions.wd5.myworkdayjobs.com/o9SolutionsExternal",
+      "listings": 40,
+      "nonempty_descriptions": 40,
+      "notes": ""
+    },
+    {
+      "number": 15,
+      "name": "DataWeave",
+      "supplied_evidence": "P",
+      "status": "connected",
+      "url": "https://dataweave.com/in/careers",
+      "notes": "Official public HTML feed verified: Technical Architect, Bangalore, India; full 5030-character stored description. Senior role; not a verified fresher opportunity.",
+      "key": "dataweave",
+      "source": "employer_portals",
+      "listings": 1,
+      "nonempty_descriptions": 1
+    },
+    {
+      "number": 16,
+      "name": "Epsilon",
+      "supplied_evidence": "P",
+      "status": "connected",
+      "key": "epsilon",
+      "source": "employer_portals",
+      "url": "https://careers.publicisgroupe.com/epsilon/jobs",
+      "listings": 67,
+      "nonempty_descriptions": 67,
+      "notes": ""
+    },
+    {
+      "number": 17,
+      "name": "Merkle",
+      "supplied_evidence": "P",
+      "status": "unresolved",
+      "url": "https://www.merkle.com/en/careers/jobs.html",
+      "notes": "Official Merkle job search found; dedicated brand scope and detail extraction not established."
+    },
+    {
+      "number": 18,
+      "name": "Course5 Intelligence",
+      "supplied_evidence": "P",
+      "status": "already_connected",
+      "key": "c5i",
+      "url": "https://www.c5i.ai/careers/",
+      "notes": "Course5 Intelligence was renamed C5i; reuse existing source instead of adding a duplicate."
+    },
+    {
+      "number": 19,
+      "name": "Impetus Technologies",
+      "supplied_evidence": "P",
+      "status": "unresolved",
+      "url": "https://www.impetus.com/careers/",
+      "notes": "Official site links to impetus.cluster3.openings.co; this ATS needs a new adapter."
+    },
+    {
+      "number": 20,
+      "name": "Datametica",
+      "supplied_evidence": "P",
+      "status": "unresolved",
+      "url": "https://www.datametica.com/careers/",
+      "notes": "Official careers request returned HTTP 406."
+    },
+    {
+      "number": 21,
+      "name": "RudderStack",
+      "supplied_evidence": "P",
+      "status": "unresolved",
+      "url": "https://www.rudderstack.com/careers/",
+      "notes": "Official page reachable; no validated supported listing/full-description feed established in this pass. Needs a current India job-detail link or a new adapter."
+    },
+    {
+      "number": 22,
+      "name": "Informatica",
+      "supplied_evidence": "P",
+      "status": "unresolved",
+      "url": "https://www.salesforce.com/company/careers/jobs/?search=informatica&pagesize=20&bc=OTH#results",
+      "notes": "Careers host redirects to Salesforce careers; Informatica-specific coverage through the existing Salesforce source is unverified."
+    },
+    {
+      "number": 23,
+      "name": "Boomi",
+      "supplied_evidence": "P",
+      "status": "connected_empty",
+      "key": "boomilp",
+      "source": "greenhouse",
+      "url": "https://job-boards.greenhouse.io/boomilp",
+      "listings": 0,
+      "nonempty_descriptions": 0,
+      "notes": "Valid feed; no India postings at verification. Included as an empty monitor, not a current opportunity."
+    },
+    {
+      "number": 24,
+      "name": "Qlik",
+      "supplied_evidence": "P",
+      "status": "connected",
+      "key": "qlik",
+      "source": "employer_portals",
+      "url": "https://careerhub.qlik.com/careers?location=India",
+      "listings": 9,
+      "nonempty_descriptions": 9,
+      "notes": ""
+    },
+    {
+      "number": 25,
+      "name": "SAS Institute",
+      "supplied_evidence": "P",
+      "status": "unresolved",
+      "url": "https://www.sas.com/en_in/careers.html",
+      "notes": "Official page reachable; no validated supported listing/full-description feed established in this pass. Needs a current India job-detail link or a new adapter."
+    },
+    {
+      "number": 26,
+      "name": "Kissht",
+      "supplied_evidence": "D",
+      "status": "connected",
+      "url": "https://app1596.workline.hr/Cportal/GeneralOpening.aspx",
+      "notes": "276 unique public Workline postings verified. Partial source: some descriptions are brief placeholders; nonempty fields do not mean complete JDs. Read-only vacancy search/details; no sign-in or candidate actions.",
+      "key": "kissht",
+      "source": "employer_portals",
+      "listings": 276,
+      "nonempty_descriptions": 276
+    },
+    {
+      "number": 27,
+      "name": "Policybazaar",
+      "supplied_evidence": "D",
+      "status": "unresolved",
+      "url": "https://www.policybazaar.com/careers/",
+      "notes": "Official page reachable; no validated supported listing/full-description feed established in this pass. Needs a current India job-detail link or a new adapter."
+    },
+    {
+      "number": 28,
+      "name": "BharatPe",
+      "supplied_evidence": "E",
+      "status": "unresolved",
+      "url": "https://bharatpe.com/career/",
+      "notes": "Official page reachable; no validated supported listing/full-description feed established in this pass. Needs a current India job-detail link or a new adapter."
+    },
+    {
+      "number": 29,
+      "name": "Pine Labs",
+      "supplied_evidence": "E",
+      "status": "unresolved",
+      "url": "https://www.pinelabs.com/careers/open-jobs",
+      "notes": "Official page reachable; no validated supported listing/full-description feed established in this pass. Needs a current India job-detail link or a new adapter."
+    },
+    {
+      "number": 30,
+      "name": "Angel One",
+      "supplied_evidence": "E",
+      "status": "unresolved",
+      "url": "https://www.angelone.in/careers",
+      "notes": "Official page reachable; no validated supported listing/full-description feed established in this pass. Needs a current India job-detail link or a new adapter."
+    },
+    {
+      "number": 31,
+      "name": "Bajaj Finance",
+      "supplied_evidence": "E",
+      "status": "unresolved",
+      "url": "https://www.bajajfinserv.in/",
+      "notes": "Official page reachable; no validated supported listing/full-description feed established in this pass. Needs a current India job-detail link or a new adapter."
+    },
+    {
+      "number": 32,
+      "name": "M2P Fintech",
+      "supplied_evidence": "E",
+      "status": "unresolved",
+      "url": "https://m2pfintech.com/view-jobs/",
+      "notes": "Careers request returned HTTP 404; no working listing/full-description feed established."
+    },
+    {
+      "number": 33,
+      "name": "Nium",
+      "supplied_evidence": "E",
+      "status": "connected",
+      "key": "nium",
+      "source": "lever",
+      "url": "https://jobs.lever.co/nium",
+      "listings": 11,
+      "nonempty_descriptions": 11,
+      "notes": ""
+    },
+    {
+      "number": 34,
+      "name": "Niyo Solutions",
+      "supplied_evidence": "E",
+      "status": "unresolved",
+      "url": "https://goniyo.com/",
+      "notes": "Official page reachable; no validated supported listing/full-description feed established in this pass. Needs a current India job-detail link or a new adapter."
+    },
+    {
+      "number": 35,
+      "name": "Khatabook",
+      "supplied_evidence": "E",
+      "status": "unresolved",
+      "url": "https://khatabook.com/careers",
+      "notes": "Official careers request failed (ReadTimeout); no working public feed established."
+    },
+    {
+      "number": 36,
+      "name": "KreditBee",
+      "supplied_evidence": "E",
+      "status": "unresolved",
+      "url": "https://www.kreditbee.in/careers",
+      "notes": "Official page reachable; no validated supported listing/full-description feed established in this pass. Needs a current India job-detail link or a new adapter."
+    },
+    {
+      "number": 37,
+      "name": "Fibe",
+      "supplied_evidence": "E",
+      "status": "unresolved",
+      "url": "https://www.fibe.in/careers/",
+      "notes": "Official page reachable; no validated supported listing/full-description feed established in this pass. Needs a current India job-detail link or a new adapter."
+    },
+    {
+      "number": 38,
+      "name": "INDmoney",
+      "supplied_evidence": "E",
+      "status": "unresolved",
+      "url": "https://www.indmoney.com/careers",
+      "notes": "Careers request returned HTTP 403; no working listing/full-description feed established."
+    },
+    {
+      "number": 39,
+      "name": "Moneyview",
+      "supplied_evidence": "E",
+      "status": "connected",
+      "key": "moneyview",
+      "source": "employer_portals",
+      "url": "https://moneyview.darwinbox.in/ms/candidatev2/main/careers/allJobs",
+      "listings": 9,
+      "nonempty_descriptions": 9,
+      "notes": ""
+    },
+    {
+      "number": 40,
+      "name": "smallcase",
+      "supplied_evidence": "E",
+      "status": "unresolved",
+      "url": "https://www.smallcase.com/404",
+      "notes": "Official site points to a PyjamaHR board; no verified adapter for this ATS yet."
+    },
+    {
+      "number": 41,
+      "name": "Rupeek",
+      "supplied_evidence": "E",
+      "status": "unresolved",
+      "url": "https://www.rupeek.com/careers/",
+      "notes": "Official careers request failed (ConnectionError); no working public feed established."
+    },
+    {
+      "number": 42,
+      "name": "MobiKwik",
+      "supplied_evidence": "P",
+      "status": "unresolved",
+      "url": "https://www.mobikwik.com/careers",
+      "notes": "Official page reachable; no validated supported listing/full-description feed established in this pass. Needs a current India job-detail link or a new adapter."
+    },
+    {
+      "number": 43,
+      "name": "Clear (ClearTax)",
+      "supplied_evidence": "P",
+      "status": "connected",
+      "key": "cleartax",
+      "source": "employer_portals",
+      "url": "https://clear.darwinbox.in/ms/candidatev2/main/careers/allJobs",
+      "listings": 15,
+      "nonempty_descriptions": 15,
+      "notes": "Partial: one posting has no source JD, only experience metadata. Nonempty is not completeness."
+    },
+    {
+      "number": 44,
+      "name": "Yubi",
+      "supplied_evidence": "P",
+      "status": "unresolved",
+      "url": "https://www.go-yubi.com/careers/",
+      "notes": "HTTP 403 from official careers page; not bypassed."
+    },
+    {
+      "number": 45,
+      "name": "OneCard (FPL Technologies)",
+      "supplied_evidence": "P",
+      "status": "unresolved",
+      "url": "https://www.fplabs.tech/careers/",
+      "notes": "OneCard links to FPL Labs careers; returned redirect without a usable board."
+    },
+    {
+      "number": 46,
+      "name": "National Payments Corporation of India (NPCI)",
+      "supplied_evidence": "P",
+      "status": "unresolved",
+      "url": "https://www.npci.org.in/who-we-are/careers",
+      "notes": "Official NPCI page returned HTTP 403; not bypassed."
+    },
+    {
+      "number": 47,
+      "name": "Signzy",
+      "supplied_evidence": "P",
+      "status": "connected",
+      "key": "signzy",
+      "source": "employer_portals",
+      "url": "https://signzy.keka.com/careers/",
+      "listings": 17,
+      "nonempty_descriptions": 17,
+      "notes": ""
+    },
+    {
+      "number": 48,
+      "name": "Open Financial Technologies",
+      "supplied_evidence": "P",
+      "status": "connected_empty",
+      "key": "openfinancial",
+      "source": "employer_portals",
+      "url": "https://openfinancial.keka.com/careers/",
+      "listings": 0,
+      "nonempty_descriptions": 0,
+      "notes": "Valid feed; no India postings at verification. Included as an empty monitor, not a current opportunity."
+    },
+    {
+      "number": 49,
+      "name": "Lendingkart",
+      "supplied_evidence": "P",
+      "status": "unresolved",
+      "url": "https://www.lendingkart.com/careers",
+      "notes": "Official page reachable; no validated supported listing/full-description feed established in this pass. Needs a current India job-detail link or a new adapter."
+    },
+    {
+      "number": 50,
+      "name": "Experian India",
+      "supplied_evidence": "P",
+      "status": "connected",
+      "key": "Experian",
+      "source": "smartrecruiters",
+      "url": "https://careers.smartrecruiters.com/Experian",
+      "listings": 33,
+      "nonempty_descriptions": 33,
+      "notes": ""
+    },
+    {
+      "number": 51,
+      "name": "PharmEasy",
+      "supplied_evidence": "D",
+      "status": "connected",
+      "key": "pharmeasy",
+      "source": "employer_portals",
+      "url": "https://myhr.darwinbox.in/ms/candidatev2/main/careers/allJobs",
+      "listings": 8,
+      "nonempty_descriptions": 8,
+      "notes": ""
+    },
+    {
+      "number": 52,
+      "name": "CARS24",
+      "supplied_evidence": "E",
+      "status": "unresolved",
+      "url": "https://careers.cars24.com/",
+      "notes": "Official CARS24 careers app found; public list/detail API not established."
+    },
+    {
+      "number": 53,
+      "name": "Dream11",
+      "supplied_evidence": "E",
+      "status": "unresolved",
+      "url": "https://www.dreamsports.group/lifeatdreamsports",
+      "notes": "Official Dream Sports site links to jobs.lever.co/dreamsports, but that API returns HTTP 404."
+    },
+    {
+      "number": 54,
+      "name": "Zomato (Eternal)",
+      "supplied_evidence": "E",
+      "status": "unresolved",
+      "url": "https://www.eternal.com/careers/",
+      "notes": "Official page reachable; no validated supported listing/full-description feed established in this pass. Needs a current India job-detail link or a new adapter."
+    },
+    {
+      "number": 55,
+      "name": "Urban Company",
+      "supplied_evidence": "E",
+      "status": "unresolved",
+      "url": "https://careers.urbancompany.com/",
+      "notes": "Official careers app found; current list/detail API not established."
+    },
+    {
+      "number": 56,
+      "name": "ShareChat",
+      "supplied_evidence": "E",
+      "status": "unresolved",
+      "url": "https://sharechat.com/careers",
+      "notes": "Official page reachable; attempted Lever/Ashby/Kula accounts unavailable. Need a current job-detail link."
+    },
+    {
+      "number": 57,
+      "name": "Delhivery",
+      "supplied_evidence": "E",
+      "status": "unresolved",
+      "url": "https://www.delhivery.com/careers",
+      "notes": "Official page reachable; no validated supported listing/full-description feed established in this pass. Needs a current India job-detail link or a new adapter."
+    },
+    {
+      "number": 58,
+      "name": "Shadowfax",
+      "supplied_evidence": "E",
+      "status": "unresolved",
+      "url": "https://www.shadowfax.in/careers",
+      "notes": "Official page reachable; no validated supported listing/full-description feed established in this pass. Needs a current India job-detail link or a new adapter."
+    },
+    {
+      "number": 59,
+      "name": "Shiprocket",
+      "supplied_evidence": "E",
+      "status": "unresolved",
+      "url": "https://www.shiprocket.in/careers/",
+      "notes": "Official Shiprocket careers page returned HTTP 403; not bypassed."
+    },
+    {
+      "number": 60,
+      "name": "Rebel Foods",
+      "supplied_evidence": "E",
+      "status": "unresolved",
+      "url": "https://www.rebelfoods.com/career",
+      "notes": "Careers request returned HTTP 500; no working listing/full-description feed established."
+    },
+    {
+      "number": 61,
+      "name": "Country Delight",
+      "supplied_evidence": "E",
+      "status": "unresolved",
+      "url": "https://countrydelight.in/careers",
+      "notes": "Official page reachable; no validated supported listing/full-description feed established in this pass. Needs a current India job-detail link or a new adapter."
+    },
+    {
+      "number": 62,
+      "name": "Ninjacart",
+      "supplied_evidence": "E",
+      "status": "connected",
+      "key": "ninjacart",
+      "source": "employer_portals",
+      "url": "https://ninjacart.darwinbox.in/ms/candidatev2/main/careers/allJobs",
+      "listings": 5,
+      "nonempty_descriptions": 5,
+      "notes": ""
+    },
+    {
+      "number": 63,
+      "name": "Udaan",
+      "supplied_evidence": "E",
+      "status": "unresolved",
+      "url": "https://udaan.com/careers",
+      "notes": "Official Udaan request timed out; attempted standard boards unavailable."
+    },
+    {
+      "number": 64,
+      "name": "Moglix",
+      "supplied_evidence": "E",
+      "status": "unresolved",
+      "url": "https://www.moglix.com/careers",
+      "notes": "Careers request returned HTTP 404; no working listing/full-description feed established."
+    },
+    {
+      "number": 65,
+      "name": "Licious",
+      "supplied_evidence": "E",
+      "status": "unresolved",
+      "url": "https://www.licious.in:443/",
+      "notes": "Official page reachable; no validated supported listing/full-description feed established in this pass. Needs a current India job-detail link or a new adapter."
+    },
+    {
+      "number": 66,
+      "name": "Nykaa",
+      "supplied_evidence": "E",
+      "status": "unresolved",
+      "url": "https://www.nykaa.com/careers",
+      "notes": "Careers request returned HTTP 403; no working listing/full-description feed established."
+    },
+    {
+      "number": 67,
+      "name": "Purplle",
+      "supplied_evidence": "E",
+      "status": "unresolved",
+      "url": "https://www.purplle.com/careers",
+      "notes": "Official page reachable; no validated supported listing/full-description feed established in this pass. Needs a current India job-detail link or a new adapter."
+    },
+    {
+      "number": 68,
+      "name": "Practo",
+      "supplied_evidence": "E",
+      "status": "unresolved",
+      "url": "https://practo.app.param.ai/jobs/",
+      "notes": "Official page reachable; no validated supported listing/full-description feed established in this pass. Needs a current India job-detail link or a new adapter."
+    },
+    {
+      "number": 69,
+      "name": "Apollo 24/7",
+      "supplied_evidence": "E",
+      "status": "unresolved",
+      "url": "https://www.apollo247.com/careers",
+      "notes": "Candidate Apollo 24/7 careers URL returned HTTP 404; current feed not established."
+    },
+    {
+      "number": 70,
+      "name": "Ather Energy",
+      "supplied_evidence": "E",
+      "status": "unresolved",
+      "url": "https://www.atherenergy.com/careers",
+      "notes": "Official careers page returned HTTP 403; not bypassed."
+    },
+    {
+      "number": 71,
+      "name": "Ola Cabs",
+      "supplied_evidence": "E",
+      "status": "unresolved",
+      "url": "https://www.olacabs.com/careers",
+      "notes": "Ola links to a TurboHire recruitment board; adapter not established. Shared board may include Ola Electric."
+    },
+    {
+      "number": 72,
+      "name": "Ola Electric",
+      "supplied_evidence": "E",
+      "status": "unresolved",
+      "url": "https://www.olaelectric.com/careers",
+      "notes": "Ola Electric links to the Ola TurboHire board; brand-specific scope not established."
+    },
+    {
+      "number": 73,
+      "name": "ixigo",
+      "supplied_evidence": "E",
+      "status": "unresolved",
+      "url": "https://careers.ixigo.com/",
+      "notes": "Official page reachable; no validated supported listing/full-description feed established in this pass. Needs a current India job-detail link or a new adapter."
+    },
+    {
+      "number": 74,
+      "name": "Yulu",
+      "supplied_evidence": "E",
+      "status": "unresolved",
+      "url": "https://www.yulu.bike/careers/",
+      "notes": "Official page reachable; no validated supported listing/full-description feed established in this pass. Needs a current India job-detail link or a new adapter."
+    },
+    {
+      "number": 75,
+      "name": "BlackBuck (Zinka Logistics)",
+      "supplied_evidence": "E",
+      "status": "unresolved",
+      "url": "https://www.blackbuck.com/careers/",
+      "notes": "Official request returned HTTP 502; attempted standard board unavailable."
+    },
+    {
+      "number": 76,
+      "name": "Chargebee",
+      "supplied_evidence": "E",
+      "status": "unresolved",
+      "url": "https://jobs.chargebee.com/",
+      "notes": "Current official Chargebee page sends candidates to LinkedIn. The older jobs.chargebee.com site is reachable but current listing coverage not established."
+    },
+    {
+      "number": 77,
+      "name": "Capillary Technologies",
+      "supplied_evidence": "E",
+      "status": "unresolved",
+      "url": "https://www.capillarytech.com/careers/",
+      "notes": "Official careers page returned HTTP 403; not bypassed."
+    },
+    {
+      "number": 78,
+      "name": "Darwinbox",
+      "supplied_evidence": "E",
+      "status": "connected",
+      "key": "darwinbox",
+      "source": "employer_portals",
+      "url": "https://dbx.darwinbox.in/ms/candidatev2/main/careers/allJobs",
+      "listings": 18,
+      "nonempty_descriptions": 18,
+      "notes": ""
+    },
+    {
+      "number": 79,
+      "name": "Exotel",
+      "supplied_evidence": "E",
+      "status": "unresolved",
+      "url": "https://exotel.com/about-us/careers/",
+      "notes": "Official page reachable; no validated supported listing/full-description feed established in this pass. Needs a current India job-detail link or a new adapter."
+    },
+    {
+      "number": 80,
+      "name": "Gupshup",
+      "supplied_evidence": "E",
+      "status": "unresolved",
+      "url": "https://www.gupshup.ai:443/careers",
+      "notes": "Official page reachable; no validated supported listing/full-description feed established in this pass. Needs a current India job-detail link or a new adapter."
+    },
+    {
+      "number": 81,
+      "name": "Plivo",
+      "supplied_evidence": "E",
+      "status": "unresolved",
+      "url": "https://www.plivo.com/jobs/",
+      "notes": "Official page reachable; no validated supported listing/full-description feed established in this pass. Needs a current India job-detail link or a new adapter."
+    },
+    {
+      "number": 82,
+      "name": "Zoho Corporation",
+      "supplied_evidence": "E",
+      "status": "unresolved",
+      "url": "https://www.zoho.com/careers/",
+      "notes": "Official page reachable; no validated supported listing/full-description feed established in this pass. Needs a current India job-detail link or a new adapter."
+    },
+    {
+      "number": 83,
+      "name": "Clari",
+      "supplied_evidence": "E",
+      "status": "unresolved",
+      "url": "https://www.salesloft.com/company/careers",
+      "notes": "Clari careers page redirects to Salesloft/combined company branding; current brand-specific board not verified."
+    },
+    {
+      "number": 84,
+      "name": "Tracxn",
+      "supplied_evidence": "P",
+      "status": "unresolved",
+      "url": "https://tracxn.com/careers",
+      "notes": "Careers request returned HTTP 404; no working listing/full-description feed established."
+    },
+    {
+      "number": 85,
+      "name": "WebEngage",
+      "supplied_evidence": "P",
+      "status": "connected",
+      "key": "webengage",
+      "source": "employer_portals",
+      "url": "https://webklipper.keka.com/careers/",
+      "listings": 20,
+      "nonempty_descriptions": 20,
+      "notes": ""
+    },
+    {
+      "number": 86,
+      "name": "Netcore Cloud",
+      "supplied_evidence": "P",
+      "status": "unresolved",
+      "url": "https://netcore.ai/careers/",
+      "notes": "Official page embeds careerpagenetcore.lovable.app; public list/detail feed not established."
+    },
+    {
+      "number": 87,
+      "name": "Yellow.ai",
+      "supplied_evidence": "P",
+      "status": "unresolved",
+      "url": "https://yellow.ai/wp-content/uploads/2023/04/Careers.png",
+      "notes": "Official page reachable; no validated supported listing/full-description feed established in this pass. Needs a current India job-detail link or a new adapter."
+    },
+    {
+      "number": 88,
+      "name": "ADP",
+      "supplied_evidence": "P",
+      "status": "unresolved",
+      "url": "https://jobs.adp.com/",
+      "notes": "Official ADP jobs page returned HTTP 403; not bypassed."
+    },
+    {
+      "number": 89,
+      "name": "EPAM Systems",
+      "supplied_evidence": "P",
+      "status": "unresolved",
+      "url": "https://www.epam.com/careers",
+      "notes": "Official EPAM careers page returned HTTP 403; not bypassed."
+    },
+    {
+      "number": 90,
+      "name": "GlobalLogic",
+      "supplied_evidence": "E",
+      "status": "unresolved",
+      "url": "https://www.globallogic.com/careers/",
+      "notes": "Custom official GlobalLogic listings found; complete India pagination/detail adapter not established."
+    },
+    {
+      "number": 91,
+      "name": "LTIMindtree",
+      "supplied_evidence": "E",
+      "status": "unresolved",
+      "url": "https://www.ltm.com/careers",
+      "notes": "Official page links to LTM/RippleHire recruitment; public India feed not established. Published query tokens were not copied into source configuration."
+    },
+    {
+      "number": 92,
+      "name": "Persistent Systems",
+      "supplied_evidence": "E",
+      "status": "unresolved",
+      "url": "https://careers.persistent.com/",
+      "notes": "Custom Persistent careers page found; list/detail adapter not established."
+    },
+    {
+      "number": 93,
+      "name": "Nokia India",
+      "supplied_evidence": "E",
+      "status": "connected",
+      "key": "nokia",
+      "source": "employer_portals",
+      "url": "https://fa-evmr-saasfaprod1.fa.ocs.oraclecloud.com/hcmUI/CandidateExperience/en/sites/CX_1/jobs",
+      "listings": 128,
+      "nonempty_descriptions": 128,
+      "notes": ""
+    },
+    {
+      "number": 94,
+      "name": "Texas Instruments India",
+      "supplied_evidence": "E",
+      "status": "connected",
+      "key": "texasinstruments",
+      "source": "employer_portals",
+      "url": "https://edbz.fa.us2.oraclecloud.com/hcmUI/CandidateExperience/en/sites/CX/jobs",
+      "listings": 121,
+      "nonempty_descriptions": 121,
+      "notes": ""
+    },
+    {
+      "number": 95,
+      "name": "Arm India",
+      "supplied_evidence": "E",
+      "status": "unresolved",
+      "url": "https://careers.arm.com/",
+      "notes": "Official Arm TalentBrew site found; India pagination/detail adapter not established."
+    },
+    {
+      "number": 96,
+      "name": "Moody's",
+      "supplied_evidence": "P",
+      "status": "unresolved",
+      "url": "https://careers.moodys.com/en",
+      "notes": "Official Moody's TalentBrew site found; India pagination/detail adapter not established."
+    },
+    {
+      "number": 97,
+      "name": "MSCI",
+      "supplied_evidence": "P",
+      "status": "unresolved",
+      "url": "https://careers.msci.com/",
+      "notes": "Official MSCI site found; attempted /api/jobs unavailable; actual search API still needed."
+    },
+    {
+      "number": 98,
+      "name": "CRISIL",
+      "supplied_evidence": "P",
+      "status": "unresolved",
+      "url": "https://career.crisil.com/crisil/",
+      "notes": "Official CRISIL site points to career.crisil.com/crisil (Zwayam); company-specific search identity not established."
+    },
+    {
+      "number": 99,
+      "name": "TransUnion CIBIL",
+      "supplied_evidence": "P",
+      "status": "connected",
+      "key": "transunion",
+      "source": "workday_india",
+      "url": "https://transunion.wd5.myworkdayjobs.com/TransUnion",
+      "listings": 38,
+      "nonempty_descriptions": 38,
+      "notes": "Broader TransUnion India group feed, not a dedicated TransUnion CIBIL board; CIBIL-specific vacancies not established."
+    },
+    {
+      "number": 100,
+      "name": "Bain & Company",
+      "supplied_evidence": "P",
+      "status": "unresolved",
+      "url": "https://www.bain.com/careers/",
+      "notes": "Official page reachable; no validated supported listing/full-description feed established in this pass. Needs a current India job-detail link or a new adapter."
+    }
+  ]
+}

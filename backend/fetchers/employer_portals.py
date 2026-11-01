@@ -18,6 +18,10 @@ from .standard import strip_html
 from .peoplestrong import fetch as fetch_peoplestrong
 from .c5i import fetch as fetch_c5i
 from .gem import fetch as fetch_gem
+from .jibe import fetch as fetch_jibe
+from .unitedairlines import fetch as fetch_unitedairlines
+from .dataweave import fetch as fetch_dataweave
+from .kissht import fetch as fetch_kissht
 
 
 def _expired(deadline):
@@ -539,7 +543,7 @@ ADAPTERS = {"darwinbox": fetch_darwinbox, "keka": fetch_keka,
             "trakstar": fetch_trakstar, "kula": fetch_kula, "oracle": fetch_oracle_india,
             "successfactors": fetch_successfactors, "pcsx": fetch_pcsx,
             "peoplestrong": fetch_peoplestrong, "c5i": fetch_c5i, "gem": fetch_gem,
-            "upstox": fetch_upstox}
+            "upstox": fetch_upstox, "jibe": fetch_jibe, "unitedairlines": fetch_unitedairlines, "dataweave": fetch_dataweave, "kissht": fetch_kissht}
 
 
 def collect(configs, deadline=None):

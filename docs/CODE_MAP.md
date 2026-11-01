@@ -4,9 +4,12 @@
 
 | Task | Files |
 |---|---|
-| Start localhost / check build freshness | `start.py`, `rozgaar/launcher.py` |
-| Change data, model or browser paths | `rozgaar/paths.py` |
+| Start localhost / check build freshness | `start.py`, `rojgaar/launcher.py` |
+| Change data, model or browser paths | `rojgaar/paths.py` |
 | Add or edit employer inventories | `backend/config/sources.py`, `backend/config/career_expansion.py` (26 October batch) |
+| Edit feeds from the 100-company target list | `backend/config/career_targets_20261030.py`; audit outcomes in `docs/catalog/CAREER_TARGETS_20261030.json` and `CAREER_EXPANSION_20261030.md` |
+| Change United Airlines India collection | `backend/fetchers/unitedairlines.py` (public Phenom country scope and full identity-checked detail JSON) |
+| Change Medpace / Epsilon public feeds | `backend/fetchers/jibe.py` (India, employer/brand identity, pagination and full returned descriptions) |
 | View disabled career sources and reasons | `backend/config/sources.py` (`DISABLED_CAREER_SOURCES`), disabled section of `docs/catalog/CAREER_COMPANIES.md` |
 | View/regenerate configured career-page companies | `docs/catalog/CAREER_COMPANIES.md`, `python -m scripts.career.company_inventory` |
 | View added-source checks and unresolved companies | `docs/catalog/CAREER_EXPANSION_20261026.md`, `docs/catalog/CAREER_SOURCES_TO_FIND.md` |
@@ -59,3 +62,7 @@ Career SQLite and reader JSON/history stay separate. FastAPI mounts the React bu
 Dated source endpoint changes and verification limits are recorded in [Source maintenance](SOURCE_STATUS.md).
 
 `scripts/release_check.py` scans candidate files and all locally reachable Git blobs for private artifacts and selected credential patterns. It reports locations without printing matched values. The scan is heuristic; it does not certify the absence of secrets.
+
+DataWeave official HTML collection: `backend/fetchers/dataweave.py`; 20-target follow-up results: `docs/catalog/CAREER_RETRY_20_20261030.md`.
+
+Kissht Workline collection: `backend/fetchers/kissht.py` (public full list and detail pages; brief descriptions report partial).

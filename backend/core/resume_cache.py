@@ -14,7 +14,7 @@ from pathlib import Path
 import torch
 
 
-from rozgaar.paths import CAREER_DATA
+from rojgaar.paths import CAREER_DATA
 CACHE_PATH = CAREER_DATA / "saved_resume.json"
 SCHEMA_VERSION = 1
 

@@ -10,7 +10,7 @@ from pathlib import Path
 import shutil
 import sqlite3
 
-from rozgaar.paths import ROOT, READER_DATA
+from rojgaar.paths import ROOT, READER_DATA
 from url_reader.identity import source_for_url
 from url_reader.storage.lock import CollectionLock
 
