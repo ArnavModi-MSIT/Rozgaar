@@ -1,0 +1,1046 @@
+[
+ {
+  "name": "Dream Sports",
+  "slugs": [
+   "dreamsports",
+   "dream11"
+  ]
+ },
+ {
+  "name": "Eternal (Zomato)",
+  "slugs": [
+   "zomato",
+   "eternal"
+  ]
+ },
+ {
+  "name": "ShareChat",
+  "slugs": [
+   "sharechat"
+  ]
+ },
+ {
+  "name": "Urban Company",
+  "slugs": [
+   "urbancompany"
+  ]
+ },
+ {
+  "name": "Delhivery"
+ },
+ {
+  "name": "BharatPe",
+  "slugs": [
+   "bharatpe"
+  ]
+ },
+ {
+  "name": "Pine Labs",
+  "slugs": [
+   "pinelabs"
+  ]
+ },
+ {
+  "name": "Chargebee",
+  "slugs": [
+   "chargebee"
+  ]
+ },
+ {
+  "name": "LeadSquared",
+  "slugs": [
+   "leadsquared"
+  ]
+ },
+ {
+  "name": "Unacademy",
+  "slugs": [
+   "unacademy"
+  ]
+ },
+ {
+  "name": "upGrad",
+  "slugs": [
+   "upgrad"
+  ]
+ },
+ {
+  "name": "PhysicsWallah",
+  "slugs": [
+   "pw",
+   "physicswallah"
+  ]
+ },
+ {
+  "name": "Ather Energy",
+  "slugs": [
+   "atherenergy"
+  ]
+ },
+ {
+  "name": "Rapido",
+  "slugs": [
+   "rapido"
+  ]
+ },
+ {
+  "name": "Games24x7",
+  "slugs": [
+   "games24x7"
+  ]
+ },
+ {
+  "name": "Mobile Premier League",
+  "slugs": [
+   "mpl"
+  ]
+ },
+ {
+  "name": "Nykaa",
+  "slugs": [
+   "nykaa"
+  ]
+ },
+ {
+  "name": "BigBasket",
+  "slugs": [
+   "bigbasket"
+  ]
+ },
+ {
+  "name": "Licious",
+  "slugs": [
+   "licious"
+  ]
+ },
+ {
+  "name": "Cars24",
+  "slugs": [
+   "cars24"
+  ]
+ },
+ {
+  "name": "CarDekho",
+  "slugs": [
+   "cardekho"
+  ]
+ },
+ {
+  "name": "Gupshup",
+  "slugs": [
+   "gupshup"
+  ]
+ },
+ {
+  "name": "Yellow.ai",
+  "slugs": [
+   "yellowai",
+   "yellow-ai"
+  ]
+ },
+ {
+  "name": "Krutrim",
+  "slugs": [
+   "krutrim"
+  ]
+ },
+ {
+  "name": "Capillary Technologies",
+  "slugs": [
+   "capillary",
+   "capillarytech"
+  ]
+ },
+ {
+  "name": "Netcore Cloud",
+  "slugs": [
+   "netcore"
+  ]
+ },
+ {
+  "name": "Gainsight",
+  "slugs": [
+   "gainsight"
+  ]
+ },
+ {
+  "name": "Kore.ai",
+  "slugs": [
+   "koreai"
+  ]
+ },
+ {
+  "name": "Haptik",
+  "slugs": [
+   "haptik"
+  ]
+ },
+ {
+  "name": "LambdaTest",
+  "slugs": [
+   "lambdatest"
+  ]
+ },
+ {
+  "name": "Setu",
+  "slugs": [
+   "setu"
+  ]
+ },
+ {
+  "name": "smallcase",
+  "slugs": [
+   "smallcase"
+  ]
+ },
+ {
+  "name": "INDmoney",
+  "slugs": [
+   "indmoney"
+  ]
+ },
+ {
+  "name": "Dhan (Raise)",
+  "slugs": [
+   "dhan",
+   "raise"
+  ]
+ },
+ {
+  "name": "Stable Money",
+  "slugs": [
+   "stablemoney"
+  ]
+ },
+ {
+  "name": "Jar",
+  "slugs": [
+   "jar",
+   "jarapp"
+  ]
+ },
+ {
+  "name": "Zluri",
+  "slugs": [
+   "zluri"
+  ]
+ },
+ {
+  "name": "Leena AI",
+  "slugs": [
+   "leenaai"
+  ]
+ },
+ {
+  "name": "Mad Street Den",
+  "slugs": [
+   "madstreetden",
+   "vueai"
+  ]
+ },
+ {
+  "name": "CoinDCX",
+  "slugs": [
+   "coindcx"
+  ]
+ },
+ {
+  "name": "CoinSwitch",
+  "slugs": [
+   "coinswitch"
+  ]
+ },
+ {
+  "name": "Honasa Consumer (Mamaearth)",
+  "slugs": [
+   "honasa",
+   "mamaearth"
+  ]
+ },
+ {
+  "name": "Pocket FM",
+  "slugs": [
+   "pocketfm"
+  ]
+ },
+ {
+  "name": "Turing",
+  "slugs": [
+   "turing"
+  ]
+ },
+ {
+  "name": "Scaler",
+  "slugs": [
+   "scaler",
+   "interviewbit"
+  ]
+ },
+ {
+  "name": "Newton School",
+  "slugs": [
+   "newtonschool"
+  ]
+ },
+ {
+  "name": "Figma",
+  "slugs": [
+   "figma"
+  ]
+ },
+ {
+  "name": "Pinterest",
+  "slugs": [
+   "pinterest"
+  ]
+ },
+ {
+  "name": "Sophos",
+  "slugs": [
+   "sophos"
+  ]
+ },
+ {
+  "name": "Fortinet",
+  "slugs": [
+   "fortinet"
+  ]
+ },
+ {
+  "name": "Check Point",
+  "slugs": [
+   "checkpoint"
+  ]
+ },
+ {
+  "name": "Trellix",
+  "slugs": [
+   "trellix"
+  ]
+ },
+ {
+  "name": "Gen Digital",
+  "slugs": [
+   "gen",
+   "gendigital"
+  ]
+ },
+ {
+  "name": "Dynatrace",
+  "slugs": [
+   "dynatrace"
+  ]
+ },
+ {
+  "name": "PagerDuty",
+  "slugs": [
+   "pagerduty"
+  ]
+ },
+ {
+  "name": "Zuora",
+  "slugs": [
+   "zuora"
+  ]
+ },
+ {
+  "name": "Anaplan",
+  "slugs": [
+   "anaplan"
+  ]
+ },
+ {
+  "name": "Sabre",
+  "slugs": [
+   "sabre"
+  ]
+ },
+ {
+  "name": "Navan",
+  "slugs": [
+   "navan"
+  ]
+ },
+ {
+  "name": "Medallia",
+  "slugs": [
+   "medallia"
+  ]
+ },
+ {
+  "name": "Genesys",
+  "slugs": [
+   "genesys"
+  ]
+ },
+ {
+  "name": "Avalara",
+  "slugs": [
+   "avalara"
+  ]
+ },
+ {
+  "name": "Workiva",
+  "slugs": [
+   "workiva"
+  ]
+ },
+ {
+  "name": "Extreme Networks",
+  "slugs": [
+   "extremenetworks"
+  ]
+ },
+ {
+  "name": "Arm",
+  "slugs": [
+   "arm"
+  ]
+ },
+ {
+  "name": "Lam Research",
+  "slugs": [
+   "lamresearch"
+  ]
+ },
+ {
+  "name": "Seagate",
+  "slugs": [
+   "seagate"
+  ]
+ },
+ {
+  "name": "Infineon",
+  "slugs": [
+   "infineon"
+  ]
+ },
+ {
+  "name": "STMicroelectronics",
+  "slugs": [
+   "stmicroelectronics"
+  ]
+ },
+ {
+  "name": "Keysight Technologies",
+  "slugs": [
+   "keysight"
+  ]
+ },
+ {
+  "name": "Synopsys",
+  "slugs": [
+   "synopsys"
+  ]
+ },
+ {
+  "name": "Ansys",
+  "slugs": [
+   "ansys"
+  ]
+ },
+ {
+  "name": "Lenovo",
+  "slugs": [
+   "lenovo"
+  ]
+ },
+ {
+  "name": "Yahoo",
+  "slugs": [
+   "yahoo"
+  ]
+ },
+ {
+  "name": "eBay",
+  "slugs": [
+   "ebay"
+  ]
+ },
+ {
+  "name": "Best Buy",
+  "slugs": [
+   "bestbuy"
+  ]
+ },
+ {
+  "name": "Home Depot",
+  "slugs": [
+   "homedepot"
+  ]
+ },
+ {
+  "name": "Nike",
+  "slugs": [
+   "nike"
+  ]
+ },
+ {
+  "name": "Wayfair",
+  "slugs": [
+   "wayfair"
+  ]
+ },
+ {
+  "name": "Agoda",
+  "slugs": [
+   "agoda"
+  ]
+ },
+ {
+  "name": "TripAdvisor",
+  "slugs": [
+   "tripadvisor"
+  ]
+ },
+ {
+  "name": "Citadel Securities",
+  "slugs": [
+   "citadelsecurities",
+   "citadel"
+  ]
+ },
+ {
+  "name": "Jump Trading",
+  "slugs": [
+   "jumptrading"
+  ]
+ },
+ {
+  "name": "Nomura",
+  "slugs": [
+   "nomura"
+  ]
+ },
+ {
+  "name": "BNP Paribas",
+  "slugs": [
+   "bnpparibas"
+  ]
+ },
+ {
+  "name": "Societe Generale",
+  "slugs": [
+   "societegenerale"
+  ]
+ },
+ {
+  "name": "MSCI",
+  "slugs": [
+   "msci"
+  ]
+ },
+ {
+  "name": "Moody's",
+  "slugs": [
+   "moodys"
+  ]
+ },
+ {
+  "name": "Intercontinental Exchange",
+  "slugs": [
+   "ice",
+   "intercontinentalexchange"
+  ]
+ },
+ {
+  "name": "CME Group",
+  "slugs": [
+   "cmegroup"
+  ]
+ },
+ {
+  "name": "Franklin Templeton",
+  "slugs": [
+   "franklintempleton"
+  ]
+ },
+ {
+  "name": "Vanguard",
+  "slugs": [
+   "vanguard"
+  ]
+ },
+ {
+  "name": "Charles Schwab",
+  "slugs": [
+   "schwab",
+   "charlesschwab"
+  ]
+ },
+ {
+  "name": "Invesco",
+  "slugs": [
+   "invesco"
+  ]
+ },
+ {
+  "name": "Prudential Financial",
+  "slugs": [
+   "prudential"
+  ]
+ },
+ {
+  "name": "MetLife",
+  "slugs": [
+   "metlife"
+  ]
+ },
+ {
+  "name": "Aon",
+  "slugs": [
+   "aon"
+  ]
+ },
+ {
+  "name": "Marsh McLennan",
+  "slugs": [
+   "marshmclennan"
+  ]
+ },
+ {
+  "name": "Willis Towers Watson",
+  "slugs": [
+   "wtw",
+   "willistowerswatson"
+  ]
+ },
+ {
+  "name": "Cigna",
+  "slugs": [
+   "cigna"
+  ]
+ },
+ {
+  "name": "Elevance Health",
+  "slugs": [
+   "elevancehealth"
+  ]
+ },
+ {
+  "name": "Ameriprise Financial",
+  "slugs": [
+   "ameriprise"
+  ]
+ },
+ {
+  "name": "Macquarie",
+  "slugs": [
+   "macquarie"
+  ]
+ },
+ {
+  "name": "Synchrony",
+  "slugs": [
+   "synchrony"
+  ]
+ },
+ {
+  "name": "Equifax",
+  "slugs": [
+   "equifax"
+  ]
+ },
+ {
+  "name": "Verisk",
+  "slugs": [
+   "verisk"
+  ]
+ },
+ {
+  "name": "FICO",
+  "slugs": [
+   "fico"
+  ]
+ },
+ {
+  "name": "Clarivate",
+  "slugs": [
+   "clarivate"
+  ]
+ },
+ {
+  "name": "Wolters Kluwer",
+  "slugs": [
+   "wolterskluwer"
+  ]
+ },
+ {
+  "name": "Dun & Bradstreet",
+  "slugs": [
+   "dnb",
+   "dunbradstreet"
+  ]
+ },
+ {
+  "name": "Mizuho",
+  "slugs": [
+   "mizuho"
+  ]
+ },
+ {
+  "name": "MUFG",
+  "slugs": [
+   "mufg"
+  ]
+ },
+ {
+  "name": "Truist",
+  "slugs": [
+   "truist"
+  ]
+ },
+ {
+  "name": "Global Payments",
+  "slugs": [
+   "globalpayments"
+  ]
+ },
+ {
+  "name": "Euronet",
+  "slugs": [
+   "euronet"
+  ]
+ },
+ {
+  "name": "SS&C Technologies",
+  "slugs": [
+   "ssc",
+   "ssctech"
+  ]
+ },
+ {
+  "name": "Clearwater Analytics",
+  "slugs": [
+   "clearwateranalytics"
+  ]
+ },
+ {
+  "name": "Addepar",
+  "slugs": [
+   "addepar"
+  ]
+ },
+ {
+  "name": "Murex",
+  "slugs": [
+   "murex"
+  ]
+ },
+ {
+  "name": "Finastra",
+  "slugs": [
+   "finastra"
+  ]
+ },
+ {
+  "name": "Temenos",
+  "slugs": [
+   "temenos"
+  ]
+ },
+ {
+  "name": "nCino",
+  "slugs": [
+   "ncino"
+  ]
+ },
+ {
+  "name": "Intapp",
+  "slugs": [
+   "intapp"
+  ]
+ },
+ {
+  "name": "McKinsey & Company",
+  "slugs": [
+   "mckinsey"
+  ]
+ },
+ {
+  "name": "Bain & Company",
+  "slugs": [
+   "bain"
+  ]
+ },
+ {
+  "name": "KPMG",
+  "slugs": [
+   "kpmg"
+  ]
+ },
+ {
+  "name": "EY",
+  "slugs": [
+   "ey"
+  ]
+ },
+ {
+  "name": "Kearney",
+  "slugs": [
+   "kearney"
+  ]
+ },
+ {
+  "name": "Mu Sigma",
+  "slugs": [
+   "musigma"
+  ]
+ },
+ {
+  "name": "Course5 Intelligence",
+  "slugs": [
+   "course5"
+  ]
+ },
+ {
+  "name": "Genpact",
+  "slugs": [
+   "genpact"
+  ]
+ },
+ {
+  "name": "Capgemini",
+  "slugs": [
+   "capgemini"
+  ]
+ },
+ {
+  "name": "Cognizant",
+  "slugs": [
+   "cognizant"
+  ]
+ },
+ {
+  "name": "Persistent Systems",
+  "slugs": [
+   "persistent"
+  ]
+ },
+ {
+  "name": "Coforge",
+  "slugs": [
+   "coforge"
+  ]
+ },
+ {
+  "name": "Mercedes-Benz Research and Development India",
+  "slugs": [
+   "mercedesbenz"
+  ]
+ },
+ {
+  "name": "BMW Group",
+  "slugs": [
+   "bmwgroup"
+  ]
+ },
+ {
+  "name": "Volkswagen",
+  "slugs": [
+   "volkswagen"
+  ]
+ },
+ {
+  "name": "Ford",
+  "slugs": [
+   "ford"
+  ]
+ },
+ {
+  "name": "General Motors",
+  "slugs": [
+   "gm"
+  ]
+ },
+ {
+  "name": "Caterpillar",
+  "slugs": [
+   "caterpillar"
+  ]
+ },
+ {
+  "name": "John Deere",
+  "slugs": [
+   "johndeere"
+  ]
+ },
+ {
+  "name": "Schneider Electric",
+  "slugs": [
+   "schneiderelectric"
+  ]
+ },
+ {
+  "name": "ABB",
+  "slugs": [
+   "abb"
+  ]
+ },
+ {
+  "name": "Rockwell Automation",
+  "slugs": [
+   "rockwellautomation"
+  ]
+ },
+ {
+  "name": "Emerson",
+  "slugs": [
+   "emerson"
+  ]
+ },
+ {
+  "name": "Danaher",
+  "slugs": [
+   "danaher"
+  ]
+ },
+ {
+  "name": "3M",
+  "slugs": [
+   "3m"
+  ]
+ },
+ {
+  "name": "Lockheed Martin",
+  "slugs": [
+   "lockheedmartin"
+  ]
+ },
+ {
+  "name": "Collins Aerospace",
+  "slugs": [
+   "collinsaerospace"
+  ]
+ },
+ {
+  "name": "Maersk",
+  "slugs": [
+   "maersk"
+  ]
+ },
+ {
+  "name": "BP",
+  "slugs": [
+   "bp"
+  ]
+ },
+ {
+  "name": "Schlumberger",
+  "slugs": [
+   "slb",
+   "schlumberger"
+  ]
+ },
+ {
+  "name": "Cummins",
+  "slugs": [
+   "cummins"
+  ]
+ },
+ {
+  "name": "Whirlpool",
+  "slugs": [
+   "whirlpool"
+  ]
+ },
+ {
+  "name": "Philips",
+  "slugs": [
+   "philips"
+  ]
+ },
+ {
+  "name": "GE HealthCare",
+  "slugs": [
+   "gehealthcare"
+  ]
+ },
+ {
+  "name": "Abbott",
+  "slugs": [
+   "abbott"
+  ]
+ },
+ {
+  "name": "Pfizer",
+  "slugs": [
+   "pfizer"
+  ]
+ },
+ {
+  "name": "Novartis",
+  "slugs": [
+   "novartis"
+  ]
+ },
+ {
+  "name": "Sanofi",
+  "slugs": [
+   "sanofi"
+  ]
+ },
+ {
+  "name": "GSK",
+  "slugs": [
+   "gsk"
+  ]
+ },
+ {
+  "name": "AstraZeneca",
+  "slugs": [
+   "astrazeneca"
+  ]
+ },
+ {
+  "name": "MSD",
+  "slugs": [
+   "msd",
+   "merck"
+  ]
+ },
+ {
+  "name": "Eli Lilly",
+  "slugs": [
+   "lilly",
+   "elililly"
+  ]
+ },
+ {
+  "name": "Roche",
+  "slugs": [
+   "roche"
+  ]
+ },
+ {
+  "name": "Johnson & Johnson",
+  "slugs": [
+   "jnj",
+   "johnsonjohnson"
+  ]
+ },
+ {
+  "name": "Thermo Fisher Scientific",
+  "slugs": [
+   "thermofisher"
+  ]
+ },
+ {
+  "name": "Syneos Health",
+  "slugs": [
+   "syneoshealth"
+  ]
+ },
+ {
+  "name": "Parexel",
+  "slugs": [
+   "parexel"
+  ]
+ },
+ {
+  "name": "ICON plc",
+  "slugs": [
+   "iconplc"
+  ]
+ }
+]

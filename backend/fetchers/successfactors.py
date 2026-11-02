@@ -93,11 +93,15 @@ def _normalize_location(location):
     return ", ".join(parts[:-1] + [name])
 
 
-def _search_page(host, startrow):
+def _search_page(host, startrow, path="/search/", extra_query=""):
+    """`path` and `extra_query` exist for tenants whose listing lives under a prefix and is
+    scoped server-side (EY: path "/ey/search/", extra_query "locationsearch=India")."""
     url = (
-        f"https://{host}/search/?q=&sortColumn=referencedate"
+        f"https://{host}{path}?q=&sortColumn=referencedate"
         f"&sortDirection=desc&startrow={startrow}"
     )
+    if extra_query:
+        url += "&" + extra_query
     return get_text(SESSION, url)
 
 
@@ -139,6 +143,11 @@ def _parse_row(row, cfg):
 
     loc_el = row.select_one("span.jobLocation")
     location = _normalize_location(loc_el.get_text(" ", strip=True) if loc_el else "")
+    scoped = cfg.get("country_scoped")
+    if scoped and location:
+        # The listing is already filtered to this country server-side, and the tenant writes
+        # "City, ST, IN, 560016 +10 more", which the location parser reads as a US state.
+        location = location.split(",")[0].strip() + ", " + scoped
 
     m = _JOB_ID_RE.search(href)
     # Fall back to the href itself when no numeric id is present — an
@@ -169,16 +178,23 @@ def fetch_successfactors(cfg, deadline=None):
     jobs = []
     seen_ids = set()
 
+    startrow = 0  # advanced by the rows actually served: tenants differ (7, 25 or 100 per page)
+    total = None
     for page in range(MAX_PAGES):
         if deadline is not None and time.monotonic() >= deadline:
             break
-        html = _search_page(host, page * PAGE_SIZE)
+        extra = {key: cfg[key] for key in ("path", "extra_query") if cfg.get(key)}
+        html = _search_page(host, startrow, **extra)
         if not html:
             break
         soup = BeautifulSoup(html, "html.parser")
         rows = soup.select("tr.data-row")
         if not rows:
             break
+        if total is None:
+            label = soup.select_one(".paginationLabel")
+            found = re.search(r"of\s+([\d,]+)", label.get_text(" ", strip=True)) if label else None
+            total = int(found.group(1).replace(",", "")) if found else 0
 
         new_on_page = 0
         for row in rows:
@@ -192,8 +208,12 @@ def fetch_successfactors(cfg, deadline=None):
             new_on_page += 1
         if new_on_page == 0:
             break  # endpoint re-serving old rows — done
-        if len(rows) < PAGE_SIZE:
-            break  # short page — genuinely the last one
+        startrow += len(rows)
+        if total:
+            if startrow >= total:
+                break  # the site's own "Results x - y of N" says this was the last page
+        elif len(rows) < PAGE_SIZE:
+            break  # no total shown: a short page is genuinely the last one
         time.sleep(0.3)  # polite gap between page requests
     else:
         # for/else: only reached when the loop ran all MAX_PAGES times
@@ -228,7 +248,7 @@ def fetch_successfactors(cfg, deadline=None):
     return jobs
 
 
-def _rmk_location(record):
+def _rmk_location(record, style=None):
     """RMK's list response gives city and country as SEPARATE fields, but
     the exact field NAMES are tenant-specific custom SuccessFactors config,
     not a platform standard — confirmed two genuinely different shapes:
@@ -240,6 +260,12 @@ def _rmk_location(record):
     Tries both, first non-empty wins. custprimecity is also genuinely None
     on some records (e.g. certain "Technical Architect" postings)
     — falls back to country alone rather than crashing on a None.join()."""
+    if style == "city_country":
+        # Wipro: jobLocationShort is "Hyderabad, IND-36, IND, 500032<br/>", which the location
+        # parser cannot read; the clean city and country are separate fields.
+        cities = record.get("sfstd_jobLocation_obj") or []
+        countries = record.get("jobLocationCountry") or []
+        return ", ".join(part for part in ((cities[0] if cities else ""), (countries[0] if countries else "")) if part)
     city = record.get("custprimecity") or ""
     countries = record.get("custCountryRegion") or []
     country = countries[0] if countries else ""
@@ -312,7 +338,7 @@ def fetch_successfactors_rmk(cfg, deadline=None):
                 "company": cfg["company"],
                 "source_id": str(job_id),
                 "title": title,
-                "location": _rmk_location(rec),
+                "location": _rmk_location(rec, cfg.get("location_style")),
                 "url": f"https://{host}/job/{html_utils.unescape(url_title)}/{job_id}-{(rec.get('supportedLocales') or ['en_US'])[0]}",
                 # Enriched from the public detail page when configured.
                 "description": "",

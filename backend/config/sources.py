@@ -611,6 +611,10 @@ from .career_expansion import register as _register_expansion
 _register_expansion(globals())
 from .career_targets_20261030 import register as _register_targets
 _register_targets(globals())
+from .career_discovered import register as _register_discovered
+_register_discovered(globals())
+from .career_browser_20261102 import register as _register_browser
+_register_browser(globals())
 
 
 # Retained for documentation; these sources are not registered collectors.

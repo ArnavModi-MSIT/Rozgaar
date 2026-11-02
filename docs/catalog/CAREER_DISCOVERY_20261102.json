@@ -1,0 +1,385 @@
+{
+  "found": [
+    {
+      "key": "unacademy",
+      "name": "Unacademy",
+      "group": "smartrecruiters",
+      "career_url": "https://careers.smartrecruiters.com/unacademy",
+      "india_postings": 3,
+      "sample_titles": [
+        "Test Jerin",
+        "Business Development Executive",
+        "Software Engineer, Backend"
+      ],
+      "skip": false
+    },
+    {
+      "key": "cars24",
+      "name": "Cars24",
+      "group": "smartrecruiters",
+      "career_url": "https://careers.smartrecruiters.com/cars24",
+      "india_postings": 1,
+      "sample_titles": [
+        "Retail Associate"
+      ],
+      "skip": false
+    },
+    {
+      "key": "gainsight",
+      "name": "Gainsight",
+      "group": "ashby",
+      "career_url": "https://jobs.ashbyhq.com/gainsight",
+      "india_postings": 4,
+      "sample_titles": [
+        "Staff Software Engineer",
+        "Director, Product Security",
+        "Lead, Product Security"
+      ],
+      "skip": false
+    },
+    {
+      "key": "koreai",
+      "name": "Kore.ai",
+      "group": "smartrecruiters",
+      "career_url": "https://careers.smartrecruiters.com/koreai",
+      "india_postings": 1,
+      "sample_titles": [
+        "Technical Lead - Java Python or Node JS"
+      ],
+      "skip": false
+    },
+    {
+      "key": "pocketfm",
+      "name": "Pocket FM",
+      "group": "lever",
+      "career_url": "https://jobs.lever.co/pocketfm",
+      "india_postings": 2,
+      "sample_titles": [
+        "Director - Analytics",
+        "Manager - Business Finance"
+      ],
+      "skip": false
+    },
+    {
+      "key": "turing",
+      "name": "Turing",
+      "group": "greenhouse",
+      "career_url": "https://job-boards.greenhouse.io/turing",
+      "india_postings": 6,
+      "sample_titles": [
+        "Forward-Deployed AI Engineer",
+        "Forward-Deployed AI Engineer",
+        "Product Manager"
+      ],
+      "skip": false
+    },
+    {
+      "key": "interviewbit",
+      "name": "Scaler",
+      "group": "smartrecruiters",
+      "career_url": "https://careers.smartrecruiters.com/interviewbit",
+      "india_postings": 1,
+      "sample_titles": [
+        "Software Engineer"
+      ],
+      "skip": false
+    },
+    {
+      "key": "newtonschool",
+      "name": "Newton School",
+      "group": "smartrecruiters",
+      "career_url": "https://careers.smartrecruiters.com/newtonschool",
+      "india_postings": 1,
+      "sample_titles": [
+        "Relationship Manager"
+      ],
+      "skip": false
+    },
+    {
+      "key": "figma",
+      "name": "Figma",
+      "group": "greenhouse",
+      "career_url": "https://job-boards.greenhouse.io/figma",
+      "india_postings": 4,
+      "sample_titles": [
+        "Account Executive, Enterprise (Bengaluru, India)",
+        "Community Support Specialist (Bengaluru, India)",
+        "Customer Support Specialist (Bengaluru, India)"
+      ],
+      "skip": false
+    },
+    {
+      "key": "sophos",
+      "name": "Sophos",
+      "group": "lever",
+      "career_url": "https://jobs.lever.co/sophos",
+      "india_postings": 13,
+      "sample_titles": [
+        "Manager, Incident Response",
+        "Product Manager",
+        "Renewal Specialist Mumbai"
+      ],
+      "skip": false
+    },
+    {
+      "key": "gen-digital",
+      "name": "Gen Digital",
+      "group": "ashby",
+      "career_url": "https://jobs.ashbyhq.com/gen-digital",
+      "india_postings": 11,
+      "sample_titles": [
+        "Senior Principal Data Engineer",
+        "Staff Data Engineer",
+        "Senior Data Platform Engineer"
+      ],
+      "skip": false
+    },
+    {
+      "key": "zuora",
+      "name": "Zuora",
+      "group": "greenhouse",
+      "career_url": "https://job-boards.greenhouse.io/zuora",
+      "india_postings": 5,
+      "sample_titles": [
+        "Marketing Business Analyst",
+        "Office & Community Manager",
+        "Sr. Solutions Architect - Workday "
+      ],
+      "skip": false
+    },
+    {
+      "key": "anaplan",
+      "name": "Anaplan",
+      "group": "greenhouse",
+      "career_url": "https://job-boards.greenhouse.io/anaplan",
+      "india_postings": 58,
+      "sample_titles": [
+        "Anaplan Model Builder",
+        "Associate Support Analyst",
+        "Coupa Program Manager (Afternoon Shift)"
+      ],
+      "skip": false
+    },
+    {
+      "key": "extremenetworks",
+      "name": "Extreme Networks",
+      "group": "lever",
+      "career_url": "https://jobs.lever.co/extremenetworks",
+      "india_postings": 38,
+      "sample_titles": [
+        "AI Principal SW Systems Engineer -10357",
+        "AI Principal SW Systems Engineer -10359",
+        "AI Principal SW Systems Engineer -AI Infra -Distributed Systems,Microservice, AI Infrastructure,Agentic systems -10358"
+      ],
+      "skip": false
+    },
+    {
+      "key": "agoda",
+      "name": "Agoda",
+      "group": "greenhouse",
+      "career_url": "https://job-boards.greenhouse.io/agoda",
+      "india_postings": 9,
+      "sample_titles": [
+        "Backend Engineer Manager (Gurugram based)",
+        "Lead Software Engineer (Level 5) | BackEnd (Gurugram based)",
+        "Senior Analyst, VBA Automation (12 months Contract, India Based) : Contract extension possible based on performance"
+      ],
+      "skip": false
+    },
+    {
+      "key": "jumptrading",
+      "name": "Jump Trading",
+      "group": "greenhouse",
+      "career_url": "https://job-boards.greenhouse.io/jumptrading",
+      "india_postings": 2,
+      "sample_titles": [
+        "HPC Systems Engineer ",
+        "Infrastructure Engineer"
+      ],
+      "skip": false
+    },
+    {
+      "key": "dnb",
+      "name": "Dun & Bradstreet",
+      "group": "lever",
+      "career_url": "https://jobs.lever.co/dnb",
+      "india_postings": 23,
+      "sample_titles": [
+        "Analyst II (R-19351)",
+        "Analyst, Data Acquisition (R-20068)",
+        "Apprentice (R-19971)"
+      ],
+      "skip": false
+    },
+    {
+      "key": "clearwater",
+      "name": "Clearwater Analytics",
+      "group": "greenhouse",
+      "career_url": "https://job-boards.greenhouse.io/clearwater",
+      "india_postings": 4,
+      "sample_titles": [
+        "Principal Penetration Tester ",
+        "Senior DevOPS Engineer ",
+        "Senior Service Now Developer "
+      ],
+      "skip": false
+    }
+  ],
+  "not_found": [
+    "Dream Sports",
+    "Eternal (Zomato)",
+    "ShareChat",
+    "Urban Company",
+    "Delhivery",
+    "BharatPe",
+    "Pine Labs",
+    "Chargebee",
+    "LeadSquared",
+    "upGrad",
+    "PhysicsWallah",
+    "Ather Energy",
+    "Rapido",
+    "Games24x7",
+    "Mobile Premier League",
+    "Nykaa",
+    "BigBasket",
+    "Licious",
+    "CarDekho",
+    "Gupshup",
+    "Yellow.ai",
+    "Krutrim",
+    "Capillary Technologies",
+    "Netcore Cloud",
+    "Haptik",
+    "LambdaTest",
+    "Setu",
+    "smallcase",
+    "INDmoney",
+    "Dhan (Raise)",
+    "Stable Money",
+    "Jar",
+    "Zluri",
+    "Leena AI",
+    "Mad Street Den",
+    "CoinDCX",
+    "CoinSwitch",
+    "Honasa Consumer (Mamaearth)",
+    "Pinterest",
+    "Fortinet",
+    "Check Point",
+    "Trellix",
+    "Dynatrace",
+    "PagerDuty",
+    "Sabre",
+    "Navan",
+    "Medallia",
+    "Genesys",
+    "Avalara",
+    "Workiva",
+    "Arm",
+    "Lam Research",
+    "Seagate",
+    "Infineon",
+    "STMicroelectronics",
+    "Keysight Technologies",
+    "Synopsys",
+    "Ansys",
+    "Lenovo",
+    "Yahoo",
+    "eBay",
+    "Best Buy",
+    "Home Depot",
+    "Nike",
+    "Wayfair",
+    "TripAdvisor",
+    "Citadel Securities",
+    "Nomura",
+    "BNP Paribas",
+    "Societe Generale",
+    "MSCI",
+    "Moody's",
+    "Intercontinental Exchange",
+    "CME Group",
+    "Franklin Templeton",
+    "Vanguard",
+    "Charles Schwab",
+    "Invesco",
+    "Prudential Financial",
+    "MetLife",
+    "Aon",
+    "Marsh McLennan",
+    "Willis Towers Watson",
+    "Cigna",
+    "Elevance Health",
+    "Ameriprise Financial",
+    "Macquarie",
+    "Synchrony",
+    "Equifax",
+    "Verisk",
+    "FICO",
+    "Clarivate",
+    "Wolters Kluwer",
+    "Mizuho",
+    "MUFG",
+    "Truist",
+    "Global Payments",
+    "Euronet",
+    "SS&C Technologies",
+    "Addepar",
+    "Murex",
+    "Finastra",
+    "Temenos",
+    "nCino",
+    "Intapp",
+    "McKinsey & Company",
+    "Bain & Company",
+    "KPMG",
+    "EY",
+    "Kearney",
+    "Mu Sigma",
+    "Course5 Intelligence",
+    "Genpact",
+    "Capgemini",
+    "Cognizant",
+    "Persistent Systems",
+    "Coforge",
+    "Mercedes-Benz Research and Development India",
+    "BMW Group",
+    "Volkswagen",
+    "Ford",
+    "General Motors",
+    "Caterpillar",
+    "John Deere",
+    "Schneider Electric",
+    "ABB",
+    "Rockwell Automation",
+    "Emerson",
+    "Danaher",
+    "3M",
+    "Lockheed Martin",
+    "Collins Aerospace",
+    "Maersk",
+    "BP",
+    "Schlumberger",
+    "Cummins",
+    "Whirlpool",
+    "Philips",
+    "GE HealthCare",
+    "Abbott",
+    "Pfizer",
+    "Novartis",
+    "Sanofi",
+    "GSK",
+    "AstraZeneca",
+    "MSD",
+    "Eli Lilly",
+    "Roche",
+    "Johnson & Johnson",
+    "Thermo Fisher Scientific",
+    "Syneos Health",
+    "Parexel",
+    "ICON plc"
+  ],
+  "inconclusive": [],
+  "already_configured": []
+}

@@ -18,8 +18,9 @@ from backend.fetchers.result import CollectionResult
 from backend.core.location import parse_country
 from backend.config.career_expansion import INDIA_BOARDS
 from backend.config.career_targets_20261030 import INDIA_BOARDS as TARGET_INDIA_BOARDS
+from backend.config.career_discovered import INDIA_BOARDS as DISCOVERED_INDIA_BOARDS
 
-INDIA_BOARDS = INDIA_BOARDS | TARGET_INDIA_BOARDS
+INDIA_BOARDS = INDIA_BOARDS | TARGET_INDIA_BOARDS | DISCOVERED_INDIA_BOARDS
 
 INDIA_SCOPED_BOARDS = {"databricks", "roku", "gleanwork", "okta", "purestorage", "gitlab", "squarepointcapital", "quberesearchandtechnologies","alphagrepsecurities", "nksecuritiesresearch", "worldquant", "imc", "optiverus", "mongodb", "datadog"}
 INDIA_SCOPED_BOARDS.update({"appian", "couchbaseinc", "inmobi", "typeface", "commvault", "sigmoid", "fanaticsinc", "fanaticscommerce", "fanaticsfbg", "fanaticscollectibles"})

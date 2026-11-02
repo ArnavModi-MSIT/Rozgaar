@@ -31,7 +31,7 @@ def collect(deadline=None):
             if deadline and time.monotonic() >= deadline:
                 errors.append(f"{label}: deadline reached")
                 continue
-            rows, total, failed = [], None, False
+            rows, total, failed, full_retry = [], None, False, False
             while total is None or len(rows) < total:
                 if deadline and time.monotonic() >= deadline:
                     errors.append(f"{label}: deadline reached")
@@ -49,6 +49,15 @@ def collect(deadline=None):
                     break
                 total = min(payload["totalMatches"], MAX_RESULTS_PER_SEARCH)
                 if not payload["jobsList"]:
+                    # The servlet may not treat `start` as a row offset. Retry once with
+                    # one request sized to the reported total before settling for partial.
+                    if rows and len(rows) < total and not full_retry:
+                        full_retry = True
+                        retry = get_json(session, f"{BASE}/services/{servlet}", timeout=LISTING_TIMEOUT, params={
+                            "start": 0, "rows": total, "search": "jobsByLocation", "searchstring": "India",
+                        })
+                        if isinstance(retry, dict) and isinstance(retry.get("jobsList"), list) and len(retry["jobsList"]) > len(rows):
+                            rows = list(retry["jobsList"])
                     break
                 rows.extend(payload["jobsList"])
             if total is not None and len(rows) < total and not failed:

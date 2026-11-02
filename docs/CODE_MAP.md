@@ -8,6 +8,7 @@
 | Change data, model or browser paths | `rojgaar/paths.py` |
 | Add or edit employer inventories | `backend/config/sources.py`, `backend/config/career_expansion.py` (26 October batch) |
 | Edit feeds from the 100-company target list | `backend/config/career_targets_20261030.py`; audit outcomes in `docs/catalog/CAREER_TARGETS_20261030.json` and `CAREER_EXPANSION_20261030.md` |
+| Find and register more ATS feeds by company name | `scripts/career/discover_sources.py`; candidates in `docs/catalog/CAREER_CANDIDATES_20261102.json`; approved rows land in `backend/config/career_discovered.py` (see `docs/catalog/CAREER_DISCOVERY.md`) |
 | Change United Airlines India collection | `backend/fetchers/unitedairlines.py` (public Phenom country scope and full identity-checked detail JSON) |
 | Change Medpace / Epsilon public feeds | `backend/fetchers/jibe.py` (India, employer/brand identity, pagination and full returned descriptions) |
 | View disabled career sources and reasons | `backend/config/sources.py` (`DISABLED_CAREER_SOURCES`), disabled section of `docs/catalog/CAREER_COMPANIES.md` |

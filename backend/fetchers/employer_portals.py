@@ -22,6 +22,11 @@ from .jibe import fetch as fetch_jibe
 from .unitedairlines import fetch as fetch_unitedairlines
 from .dataweave import fetch as fetch_dataweave
 from .kissht import fetch as fetch_kissht
+from .talentbrew import fetch as fetch_talentbrew
+from .avature import fetch as fetch_avature
+from .capgemini import fetch as fetch_capgemini
+from .urbancompany import fetch as fetch_urbancompany
+from .mckinsey import fetch as fetch_mckinsey
 
 
 def _expired(deadline):
@@ -543,7 +548,7 @@ ADAPTERS = {"darwinbox": fetch_darwinbox, "keka": fetch_keka,
             "trakstar": fetch_trakstar, "kula": fetch_kula, "oracle": fetch_oracle_india,
             "successfactors": fetch_successfactors, "pcsx": fetch_pcsx,
             "peoplestrong": fetch_peoplestrong, "c5i": fetch_c5i, "gem": fetch_gem,
-            "upstox": fetch_upstox, "jibe": fetch_jibe, "unitedairlines": fetch_unitedairlines, "dataweave": fetch_dataweave, "kissht": fetch_kissht}
+            "upstox": fetch_upstox, "jibe": fetch_jibe, "unitedairlines": fetch_unitedairlines, "dataweave": fetch_dataweave, "kissht": fetch_kissht, "talentbrew": fetch_talentbrew, "avature": fetch_avature, "capgemini": fetch_capgemini, "urbancompany": fetch_urbancompany, "mckinsey": fetch_mckinsey}
 
 
 def collect(configs, deadline=None):

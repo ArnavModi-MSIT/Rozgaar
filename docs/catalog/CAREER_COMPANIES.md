@@ -1,16 +1,16 @@
 # Career-page company inventory
 
-Updated: 30 October 2026.
+Updated: 02 November 2026.
 
-**319 company/display-name entries** configured in the career-page pipeline. Multiple boards or student feeds for the same display name share one row; separate divisions may retain their own display names.
+**361 company/display-name entries** configured in the career-page pipeline. Multiple boards or student feeds for the same display name share one row; separate divisions may retain their own display names.
 
 This is a configuration inventory, not a live health check, a count of companies with current jobs, or a guarantee of complete descriptions. It excludes the separate URL-reader pipeline.
 
-Compiled from `backend/config/sources.py`, `backend/config/career_expansion.py`, `backend/config/career_targets_20261030.py`, `backend/config/display.py`, and every registered collector in `backend/core/collector.py`.
+Compiled from `backend/config/sources.py`, `backend/config/career_expansion.py`, `backend/config/career_targets_20261030.py`, `backend/config/career_discovered.py`, `backend/config/career_browser_20261102.py`, `backend/config/display.py`, and every registered collector in `backend/core/collector.py`.
 
 Regenerate offline after source changes: `runtime/python/Scripts/python.exe -m scripts.career.company_inventory`. This command does not collect jobs or change the database.
 
-The older `COMPANY_SOURCES.json` is a curated 75-company audit input, not the full inventory. Dated observations are in [Source maintenance](../SOURCE_STATUS.md); the [26 October expansion](CAREER_EXPANSION_20261026.md) and [30 October target check](CAREER_EXPANSION_20261030.md) record validation scope, unresolved companies and salary uncertainty.
+The older `COMPANY_SOURCES.json` is a curated 75-company audit input, not the full inventory. Dated observations are in [Source maintenance](../SOURCE_STATUS.md); the [26 October expansion](CAREER_EXPANSION_20261026.md) and [30 October target check](CAREER_EXPANSION_20261030.md), and the [2 November discovery notes](CAREER_DISCOVERY.md) record validation scope, unresolved companies and salary uncertainty.
 
 | Company | Configuration key / board | Source / collector |
 |---|---|---|
@@ -20,6 +20,7 @@ The older `COMPANY_SOURCES.json` is a curated 75-company audit input, not the fu
 | Accenture | `accenture` | `workday_india` |
 | Acko | `acko` | `employer_portals / kula` |
 | Adobe | `adobe` | `phenom` |
+| Agoda | `agoda` | `greenhouse` |
 | Airbnb | `airbnb` | `greenhouse` |
 | Airbus | `airbus` | `workday_india` |
 | Akamai Technologies | `akamai` | `employer_portals / oracle` |
@@ -31,8 +32,10 @@ The older `COMPANY_SOURCES.json` is a curated 75-company audit input, not the fu
 | AMD | `amd` | `amd (dedicated adapter)` |
 | American Express | `amex` | `oracle` |
 | Analog Devices | `analogdevices` | `workday_india` |
+| Anaplan | `anaplan` | `greenhouse` |
 | Anthropic | `anthropic` | `greenhouse` |
 | ANZ | `anz` | `employer_portals / successfactors` |
+| Aon | `aon` | `employer_portals / jibe` |
 | Apollo Global Management | `apollo` | `workday_india` |
 | Appian | `appian` | `greenhouse` |
 | Apple | `apple` | `apple (dedicated adapter)` |
@@ -62,23 +65,28 @@ The older `COMPANY_SOURCES.json` is a curated 75-company audit input, not the fu
 | Boomi | `boomilp` | `greenhouse` |
 | Bosch | `BoschGroup` | `smartrecruiters` |
 | Boston Consulting Group | `bcg` | `phenom` |
+| bp | `bp` | `workday_india` |
 | Bristol Myers Squibb | `bms` | `workday_india` |
 | Broadcom | `broadcom` | `workday_india` |
 | Broadridge | `broadridge` | `workday_india` |
 | BrowserStack | `browserstack` | `workday_india` |
 | C5i | `c5i` | `employer_portals / c5i` |
 | Cadence Design Systems | `cadence` | `workday_india` |
+| Capgemini | `capgemini` | `employer_portals / capgemini` |
 | Capital One | `capitalone` | `workday_india` |
+| Cars24 | `cars24` | `smartrecruiters` |
 | Cashfree Payments | `cashfree` | `employer_portals / kula` |
 | Celigo | `celigo` | `greenhouse` |
 | Ciena | `ciena` | `workday_india` |
 | Cisco | `cisco` | `workday` |
 | Citi | `citi` | `workday_india` |
 | Clear (ClearTax) | `cleartax` | `employer_portals / darwinbox` |
+| Clearwater Analytics | `clearwater` | `greenhouse` |
 | CleverTap | `clevertap` | `employer_portals / kula` |
 | ClickHouse | `clickhouse` | `ashby` |
 | Cloudera | `cloudera` | `workday_india` |
 | Cloudflare | `cloudflare` | `greenhouse` |
+| CME Group | `cmegroup` | `workday_india` |
 | Cognite | `cognite` | `greenhouse` |
 | Cohesity | `cohesity` | `workday_india` |
 | Coinbase | `coinbase` | `greenhouse` |
@@ -90,6 +98,7 @@ The older `COMPANY_SOURCES.json` is a curated 75-company audit input, not the fu
 | Coursera | `coursera` | `greenhouse` |
 | CRED | `cred` | `lever` |
 | CrowdStrike | `crowdstrike` | `workday_india` |
+| Cummins | `cummins` | `employer_portals / oracle` |
 | Cvent | `cvent` | `icims` |
 | D. E. Shaw India | `deshaw` | `deshaw (dedicated adapter)` |
 | Darwinbox | `darwinbox` | `employer_portals / darwinbox` |
@@ -97,6 +106,7 @@ The older `COMPANY_SOURCES.json` is a curated 75-company audit input, not the fu
 | Datadog | `datadog` | `greenhouse` |
 | DataWeave | `dataweave` | `employer_portals / dataweave` |
 | DBS Bank | `dbs` | `workday_india` |
+| Delhivery | `delhivery` | `employer_portals / darwinbox` |
 | Deliveroo | `deliveroo` | `greenhouse` |
 | Dell | `dell` | `oracle` |
 | Deloitte | `deloitte` | `deloitte (dedicated adapter)` |
@@ -104,7 +114,9 @@ The older `COMPANY_SOURCES.json` is a curated 75-company audit input, not the fu
 | Deutsche Bank | `deutsche_bank` | `deutsche_bank (dedicated adapter)` |
 | Dialpad | `dialpad` | `greenhouse` |
 | Druva | `druva` | `greenhouse` |
+| Dun & Bradstreet | `dnb` | `lever` |
 | Duolingo | `duolingo` | `greenhouse` |
+| Eaton | `eaton` | `eightfold` |
 | Eightfold AI | `eightfoldai` | `employer_portals / pcsx` |
 | Elastic | `elastic` | `greenhouse` |
 | Electronic Arts | `ea` | `ea (dedicated adapter)` |
@@ -114,7 +126,9 @@ The older `COMPANY_SOURCES.json` is a curated 75-company audit input, not the fu
 | Evalueserve | `evalueserve` | `employer_portals / darwinbox` |
 | EXL | `exl` | `oracle` |
 | Experian India | `Experian` | `smartrecruiters` |
+| Extreme Networks | `extremenetworks` | `lever` |
 | ExxonMobil | `exxonmobil` | `employer_portals / successfactors` |
+| EY | `ey` | `successfactors` |
 | F5 | `f5` | `workday_india` |
 | FactSet | `factset` | `workday_india` |
 | Fampay | `fampay` | `lever` |
@@ -125,6 +139,7 @@ The older `COMPANY_SOURCES.json` is a curated 75-company audit input, not the fu
 | Fi Money | `epifi` | `lever` |
 | Fidelity International | `fidelity` | `workday` |
 | Fidelity Investments | `fidelityinvestments` | `workday_india` |
+| Figma | `figma` | `greenhouse` |
 | FIS | `fis` | `workday_india` |
 | Fiserv | `fiserv` | `phenom` |
 | Fivetran | `fivetran` | `greenhouse` |
@@ -132,9 +147,12 @@ The older `COMPANY_SOURCES.json` is a curated 75-company audit input, not the fu
 | FNZ | `fnz` | `workday_india` |
 | Fractal Analytics | `fractal` | `workday` |
 | Freshworks | `Freshworks` | `smartrecruiters` |
+| Gainsight | `gainsight` | `ashby` |
 | Gartner | `gartner` | `workday_india` |
 | GE Aerospace | `geaerospace` | `workday_india` |
 | GE Appliances | `geappliances` | `workday_india` |
+| Gen Digital | `gen-digital` | `ashby` |
+| Genpact | `genpact` | `workday_india` |
 | GitLab | `gitlab` | `greenhouse` |
 | Glean | `gleanwork` | `greenhouse` |
 | Goldman Sachs | `goldman_sachs` | `goldman_sachs (dedicated adapter)` |
@@ -144,8 +162,10 @@ The older `COMPANY_SOURCES.json` is a curated 75-company audit input, not the fu
 | Guidewire | `guidewire` | `workday_india` |
 | HackerRank | `hackerrank` | `greenhouse` |
 | Harness | `harnessinc` | `greenhouse` |
+| HCLTech | `hcltech` | `successfactors` |
 | Hevo Data | `hevodata` | `lever` |
 | Hewlett Packard Enterprise | `hpe` | `workday_india` |
+| Hexaware | `hexaware` | `employer_portals / oracle` |
 | HighRadius | `highradius` | `greenhouse` |
 | Honeywell | `honeywell` | `employer_portals / oracle` |
 | HP | `hp` | `workday` |
@@ -158,6 +178,7 @@ The older `COMPANY_SOURCES.json` is a curated 75-company audit input, not the fu
 | InMobi | `inmobi` | `greenhouse` |
 | Innovaccer | `innovaccer-analytics` | `workable` |
 | Intel | `intel` | `workday` |
+| Intercontinental Exchange | `ice` | `employer_portals / jibe` |
 | Intuit | `intuit` | `intuit (dedicated adapter)` |
 | ION Group | `ion` | `lever` |
 | IQVIA | `iqvia` | `workday_india` |
@@ -165,22 +186,29 @@ The older `COMPANY_SOURCES.json` is a curated 75-company audit input, not the fu
 | Josh Technology Group | `joshtechnologygroup` | `joshtechnologygroup (dedicated adapter)` |
 | JPMorgan Chase | `jpmc` | `oracle` |
 | Jumio | `jumio` | `greenhouse` |
+| Jump Trading | `jumptrading` | `greenhouse` |
 | Jupiter Money | `jupiter` | `employer_portals / keka` |
 | Juspay | `juspay` | `juspay (dedicated adapter)` |
 | Kissht | `kissht` | `employer_portals / kissht` |
 | KLA | `kla` | `workday_india` |
+| Kore.ai | `koreai` | `smartrecruiters` |
+| KPMG Global Services | `kpmg` | `employer_portals / oracle` |
 | LatentView Analytics | `latentview` | `employer_portals / darwinbox` |
+| LeadSquared | `leadsquared` | `employer_portals / darwinbox` |
 | Lenskart | `lenskart` | `ainterviews` |
 | LinkedIn | `linkedin_company` | `linkedin_company (dedicated adapter)` |
 | Lowe's India | `lowes` | `lowes (dedicated adapter)` |
 | LSEG | `lseg` | `workday_india` |
+| Macquarie | `macquarie` | `employer_portals / avature` |
 | MakeMyTrip | `makemytrip` | `makemytrip (dedicated adapter)` |
 | Manhattan Associates | `manh` | `workday_india` |
 | MAQ Software | `maqsoftware` | `maqsoftware (dedicated adapter)` |
+| Marsh McLennan | `marsh` | `phenom` |
 | Marvell Technology | `marvell` | `workday_india` |
 | Mastercard | `mastercard` | `mastercard_workday (dedicated adapter)`, `phenom` |
 | MathCo | `mathco` | `employer_portals / peoplestrong` |
 | MathWorks | `mathworks` | `mathworks (dedicated adapter)` |
+| McKinsey & Company | `mckinsey` | `employer_portals / mckinsey` |
 | MediaTek | `mediatek` | `mediatek (dedicated adapter)` |
 | Medpace | `medpace` | `employer_portals / jibe` |
 | Medtronic | `medtronic` | `workday` |
@@ -195,6 +223,7 @@ The older `COMPANY_SOURCES.json` is a curated 75-company audit input, not the fu
 | MoEngage | `moengage` | `employer_portals / trakstar` |
 | Moneyview | `moneyview` | `employer_portals / darwinbox` |
 | MongoDB | `mongodb` | `greenhouse` |
+| Moody's | `moodys` | `employer_portals / talentbrew` |
 | Morgan Stanley | `morganstanley` | `eightfold`, `morgan_stanley_students (dedicated adapter)` |
 | Morningstar | `morningstar` | `workday_india` |
 | Myntra | `myntra` | `myntra (dedicated adapter)` |
@@ -209,12 +238,14 @@ The older `COMPANY_SOURCES.json` is a curated 75-company audit input, not the fu
 | Netradyne | `Netradyne` | `smartrecruiters` |
 | Netskope | `netskope` | `greenhouse` |
 | New Relic | `newrelic` | `greenhouse` |
+| Newton School | `newtonschool` | `smartrecruiters` |
 | Nielsen | `TheNielsenCompany` | `smartrecruiters` |
 | NielsenIQ | `NielsenIQ` | `smartrecruiters` |
 | Ninjacart | `ninjacart` | `employer_portals / darwinbox` |
 | Nium | `nium` | `lever` |
 | NK Securities Research | `nksecuritiesresearch` | `greenhouse` |
 | Nokia India | `nokia` | `employer_portals / oracle` |
+| Nomura | `nomura` | `successfactors` |
 | Northern Trust | `northerntrust` | `workday_india` |
 | Notion | `notion` | `ashby` |
 | Nutanix | `nutanix` | `nutanix (dedicated adapter)` |
@@ -235,6 +266,7 @@ The older `COMPANY_SOURCES.json` is a curated 75-company audit input, not the fu
 | Perfios | `perfios` | `employer_portals / darwinbox` |
 | PharmEasy | `pharmeasy` | `employer_portals / darwinbox` |
 | PhonePe | `PHONEPELIMITED` | `smartrecruiters` |
+| Pocket FM | `pocketfm` | `lever` |
 | Portcast | `portcast` | `lever` |
 | Porter | `porter` | `employer_portals / darwinbox` |
 | Postman | `postman` | `workday_india` |
@@ -264,6 +296,8 @@ The older `COMPANY_SOURCES.json` is a curated 75-company audit input, not the fu
 | Samsung | `samsung` | `workday` |
 | SAP Labs India | `sap` | `sap (dedicated adapter)` |
 | Sarvam | `sarvam` | `ashby` |
+| Scaler | `interviewbit` | `smartrecruiters` |
+| Schneider Electric | `schneiderelectric` | `employer_portals / jibe` |
 | ServiceNow | `servicenow` | `smartrecruiters` |
 | Shell | `shell` | `workday_india` |
 | Siemens Digital Industries Software | `siemenssoftware` | `siemenssoftware (dedicated adapter)` |
@@ -275,6 +309,7 @@ The older `COMPANY_SOURCES.json` is a curated 75-company audit input, not the fu
 | Slice | `slice` | `employer_portals / kula` |
 | Smarsh | `smarsh` | `lever` |
 | Snowflake | `snowflake` | `ashby` |
+| Sophos | `sophos` | `lever` |
 | Spinny | `spinny` | `employer_portals / darwinbox` |
 | Sprinklr | `sprinklr` | `workday` |
 | Sprinto | `Sprinto` | `lever` |
@@ -286,6 +321,7 @@ The older `COMPANY_SOURCES.json` is a curated 75-company audit input, not the fu
 | Sumo Logic | `sumologic` | `greenhouse` |
 | Swiggy | `swiggy` | `swiggy (dedicated adapter)` |
 | Swiss Re | `swissre` | `swissre (dedicated adapter)` |
+| Synopsys | `synopsys` | `employer_portals / talentbrew` |
 | Target | `target` | `target (dedicated adapter)` |
 | Tekion | `tekion` | `ashby` |
 | Teradata | `teradata` | `teradata (dedicated adapter)` |
@@ -301,25 +337,30 @@ The older `COMPANY_SOURCES.json` is a curated 75-company audit input, not the fu
 | TransUnion (India group) | `transunion` | `workday_india` |
 | Tredence Analytics | `tredence` | `tredence (dedicated adapter)` |
 | Trimble | `trimble` | `workday_india` |
+| Turing | `turing` | `greenhouse` |
 | Twilio | `twilio` | `greenhouse` |
 | Typeface | `typeface` | `greenhouse` |
 | Uber | `uber` | `uber (dedicated adapter)` |
 | UBS | `ubs` | `ubs (dedicated adapter)` |
 | UiPath | `uipath` | `ashby` |
 | Ukg | `ukg` | `eightfold` |
+| Unacademy | `unacademy` | `smartrecruiters` |
 | Uniphore | `uniphore` | `workday_india` |
 | United Airlines | `unitedairlines` | `employer_portals / unitedairlines` |
 | UnitedHealth Group / Optum | `unitedhealthgroup` | `unitedhealthgroup (dedicated adapter)` |
 | Upstox | `upstox` | `employer_portals / upstox` |
+| Urban Company | `urbancompany` | `employer_portals / urbancompany` |
 | Veeva Systems | `veeva` | `lever` |
 | Vercel | `vercel` | `greenhouse` |
 | Visa | `visa` | `workday`, `workday_students` |
+| Vodafone Idea | `vodafoneidea` | `successfactors` |
 | Walmart Global Tech | `walmart` | `workday`, `workday_students` |
 | WebEngage | `webengage` | `employer_portals / keka` |
 | Wells Fargo | `wellsfargo` | `workday_india` |
 | Western Digital | `WesternDigital` | `smartrecruiters` |
 | Whatfix | `whatfix` | `employer_portals / trakstar` |
 | Wingify | `wingify` | `employer_portals / keka` |
+| Wipro | `wipro` | `successfactors` |
 | Workday | `workdaycompany` | `workday_india` |
 | WorldQuant | `worldquant` | `greenhouse` |
 | YipitData | `yipitdatajobs` | `greenhouse` |
@@ -333,6 +374,7 @@ The older `COMPANY_SOURCES.json` is a curated 75-company audit input, not the fu
 | ZoomInfo | `zoominfo` | `greenhouse` |
 | ZS Associates | `zs` | `zs (dedicated adapter)` |
 | Zscaler | `zscaler` | `greenhouse` |
+| Zuora | `zuora` | `greenhouse` |
 
 ## Disabled sources
 
