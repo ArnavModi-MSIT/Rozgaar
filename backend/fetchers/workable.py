@@ -9,44 +9,31 @@ without it you only get summary fields.
 """
 
 import logging
-import time
 from concurrent.futures import ThreadPoolExecutor
 
 import requests
 
+from .http_client import get_json
 from .standard import strip_html
 from .result import CollectionResult
 
 log = logging.getLogger("jobbot")
 TIMEOUT = 15
-RETRIES = 3
-RETRY_BACKOFF = (1, 2, 4)
 SESSION = requests.Session()
 SESSION.headers["User-Agent"] = "jobbot/1.0"
 
 
 def _get(url):
-    for attempt in range(RETRIES):
-        try:
-            r = SESSION.get(url, timeout=TIMEOUT)
-            if r.status_code >= 500:
-                raise requests.HTTPError(f"{r.status_code} server error")
-            r.raise_for_status()
-            return r.json()
-        except requests.HTTPError:
-            if r.status_code < 500:
-                return None  # 4xx — don't retry (wrong slug, account disabled)
-        except (requests.RequestException, ValueError):
-            pass
-        if attempt < RETRIES - 1:
-            time.sleep(RETRY_BACKOFF[attempt])
-    return None
+    """GET json through the shared retry policy (http_client): 429 waits for
+    Retry-After, 5xx/timeouts back off and retry, any other 4xx returns None.
+    None means "no usable feed after retries" -- never "the board is empty"."""
+    return get_json(SESSION, url, timeout=TIMEOUT)
 
 
 def fetch_workable(slug):
     data = _get(f"https://apply.workable.com/api/v1/widget/accounts/{slug}?details=true")
     if not isinstance(data,dict) or not isinstance(data.get("jobs"),list):
-        raise RuntimeError("Workable board unavailable: "+slug)
+        raise RuntimeError(f"Workable board unavailable: {slug} (no valid response after retries)")
     jobs = {}
     for j in data.get("jobs", []):
         locations = j.get("locations") or [j.get("location") or {
