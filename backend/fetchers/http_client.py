@@ -77,6 +77,10 @@ def _request(session, method, url, parse, retries=DEFAULT_RETRIES, backoff=DEFAU
             return parse(r)
         except requests.HTTPError as e:
             if r.status_code < 500:
+                # Say why: a rejected request must not look like "no data".
+                # 404 is routine (closed postings), so it stays at INFO.
+                log.log(logging.INFO if r.status_code == 404 else logging.WARNING,
+                        "request rejected HTTP %s %s %s", r.status_code, method, url)
                 return None  # other 4xx — don't retry
             last_err = e
         except (requests.RequestException, ValueError) as e:
