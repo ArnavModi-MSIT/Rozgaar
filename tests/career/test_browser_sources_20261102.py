@@ -8,7 +8,7 @@ class BrowserSourceTests(unittest.TestCase):
     def test_rows_are_registered_with_expected_shapes(self):
         by_key = {row["key"]: row for row in batch.SOURCES}
         self.assertEqual(set(by_key), {"ice", "cmegroup", "nomura", "synopsys", "moodys", "aon", "marsh", "genpact", "macquarie", "kpmg", "hexaware", "vodafoneidea",
-                                "capgemini", "leadsquared", "delhivery", "schneiderelectric", "eaton", "bp", "cummins", "ey", "wipro", "hcltech", "urbancompany", "mckinsey"})
+                                "capgemini", "leadsquared", "delhivery", "schneiderelectric", "eaton", "bp", "cummins", "hcltech", "urbancompany", "mckinsey"})
         self.assertIn({"company": "ice", "kind": "jibe", "host": "careers.ice.com", "client_code": "ice"}, sources.EMPLOYER_PORTALS)
         self.assertIn({"company": "cmegroup", "tenant": "cmegroup", "wd_server": "wd1", "site": "cme_careers",
                        "verify_detail_country": True}, sources.WORKDAY_INDIA)
@@ -32,11 +32,6 @@ class BrowserSourceTests(unittest.TestCase):
                        "fetch_details": True}, sources.EIGHTFOLD)
         self.assertIn({"company": "bp", "tenant": "bpinternational", "wd_server": "wd3", "site": "bpCareers",
                        "verify_detail_country": True}, sources.WORKDAY_INDIA)
-        self.assertIn({"company": "ey", "host": "careers.ey.com", "path": "/ey/search/", "extra_query": "locationsearch=India",
-                       "country_scoped": "India", "fetch_details": True}, sources.SUCCESSFACTORS)
-        self.assertIn({"company": "wipro", "host": "careers.wipro.com", "variant": "rmk", "category_id": 0,
-                       "facet_filters": {"jobLocationCountry": ["India"]}, "location_style": "city_country",
-                       "fetch_details": True}, sources.SUCCESSFACTORS)
         self.assertIn({"company": "hcltech", "host": "careers.hcltech.com", "variant": "rmk", "category_id": 0,
                        "facet_filters": {"custCountryRegion": ["India"]}, "fetch_details": True}, sources.SUCCESSFACTORS)
         self.assertIn({"company": "urbancompany", "kind": "urbancompany"}, sources.EMPLOYER_PORTALS)

@@ -20,4 +20,14 @@ class RoleYearsTests(unittest.TestCase):
   self.assertEqual(extract_min_experience('<p>Years of Experience: 3+</p>'),3)
   self.assertEqual(extract_min_experience('Experience (years): 0-1'),0)
   self.assertIsNone(extract_min_experience('Years of Experience: 6 months'))
+ def test_ibm_years_range_with_non_breaking_spaces(self):
+  # Live IBM markup (jobId 131764): the range is "8&nbsp;-&nbsp;14" and follows a "Preferred" heading.
+  ibm=('<div><strong>Preferred technical and professional experience</strong></div>'
+       '<p>&bull; Open Source Technologies: Exposure to Airflow, dbt, Spark.</p>'
+       '<div class="article__content__view__field__value"><strong>Years of Experience:</strong><br>8&nbsp;-&nbsp;14</div>'
+       '<h3>ABOUT BUSINESS UNIT</h3><p>IBM Consulting is IBM\u2019s consulting business.</p>')
+  self.assertEqual(extract_min_experience(ibm),8)
+  self.assertEqual(extract_min_experience('Years of Experience: 8\xa0-\xa014'),8)
+  self.assertEqual(extract_min_experience('Years of Experience: 3\xa0+'),3)
+  self.assertIsNone(extract_min_experience('Years of Experience: 6\xa0months'))
 if __name__=='__main__': unittest.main()

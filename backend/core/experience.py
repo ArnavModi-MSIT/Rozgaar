@@ -174,9 +174,11 @@ def _bare_experience_years(text):
 
 # Labelled numbers with the unit in the label ("Years of Experience: 5 - 10"),
 # which the N-years pattern cannot see because no unit follows the number.
+# Spacing inside the range is horizontal whitespace of any kind: IBM writes
+# "8&nbsp;-&nbsp;14", and a non-breaking space is not a plain space or tab.
 _LABELLED_YEARS_RE = re.compile(
     r"\b((?:total\s+)?(?:years?\s+of\s+experience|experience\s*\(\s*(?:in\s+)?years?\s*\)))"
-    r"(\s*[:\-]\s*)(\d+(?:\.\d+)?(?:[ \t]*\+)?(?:[ \t]*(?:-|to|–|—)[ \t]*\d+(?:\.\d+)?(?:[ \t]*\+)?)?)"
+    r"(\s*[:\-]\s*)(\d+(?:\.\d+)?(?:[^\S\r\n]*\+)?(?:[^\S\r\n]*(?:-|to|–|—)[^\S\r\n]*\d+(?:\.\d+)?(?:[^\S\r\n]*\+)?)?)"
     r"(?!\s*(?:years?|yrs?|months?)\b)(?![\d.])", re.I)
 
 

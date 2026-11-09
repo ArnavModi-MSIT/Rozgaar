@@ -57,7 +57,7 @@ from backend.core.location import is_india_or_unknown, is_smartrecruiters_india_
 from backend.core.skills import build_patterns, extract_skills
 from backend.core.storage import cleanup_old, delete_by_source, get_custom_skills, get_oracle_jobs_missing_description, get_unprocessed, get_workday_jobs_missing_description, init_db, job_id, load_dedup_keys, load_existing_ids, mark_observed, prune_non_india, record_stats, refresh_atlassian_job, refresh_mastercard_from_workday, refresh_qualcomm_student, refresh_collected_description, reset_experience_years, reset_skills, save_job, update_categories, update_descriptions, update_experience, update_skills
 from backend.fetchers.oracle import fetch_requisition_detail
-from backend.fetchers.workday import fetch_job_detail
+from backend.fetchers.workday import fetch_job_detail, workday_base
 
 log = logging.getLogger("jobbot")
 
@@ -416,7 +416,7 @@ if __name__ == "__main__":
             rows = [(jid, title, url) for jid, title, url in rows if detail_filter.search(title)]
             log.info("workday refetch %s: %d/%d rows match fetch_details_filter", company, len(rows), before)
         log.info("refetching descriptions for %d workday job(s) (%s)...", len(rows), company)
-        base = f"https://{cfg['tenant']}.{cfg['wd_server']}.myworkdayjobs.com"
+        base = workday_base(cfg['tenant'], cfg.get('wd_server', ''))
         site_prefix = f"{base}/en-US/{cfg['site']}"
         referer = f"{base}/en-US/{cfg['site']}"
         updates = []

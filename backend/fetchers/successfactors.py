@@ -21,6 +21,7 @@ from bs4 import BeautifulSoup
 
 from backend.core.location import is_india_or_unknown
 from backend.fetchers.http_client import get_text
+from backend.fetchers.result import CollectionResult
 from backend.fetchers.standard import strip_html
 
 log = logging.getLogger("jobbot")
@@ -115,6 +116,12 @@ def _search_page(host, startrow, path="/search/", extra_query=""):
 # "" already means "no description available" everywhere in this project.
 _PLACEHOLDER_DESCRIPTIONS = {"na", "n/a", "-", "--", "tbd", "none", "."}
 
+# Some tenants repeat a company "About us" paragraph in its own
+# itemprop="description" block ahead of the real ones (Wipro: three blocks —
+# About Wipro, the role text, then "Mandatory Skills / Experience"). Taking
+# only the first block stored that identical paragraph for every posting.
+_BOILERPLATE_PREFIXES = ("Wipro Limited (NYSE: WIT",)
+
 
 def fetch_job_description(host, href):
     """Full description via the job detail page's
@@ -125,10 +132,14 @@ def fetch_job_description(host, href):
     if not html:
         return ""
     soup = BeautifulSoup(html, "html.parser")
-    el = soup.select_one('[data-careersite-propertyid="description"], [itemprop="description"]')
-    if el is None:
+    el = soup.select_one('[data-careersite-propertyid="description"]')
+    if el is not None:
+        text = strip_html(el.decode_contents(), max_chars=None)
+    else:
+        parts = [strip_html(e.decode_contents(), max_chars=None) for e in soup.select('[itemprop="description"]')]
+        text = "\n".join(p for p in parts if p.strip() and not p.lstrip().startswith(_BOILERPLATE_PREFIXES))
+    if not text.strip():
         return ""
-    text = strip_html(el.decode_contents(), max_chars=None)
     if text.strip().lower() in _PLACEHOLDER_DESCRIPTIONS:
         return ""
     return text
@@ -358,12 +369,23 @@ def fetch_successfactors_rmk(cfg, deadline=None):
         )
 
     if cfg.get("fetch_details"):
+        skipped = []
+
         def enrich(job):
             if deadline is None or time.monotonic() < deadline:
                 job["description"] = fetch_job_description(host, urlparse(job["url"]).path)
+            else:
+                skipped.append(job)
             return job
         with ThreadPoolExecutor(max_workers=2) as pool:
             jobs = list(pool.map(enrich, jobs))
+        if skipped:
+            # These postings are saved WITHOUT a description; say so instead of
+            # reporting a complete run.
+            log.warning("successfactors(rmk) %s: time budget reached — %d of %d description(s) not fetched",
+                        cfg["company"], len(skipped), len(jobs))
+            return CollectionResult(jobs, status="partial", error=(
+                f"{cfg['company']}: {len(skipped)} of {len(jobs)} descriptions not fetched before the time budget ended"))
     return jobs
 
 
@@ -371,6 +393,7 @@ def collect(configs, deadline=None):
     if not configs:
         return []
     jobs = []
+    partial = []
     failures = 0
     with ThreadPoolExecutor(max_workers=min(8, len(configs))) as pool:
         futures = {}
@@ -380,7 +403,10 @@ def collect(configs, deadline=None):
         for f in futures:
             cfg = futures[f]
             try:
-                jobs += f.result()
+                result = f.result()
+                jobs += result
+                if getattr(result, "status", "ok") == "partial":
+                    partial.append(getattr(result, "error", "") or str(cfg.get("company")))
             except Exception as e:
                 log.exception("successfactors fetch failed for %s: %s", cfg.get("company"), e)
                 failures += 1
@@ -390,4 +416,6 @@ def collect(configs, deadline=None):
         # postings — surface this so run.py records status="failed"
         # instead of an indistinguishable "0 jobs, ok".
         raise RuntimeError(f"successfactors fetcher: all {len(configs)} company fetch(es) failed")
+    if partial:
+        return CollectionResult(jobs, status="partial", error="; ".join(partial))
     return jobs

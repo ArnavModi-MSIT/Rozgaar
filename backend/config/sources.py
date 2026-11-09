@@ -284,7 +284,7 @@ EIGHTFOLD = [
     # in the 500 fetched. Bangalore/Hyderabad-heavy and mostly hardware/
     # silicon engineering, so treat the NCR slice, not the total, as the
     # value here.
-    {"company": "qualcomm", "host": "careers.qualcomm.com", "domain": "qualcomm.com", "location": "India", "fetch_details": True},
+    # Qualcomm disabled 8 November 2026: see DISABLED_CAREER_SOURCES (AWS WAF human verification).
     {"company": "morganstanley", "host": "morganstanley.eightfold.ai", "domain": "morganstanley.com", "location": "India", "fetch_details": True},
 ]
 
@@ -361,7 +361,7 @@ INDIAMART = [
 
 WORKDAY_INDIA = [
     {'company': 'redhat', 'tenant': 'redhat', 'wd_server': 'wd5', 'site': 'Jobs'},
-    {'company': 'nxp', 'tenant': 'nxp', 'wd_server': 'wd3', 'site': 'careers'},
+    {'company': 'nxp', 'tenant': 'nxp', 'wd_server': '', 'site': 'careers'},  # moved to nxp.myworkdayjobs.com (no wdN) by 9 Nov 2026; wd3 answers HTTP 422
     {'company': 'marvell', 'tenant': 'marvell', 'wd_server': 'wd1', 'site': 'MarvellCareers'},
     {'company': 'microchip', 'tenant': 'microchiphr', 'wd_server': 'wd5', 'site': 'External'},
     {'company': 'cloudera', 'tenant': 'cloudera', 'wd_server': 'wd5', 'site': 'External_Career'},
@@ -615,10 +615,13 @@ from .career_discovered import register as _register_discovered
 _register_discovered(globals())
 from .career_browser_20261102 import register as _register_browser
 _register_browser(globals())
+from .career_browser_20261107 import register as _register_browser_1107
+_register_browser_1107(globals())
 
 
 # Retained for documentation; these sources are not registered collectors.
 DISABLED_CAREER_SOURCES = {
     "hrt": {"name": "Hudson River Trading", "url": "https://www.hudsonrivertrading.com/careers/?locations=mumbai%2C", "reason": "Disabled 27 October 2026: HTTP 403 access challenge."},
+    "qualcomm": {"name": "Qualcomm", "url": "https://careers.qualcomm.com/careers?location=India", "reason": "Disabled 8 November 2026: HTTP 405 from AWS WAF human verification (CAPTCHA) on /api/pcsx/search; covers the main India feed and the Intern-only qualcomm_students collector."},
     "expedia": {"name": "Expedia Group", "url": "https://careers.expediagroup.com/jobs/?filter%5Bcountry%5D=India", "reason": "Disabled 27 October 2026: HTTP 403; earlier HTTP 429 rate limiting."},
 }

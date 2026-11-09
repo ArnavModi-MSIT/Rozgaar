@@ -7,6 +7,7 @@ import requests
 from .http_client import get_json, post_json
 from .result import CollectionResult
 from .standard import strip_html
+from .workday import workday_base
 
 def _facets(data, location_pattern=None):
     candidates = []
@@ -25,7 +26,7 @@ def _facets(data, location_pattern=None):
 def fetch(cfg,deadline=None):
     if deadline is not None and time.monotonic() >= deadline:
         return CollectionResult(status="partial", error="deadline reached before listing")
-    base=f"https://{cfg['tenant']}.{cfg['wd_server']}.myworkdayjobs.com"
+    base=workday_base(cfg['tenant'],cfg.get('wd_server',''))
     root=f"{base}/wday/cxs/{cfg['tenant']}/{cfg['site']}"
     headers={"Referer":f"{base}/en-US/{cfg['site']}"}
     jobs,errors,seen,total=[],[],set(),None

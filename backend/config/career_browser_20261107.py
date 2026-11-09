@@ -1,0 +1,78 @@
+"""Workday boards found on 7 November 2026 by reading each tenant's robots.txt, then its public CXS listing.
+
+Every row below answered the CXS listing with an India filter available (a country facet, or city
+facets matched by `india_facet_pattern`). Observed India postings that day: Cigna 102, MUFG 204,
+Ameriprise 48, Wolters Kluwer 54, Sabre 35, Genesys 12, Clarivate ~51, Invesco 46, Trellix 12,
+Prudential 31, FICO 6, Finastra 36, Global Payments ~63, Vanguard 79, Danaher 119, 3M 91,
+Novartis 143, GSK 190, Philips 68, Rockwell Automation 52. Counts are dated observations,
+not live health. Registration implies nothing about pay or fresher eligibility.
+"""
+
+SOURCES = [
+    {'key': 'cigna', 'name': 'Cigna', 'group': 'workday_india',
+     'career_url': 'https://cigna.wd5.myworkdayjobs.com/en-US/cignacareers',
+     'config': {'tenant': 'cigna', 'wd_server': 'wd5', 'site': 'cignacareers', 'verify_detail_country': True}},
+    {'key': 'mufg', 'name': 'MUFG', 'group': 'workday_india',
+     'career_url': 'https://mufgub.wd3.myworkdayjobs.com/en-US/MUFG-Careers',
+     'config': {'tenant': 'mufgub', 'wd_server': 'wd3', 'site': 'MUFG-Careers', 'verify_detail_country': True}},
+    {'key': 'ameriprise', 'name': 'Ameriprise Financial', 'group': 'workday_india',
+     'career_url': 'https://ameriprise.wd5.myworkdayjobs.com/en-US/Ameriprise',
+     'config': {'tenant': 'ameriprise', 'wd_server': 'wd5', 'site': 'Ameriprise', 'verify_detail_country': True}},
+    {'key': 'wolterskluwer', 'name': 'Wolters Kluwer', 'group': 'workday_india',
+     'career_url': 'https://wk.wd3.myworkdayjobs.com/en-US/External',
+     'config': {'tenant': 'wk', 'wd_server': 'wd3', 'site': 'External', 'verify_detail_country': True}},
+    {'key': 'sabre', 'name': 'Sabre', 'group': 'workday_india',
+     'career_url': 'https://sabre.wd1.myworkdayjobs.com/en-US/SabreJobs',
+     'config': {'tenant': 'sabre', 'wd_server': 'wd1', 'site': 'SabreJobs', 'verify_detail_country': True}},
+    {'key': 'genesys', 'name': 'Genesys', 'group': 'workday_india',
+     'career_url': 'https://genesys.wd1.myworkdayjobs.com/en-US/Genesys',
+     'config': {'tenant': 'genesys', 'wd_server': 'wd1', 'site': 'Genesys', 'verify_detail_country': True}},
+    {'key': 'clarivate', 'name': 'Clarivate', 'group': 'workday_india',
+     'career_url': 'https://clarivate.wd3.myworkdayjobs.com/en-US/Clarivate_Careers',
+     'config': {'tenant': 'clarivate', 'wd_server': 'wd3', 'site': 'Clarivate_Careers', 'verify_detail_country': True, 'india_facet_pattern': 'India|^IND -|Bangalore|Noida|Chennai'}},
+    {'key': 'invesco', 'name': 'Invesco', 'group': 'workday_india',
+     'career_url': 'https://invesco.wd1.myworkdayjobs.com/en-US/IVZ',
+     'config': {'tenant': 'invesco', 'wd_server': 'wd1', 'site': 'IVZ', 'verify_detail_country': True, 'india_facet_pattern': '^Hyderabad'}},
+    {'key': 'trellix', 'name': 'Trellix', 'group': 'workday_india',
+     'career_url': 'https://trellix.wd1.myworkdayjobs.com/en-US/EnterpriseCareers',
+     'config': {'tenant': 'trellix', 'wd_server': 'wd1', 'site': 'EnterpriseCareers', 'verify_detail_country': True, 'india_facet_pattern': 'India'}},
+    {'key': 'prudential', 'name': 'Prudential Financial', 'group': 'workday_india',
+     'career_url': 'https://prudential.wd3.myworkdayjobs.com/en-US/prudential',
+     'config': {'tenant': 'prudential', 'wd_server': 'wd3', 'site': 'prudential', 'verify_detail_country': True}},
+    {'key': 'fico', 'name': 'FICO', 'group': 'workday_india',
+     'career_url': 'https://fico.wd1.myworkdayjobs.com/en-US/External',
+     'config': {'tenant': 'fico', 'wd_server': 'wd1', 'site': 'External', 'verify_detail_country': True, 'india_facet_pattern': 'India'}},
+    {'key': 'finastra', 'name': 'Finastra', 'group': 'workday_india',
+     'career_url': 'https://finastra.wd3.myworkdayjobs.com/en-US/FINC',
+     'config': {'tenant': 'finastra', 'wd_server': 'wd3', 'site': 'FINC', 'verify_detail_country': True, 'india_facet_pattern': '^Bengaluru$|^Pune$|India'}},
+    {'key': 'globalpayments', 'name': 'Global Payments', 'group': 'workday_india',
+     'career_url': 'https://tsys.wd1.myworkdayjobs.com/en-US/TSYS',
+     'config': {'tenant': 'tsys', 'wd_server': 'wd1', 'site': 'TSYS', 'verify_detail_country': True, 'india_facet_pattern': 'INDIA|^IND '}},
+    {'key': 'vanguard', 'name': 'Vanguard', 'group': 'workday_india',
+     'career_url': 'https://vanguard.wd5.myworkdayjobs.com/en-US/vanguard_external',
+     'config': {'tenant': 'vanguard', 'wd_server': 'wd5', 'site': 'vanguard_external', 'verify_detail_country': True, 'india_facet_pattern': 'India'}},
+    {'key': 'danaher', 'name': 'Danaher', 'group': 'workday_india',
+     'career_url': 'https://danaher.wd1.myworkdayjobs.com/en-US/DanaherJobs',
+     'config': {'tenant': 'danaher', 'wd_server': 'wd1', 'site': 'DanaherJobs', 'verify_detail_country': True}},
+    {'key': 'threem', 'name': '3M', 'group': 'workday_india',
+     'career_url': 'https://3m.wd1.myworkdayjobs.com/en-US/Search',
+     'config': {'tenant': '3m', 'wd_server': 'wd1', 'site': 'Search', 'verify_detail_country': True}},
+    {'key': 'novartis', 'name': 'Novartis', 'group': 'workday_india',
+     'career_url': 'https://novartis.wd3.myworkdayjobs.com/en-US/Novartis_Careers',
+     'config': {'tenant': 'novartis', 'wd_server': 'wd3', 'site': 'Novartis_Careers', 'verify_detail_country': True}},
+    {'key': 'gsk', 'name': 'GSK', 'group': 'workday_india',
+     'career_url': 'https://gsk.wd5.myworkdayjobs.com/en-US/GSKCareers',
+     'config': {'tenant': 'gsk', 'wd_server': 'wd5', 'site': 'GSKCareers', 'verify_detail_country': True}},
+    {'key': 'philips', 'name': 'Philips', 'group': 'workday_india',
+     'career_url': 'https://philips.wd3.myworkdayjobs.com/en-US/jobs-and-careers',
+     'config': {'tenant': 'philips', 'wd_server': 'wd3', 'site': 'jobs-and-careers', 'verify_detail_country': True}},
+    {'key': 'rockwell', 'name': 'Rockwell Automation', 'group': 'workday_india',
+     'career_url': 'https://rockwellautomation.wd1.myworkdayjobs.com/en-US/External_Rockwell_Automation',
+     'config': {'tenant': 'rockwellautomation', 'wd_server': 'wd1', 'site': 'External_Rockwell_Automation', 'verify_detail_country': True}},
+]
+
+
+def register(namespace):
+    for row in SOURCES:
+        namespace[row['group'].upper()].append({'company': row['key'], **row['config']})
+        namespace['DISPLAY_NAMES'][row['key']] = row['name']

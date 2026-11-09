@@ -7,8 +7,8 @@ Marsh (Phenom) 70 India of 1,932 global, Genpact (Workday) India roles,
 Macquarie (Avature) 77 India postings, KPMG Global Services (Oracle) 523 India of 524,
 Hexaware (Oracle) 109 India of 255, Vodafone Idea (SuccessFactors) 332 postings,
 Capgemini (own JSON API) 634, LeadSquared and Delhivery (Darwinbox) 13 and 6, Schneider Electric (Jibe) 573 India,
-Eaton (Eightfold) 203, bp (Workday) 31, Cummins (Oracle) 156 India of 1,188, EY (SuccessFactors) 2,593, Wipro (SuccessFactors RMK) 5,444 India of 6,885,
-HCLTech (SuccessFactors RMK) 12,676 India of 15,180. The two RMK rows read only the newest 1,000 India postings
+Eaton (Eightfold) 203, bp (Workday) 31, Cummins (Oracle) 156 India of 1,188,
+HCLTech (SuccessFactors RMK) 12,676 India of 15,180. The RMK row reads only the newest 1,000 India postings
 (RMK_MAX_PAGES), a deliberate sample, not the full pool. Counts are dated
 observations, not live health. Registration implies nothing about pay or fresher eligibility.
 """
@@ -72,15 +72,6 @@ SOURCES = [
     {'key': 'cummins', 'name': 'Cummins', 'group': 'employer_portals',
      'career_url': 'https://fa-espx-saasfaprod1.fa.ocs.oraclecloud.com/hcmUI/CandidateExperience/en/sites/CX_1/jobs',
      'config': {'kind': 'oracle', 'base_url': 'https://fa-espx-saasfaprod1.fa.ocs.oraclecloud.com', 'site': 'CX_1'}},
-    {'key': 'ey', 'name': 'EY', 'group': 'successfactors',
-     'career_url': 'https://careers.ey.com/ey/search/?createNewAlert=false&q=&locationsearch=India',
-     'config': {'host': 'careers.ey.com', 'path': '/ey/search/', 'extra_query': 'locationsearch=India',
-                'country_scoped': 'India', 'fetch_details': True}},
-    {'key': 'wipro', 'name': 'Wipro', 'group': 'successfactors',
-     'career_url': 'https://careers.wipro.com/search/?searchResultView=LIST',
-     'config': {'host': 'careers.wipro.com', 'variant': 'rmk', 'category_id': 0,
-                'facet_filters': {'jobLocationCountry': ['India']}, 'location_style': 'city_country',
-                'fetch_details': True}},
     {'key': 'hcltech', 'name': 'HCLTech', 'group': 'successfactors',
      'career_url': 'https://careers.hcltech.com/',
      'config': {'host': 'careers.hcltech.com', 'variant': 'rmk', 'category_id': 0,

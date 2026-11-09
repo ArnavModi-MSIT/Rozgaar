@@ -55,7 +55,6 @@ PLATFORMS = [
     ("mathworks", lambda deadline: career_html.fetch('mathworks', deadline)),
     ("maqsoftware", lambda deadline: career_html.collect_maq(deadline)),
     ("micron", lambda deadline: career_html.collect_micron(deadline)),
-    ("qualcomm_students", lambda deadline: qualcomm_students.collect(deadline)),
     ("workday_students", lambda deadline: workday_india.collect(config.WORKDAY_STUDENTS, deadline)),
     ("morgan_stanley_students", lambda deadline: morgan_stanley_students.collect(deadline)),
     ("unitedhealthgroup", lambda deadline: unitedhealthgroup.collect(deadline)),

@@ -52,6 +52,11 @@ SESSION.headers.update({
 })
 
 
+def workday_base(tenant, wd_server=""):
+    """Tenant origin; some tenants (e.g. NXP) moved to <tenant>.myworkdayjobs.com with no wdN part."""
+    return f"https://{tenant}.{wd_server}.myworkdayjobs.com" if wd_server else f"https://{tenant}.myworkdayjobs.com"
+
+
 def _post(url, payload, referer):
     headers = {"Referer": referer}
     for attempt in range(RETRIES):
@@ -165,9 +170,9 @@ def fetch_workday(cfg, deadline=None):
     other platforms and backoff delays add up fast).
     """
     tenant = cfg["tenant"]
-    wd_server = cfg["wd_server"]
+    wd_server = cfg.get("wd_server", "")
     site = cfg["site"]
-    base = f"https://{tenant}.{wd_server}.myworkdayjobs.com"
+    base = workday_base(tenant, wd_server)
     url = f"{base}/wday/cxs/{tenant}/{site}/jobs"
     referer = f"{base}/en-US/{site}"
     # Optional server-side facet filtering (e.g. {"locationCountry":

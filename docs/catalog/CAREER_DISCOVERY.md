@@ -66,6 +66,35 @@ browser and calling the public listing API from the employer's own origin. Obser
 Checked and not usable with a generic adapter: Vanguard, Citadel Securities and Equifax (custom sites),
 Schwab (TalentBrew, not yet checked with the new adapter), MSCI (classic iCIMS portal). Verisk's site refused the browser.
 
+## Workday batch, 7 November 2026
+
+`backend/config/career_browser_20261107.py` holds 20 Workday employers found by reading each tenant's `robots.txt` (a valid tenant answers 200 with its site names, an unknown one 422), then calling the public CXS listing. Each was run through the real `workday_india` collector the same day; descriptions were present on every posting. A `partial` status means some multi-location postings were dropped because their detail page was not India (the adapter's country check), not that the board failed.
+
+| Employer | Site | India postings collected |
+|---|---|---|
+| Cigna | `cigna` / `cignacareers` | 102 |
+| MUFG | `mufgub` / `MUFG-Careers` | 203 (partial) |
+| Ameriprise Financial | `ameriprise` / `Ameriprise` | 48 |
+| Wolters Kluwer | `wk` / `External` | 54 |
+| Sabre | `sabre` / `SabreJobs` | 35 |
+| Genesys | `genesys` / `Genesys` | 12 |
+| Clarivate | `clarivate` / `Clarivate_Careers` | 48 (partial; city-pattern facet) |
+| Invesco | `invesco` / `IVZ` | 47 (Hyderabad only; pattern facet) |
+| Trellix | `trellix` / `EnterpriseCareers` | 10 |
+| Prudential Financial | `prudential` / `prudential` | 30 (partial) |
+| FICO | `fico` / `External` | 5 |
+| Finastra | `finastra` / `FINC` | 35 |
+| Global Payments | `tsys` / `TSYS` | 51 (partial; pattern facet) |
+| Vanguard | `vanguard` / `vanguard_external` | 79 (Hyderabad) |
+| Danaher | `danaher` / `DanaherJobs` | 118 (partial) |
+| 3M | `3m` / `Search` | 86 (partial) |
+| Novartis | `novartis` / `Novartis_Careers` | 142 (partial) |
+| GSK | `gsk` / `GSKCareers` | 190 |
+| Philips | `philips` / `jobs-and-careers` | 65 (partial) |
+| Rockwell Automation | `rockwellautomation` / `External_Rockwell_Automation` | 52 |
+
+Found but not added this round (Workday, India postings seen): Sanofi 65, Pfizer 26, GE HealthCare ~180 (mixed location labels), AstraZeneca 27, MSD 38, Rockwell early careers 3, Franklin Templeton (no India facet). Truist, Elevance, Pru/PGIM, Intapp and Temenos showed no India location.
+
 ## Checked in the 49-link review (2 November): not added
 
 - **Reachable, checked, and not worth an adapter now:** Axis Bank (RippleHire, 9,581 mostly branch roles, empty list descriptions), CitiusTech (RippleHire, 38 postings, no descriptions in the list), Indegene (SuccessFactors RMK, 19 postings including a test job), Zoho (public API returns only a few openings), Moglix (Flexiele, signed requests).
