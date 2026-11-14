@@ -1,4 +1,4 @@
-# Rojgaar editing guide
+# Rozgaar editing guide
 
 Read `README.md`, `docs/CODE_MAP.md` and `docs/ARCHITECTURE.md` before changing behavior.
 

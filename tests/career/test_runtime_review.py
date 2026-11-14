@@ -34,7 +34,7 @@ class RuntimeReviewTests(unittest.TestCase):
 
     def test_stale_backend_is_not_silently_reused(self):
         with patch.object(start,"PYTHON",Path(sys.executable)),patch.object(start,"ui_needs_build",return_value=False),patch.object(start,"api_ready",return_value=False),patch.object(start,"api_status",return_value="stale"),patch.object(start.subprocess,"Popen") as spawn:
-            with self.assertRaisesRegex(RuntimeError,"older Rojgaar"):
+            with self.assertRaisesRegex(RuntimeError,"older Rozgaar"):
                 start.main(["--no-scrape"])
             spawn.assert_not_called()
 
@@ -43,7 +43,7 @@ class RuntimeReviewTests(unittest.TestCase):
         @contextmanager
         def response(value):
             yield io.BytesIO(json.dumps(value).encode())
-        with patch.object(start,"runtime_identity",return_value=expected),patch.object(start,"urlopen",side_effect=[response({"info":{"title":"Rojgaar API"}}),response({**expected,"revision":"old"})]):
+        with patch.object(start,"runtime_identity",return_value=expected),patch.object(start,"urlopen",side_effect=[response({"info":{"title":"Rozgaar API"}}),response({**expected,"revision":"old"})]):
             self.assertEqual(start.api_status(),"stale")
 
     def test_failed_new_resume_preserves_previous_state(self):

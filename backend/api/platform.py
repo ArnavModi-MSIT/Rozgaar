@@ -1,4 +1,4 @@
-"""Shared-platform controls, mounted beside the existing Rojgaar API."""
+"""Shared-platform controls, mounted beside the existing Rozgaar API."""
 from contextlib import asynccontextmanager
 import argparse
 import secrets

@@ -11,6 +11,8 @@ import backend.config as config
 from backend.fetchers import career_html, tredence, myntra, makemytrip, ubs, pwc, ea, swissre, netapp, employer_portals
 from backend.fetchers import qualcomm_students, morgan_stanley_students, unitedhealthgroup, zepto, bloomberg, linkedin_company, netflix, workday_india, automattic, zerodha, amd, booking, target, tesco, juspay, mediatek, millennium, ainterviews, amazon, apple, atlassian, bank_of_america, barclays, blackrock, deloitte, deshaw, deutsche_bank, eightfold, flipkart, goldman_sachs, google_careers, icims, indiamart, intuit, mastercard_workday, meta, oracle, paypal, phenom, quadeye, rippling, smartrecruiters, standard, successfactors, swiggy, tower_research, uber, workable, workday, zs
 from backend.fetchers.result import CollectionResult
+from backend.core.storage import load_known_job_locations
+from rojgaar.paths import CAREER_DB
 from backend.fetchers import ibm
 from backend.fetchers import infoedge
 from backend.fetchers import joshtechnologygroup
@@ -61,7 +63,7 @@ PLATFORMS = [
     ("zepto", lambda deadline: zepto.collect(deadline)),
     ("bloomberg", lambda deadline: bloomberg.collect(deadline)),
     ("linkedin_company", lambda deadline: linkedin_company.collect(deadline)),
-    ("workday_india", lambda deadline: workday_india.collect(config.WORKDAY_INDIA, deadline)),
+    ("workday_india", lambda deadline: workday_india.collect(config.WORKDAY_INDIA, deadline, known=load_known_job_locations(str(CAREER_DB), "workday_india"))),
     ("netflix", lambda deadline: netflix.collect(deadline)),
     ("automattic", lambda deadline: automattic.collect(deadline)),
     ("zerodha", lambda deadline: zerodha.collect(deadline)),

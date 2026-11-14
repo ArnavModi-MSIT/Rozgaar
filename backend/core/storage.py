@@ -170,6 +170,21 @@ def load_existing_ids(conn):
     return {r[0] for r in rows}
 
 
+def load_known_job_locations(db_path, source):
+    """{job id: stored location} for saved jobs of one source that already have a description.
+    Own read-only connection (collectors run in threads); any failure returns {} so a full fetch happens."""
+    import sqlite3
+    try:
+        conn = sqlite3.connect(f"file:{db_path}?mode=ro", uri=True, timeout=5)
+        try:
+            rows = conn.execute("SELECT id, location FROM jobs WHERE source = ? AND COALESCE(description, '') != ''", (source,)).fetchall()
+        finally:
+            conn.close()
+        return {r[0]: r[1] or "" for r in rows}
+    except Exception:
+        return {}
+
+
 def load_dedup_keys(conn):
     """Map strong duplicate evidence to saved IDs, including dismissed jobs."""
     rows = conn.execute("SELECT id, company, title, location, description, url FROM jobs")

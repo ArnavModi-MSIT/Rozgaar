@@ -68,7 +68,7 @@ def record_company_run(conn, run_id, platform, jobs=(), *, status="ok", error=""
             reason = "Platform returned successfully; company completeness is unverified."
         conn.execute("""INSERT OR REPLACE INTO company_runs VALUES (?,?,?,?,?,?,?,?,?)""",
             (run_id, int(time.time()), company, platform, company_status, len(rows), len(accepted),
-             sum(not (job.get("description") or "").strip() for job in accepted), reason[:500]))
+             sum(not (job.get("description") or "").strip() and not job.get("_description_known") for job in accepted), reason[:500]))
 
 
 def dashboard(conn):

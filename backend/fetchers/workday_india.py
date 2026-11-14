@@ -23,7 +23,7 @@ def _facets(data, location_pattern=None):
     _,key,ids=sorted(candidates,key=lambda x:x[0])[0]
     return {key:ids}
 
-def fetch(cfg,deadline=None):
+def fetch(cfg,deadline=None,known=None):
     if deadline is not None and time.monotonic() >= deadline:
         return CollectionResult(status="partial", error="deadline reached before listing")
     base=workday_base(cfg['tenant'],cfg.get('wd_server',''))
@@ -69,6 +69,11 @@ def fetch(cfg,deadline=None):
     local = threading.local()
     detail_sessions = []
     def description(job):
+        # Already saved with a description: its country was checked when it was
+        # saved, so do not spend the time budget fetching the detail page again.
+        if known is not None:
+            stored=known.get(f"{job['company']}:{job['source_id']}")
+            if stored is not None:return {"_known_location":stored}
         if deadline is not None and time.monotonic()>=deadline:return {}
         # Reuse one connection pool per detail worker, never share a mutable
         # Session between workers. Large employer batches otherwise repeat a
@@ -84,6 +89,11 @@ def fetch(cfg,deadline=None):
         with ThreadPoolExecutor(max_workers=4) as pool:
             for job,info in zip(jobs,pool.map(description,jobs)):
                 job.pop("_path",None)
+                if "_known_location" in info:
+                    # Reuse the stored location; the empty description leaves the saved one untouched.
+                    job["location"]=info["_known_location"] or job["location"]
+                    job["_description_known"]=True
+                    accepted.append(job);continue
                 if global_scope or cfg.get("verify_detail_country"):
                     country_info = info.get("country")
                     country = country_info.get("descriptor") if isinstance(country_info, dict) else country_info if isinstance(country_info, str) else None
@@ -111,12 +121,15 @@ def fetch(cfg,deadline=None):
     if errors and not jobs:raise RuntimeError("Workday India: "+"; ".join(errors[:5]))
     return CollectionResult(jobs,status="partial" if errors else "ok",error="; ".join(errors[:5]))
 
-def collect(configs,deadline=None):
+def collect(configs,deadline=None,known=None):
     jobs,errors=[],[]
-    # Each employer uses a different host; bounded overlap prevents a large
-    # new batch from waiting behind every preceding company's descriptions.
-    with ThreadPoolExecutor(max_workers=min(4,len(configs) or 1)) as pool:
-        futures=[(cfg,pool.submit(fetch,cfg,deadline)) for cfg in configs]
+    configs=list(configs)
+    # Each employer uses a different host. The list is split in two halves with
+    # their own worker pools so large boards at the front cannot use the whole
+    # time budget before the boards at the back have started.
+    mid=(len(configs)+1)//2 if len(configs)>4 else len(configs)
+    with ThreadPoolExecutor(max_workers=min(4,len(configs) or 1)) as head,ThreadPoolExecutor(max_workers=4) as tail:
+        futures=[(cfg,(head if i<mid else tail).submit(fetch,cfg,deadline,known)) for i,cfg in enumerate(configs)]
         for cfg,future in futures:
             try:
                 result=future.result();jobs.extend(result)
